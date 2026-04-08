@@ -323,6 +323,7 @@ class Pm3Process {
   // Matches Proxmark3GUI pattern: QRegularExpression("(os:\\s+|OS\\.+\\s+)")
   bool _isConnectionPrompt(String line) {
     return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
+        line.toLowerCase().contains('communicating with pm3 over usb-cdc') ||
         line.contains('[usb]') ||
         line.contains('[bt]') ||
         line.contains('pm3 -->');

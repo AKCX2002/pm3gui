@@ -14,6 +14,8 @@ dependencies:
   provider: ^6.1.2
   # File picking for dump files
   file_picker: ^8.0.0
+  # Desktop-native open/save dialogs (Linux/Windows/macOS)
+  file_selector: ^1.0.3
   # File path utilities
   path_provider: ^2.1.4
   path: ^1.9.0

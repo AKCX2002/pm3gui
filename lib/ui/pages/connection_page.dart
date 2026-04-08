@@ -150,16 +150,6 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         prefixIcon: Icon(Icons.usb),
                       ),
                     ),
-                  const SizedBox(height: 8),
-                  // Manual port entry
-                  TextFormField(
-                    initialValue: appState.portName,
-                    decoration: const InputDecoration(
-                      hintText: '或手动输入端口...',
-                      prefixIcon: Icon(Icons.edit),
-                    ),
-                    onChanged: isConnected ? null : appState.setPort,
-                  ),
                 ],
               ),
             ),

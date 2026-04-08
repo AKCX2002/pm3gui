@@ -7,7 +7,7 @@ library;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart' as fs;
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/models/access_bits.dart';
 import 'package:pm3gui/parsers/dump_parser.dart';
@@ -16,6 +16,7 @@ import 'package:pm3gui/parsers/bin_parser.dart';
 import 'package:pm3gui/parsers/json_dump_parser.dart';
 import 'package:pm3gui/parsers/key_parser.dart';
 import 'package:pm3gui/services/dump_converter.dart';
+import 'package:pm3gui/services/file_dialog_service.dart';
 
 class DumpViewerPage extends StatefulWidget {
   const DumpViewerPage({super.key});
@@ -57,12 +58,14 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
   Future<void> _openFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
+      final path = await FileDialogService.pickSingleFilePath(
+        desktopTypeGroups: const [
+          fs.XTypeGroup(
+            label: 'PM3 dump/key',
+            extensions: ['eml', 'bin', 'json', 'dump', 'dic', 'txt'],
+          ),
+        ],
       );
-      if (result == null || result.files.isEmpty) return;
-      final path = result.files.single.path;
       if (path == null) return;
       final dumpResult = await parseDumpFile(path);
       setState(() {
@@ -80,9 +83,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
   Future<void> _exportAs(String format) async {
     if (_card == null) return;
-    String? savePath = await FilePicker.platform.saveFile(
+    String? savePath = await FileDialogService.pickSaveFilePath(
       dialogTitle: '导出文件',
-      fileName: 'dump.$format',
+      suggestedName: 'dump.$format',
     );
     if (savePath == null) return;
     try {
@@ -1036,12 +1039,14 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   }
 
   Future<void> _pickConvertSource() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
+    final path = await FileDialogService.pickSingleFilePath(
+      desktopTypeGroups: const [
+        fs.XTypeGroup(
+          label: 'PM3 dump/key',
+          extensions: ['eml', 'bin', 'json', 'dump', 'dic', 'txt'],
+        ),
+      ],
     );
-    if (result == null || result.files.isEmpty) return;
-    final path = result.files.single.path;
     if (path == null) return;
     setState(() {
       _convertInput = path;
@@ -1075,9 +1080,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
           _convertInput!.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '');
       final defaultName = '$baseName.${_convertTarget!.ext}';
 
-      final savePath = await FilePicker.platform.saveFile(
+      final savePath = await FileDialogService.pickSaveFilePath(
         dialogTitle: '保存转换文件',
-        fileName: defaultName,
+        suggestedName: defaultName,
       );
       if (savePath == null) {
         setState(() => _converting = false);
