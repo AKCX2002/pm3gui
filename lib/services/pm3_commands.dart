@@ -687,6 +687,34 @@ class Pm3Commands {
       'hf mf csetblk --blk $block -d $data';
   static String hfMfMagicWipe() => 'hf mf cwipe';
 
+  /// CUID 卡逐块清空：使用已知密钥认证后写入全 0 数据
+  /// [block] — 块号
+  /// [keyType] — 'A' 或 'B'
+  /// [key] — 12位 hex 密钥
+  static String hfMfCuidClearBlock(int block, String keyType, String key) =>
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d 00000000000000000000000000000000';
+
+  /// CUID 卡逐块回写：使用目标卡密钥认证后写入指定数据
+  /// [block] — 块号
+  /// [keyType] — 'A' 或 'B'
+  /// [key] — 12位 hex 密钥
+  /// [data] — 32位 hex 数据
+  static String hfMfCuidWriteBlock(
+          int block, String keyType, String key, String data) =>
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $data';
+
+  /// 尾块回写 (Key A + 访问控制 + Key B)
+  static String hfMfWriteTrailer(
+          int block, String keyType, String key, String trailerData) =>
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $trailerData';
+
+  /// 生成 1K 卡默认尾块数据
+  static String defaultTrailerData(
+          {String keyA = 'FFFFFFFFFFFF',
+          String accessBits = 'FF078069',
+          String keyB = 'FFFFFFFFFFFF'}) =>
+      '$keyA$accessBits$keyB';
+
   // Sniff
   static String hfSniff() => 'hf sniff';
   static String hf14aSniff() => 'hf 14a sniff';

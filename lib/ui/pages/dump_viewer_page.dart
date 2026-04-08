@@ -1,13 +1,14 @@
 /// Dump viewer page — open/view/edit/export Mifare dump files.
 ///
 /// This is the core offline feature — works without PM3 hardware.
-/// Includes dump viewing, deep analysis, and format conversion.
+/// Includes dump viewing, deep analysis, format conversion, and write-back.
 library;
 
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart' as fs;
+import 'package:provider/provider.dart';
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/models/access_bits.dart';
 import 'package:pm3gui/parsers/dump_parser.dart';
@@ -17,6 +18,8 @@ import 'package:pm3gui/parsers/json_dump_parser.dart';
 import 'package:pm3gui/parsers/key_parser.dart';
 import 'package:pm3gui/services/dump_converter.dart';
 import 'package:pm3gui/services/file_dialog_service.dart';
+import 'package:pm3gui/services/pm3_commands.dart';
+import 'package:pm3gui/state/app_state.dart';
 
 class DumpViewerPage extends StatefulWidget {
   const DumpViewerPage({super.key});
@@ -44,15 +47,35 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   List<SectorKey>? _extractedKeys;
   String? _keySummary;
 
+  // Editable block data controllers (per-sector)
+  final Map<int, TextEditingController> _blockControllers = {};
+  // Editable key controllers
+  final Map<int, TextEditingController> _keyAControllers = {};
+  final Map<int, TextEditingController> _keyBControllers = {};
+
+  // Write-back state
+  String _writeKeyType = 'B'; // default use Key B for auth
+  bool _skipBlock0 = true;
+  bool _writeTrailers = true;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    for (final c in _blockControllers.values) {
+      c.dispose();
+    }
+    for (final c in _keyAControllers.values) {
+      c.dispose();
+    }
+    for (final c in _keyBControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -75,6 +98,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         _format = dumpResult.format;
         _error = dumpResult.error;
         _selectedSector = 0;
+        _initEditControllers();
       });
     } catch (e) {
       setState(() => _error = 'Error: $e');
@@ -149,8 +173,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
               labelColor: Theme.of(context).colorScheme.primary,
               tabs: const [
                 Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
+                Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
                 Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
-                Tab(text: '格式转换', icon: Icon(Icons.swap_horiz, size: 18)),
+                Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
               ]),
         if (_card != null)
           Expanded(
@@ -161,10 +186,12 @@ class _DumpViewerPageState extends State<DumpViewerPage>
               const VerticalDivider(width: 1),
               Expanded(child: _buildSectorView()),
             ]),
-            // Tab 1: 深度分析
+            // Tab 1: 密钥编辑 & 块数据编辑
+            _buildKeyEditorView(),
+            // Tab 2: 深度分析
             _buildAnalysisView(),
-            // Tab 2: 格式转换 & 密钥提取
-            _buildConverterView(),
+            // Tab 3: 回写/清空 (CUID)
+            _buildWriteBackView(),
           ]))
         else
           const Expanded(
@@ -1111,5 +1138,912 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         _convertStatus = '❌ 转换异常: $e';
       });
     }
+  }
+
+  // ======================================================================
+  //  初始化编辑控制器
+  // ======================================================================
+  void _initEditControllers() {
+    // Clean up old controllers
+    for (final c in _blockControllers.values) {
+      c.dispose();
+    }
+    for (final c in _keyAControllers.values) {
+      c.dispose();
+    }
+    for (final c in _keyBControllers.values) {
+      c.dispose();
+    }
+    _blockControllers.clear();
+    _keyAControllers.clear();
+    _keyBControllers.clear();
+
+    if (_card == null) return;
+
+    // Create block data controllers
+    for (var i = 0; i < _card!.blocks.length; i++) {
+      _blockControllers[i] = TextEditingController(text: _card!.blocks[i]);
+    }
+
+    // Create key controllers
+    for (var s = 0; s < _card!.sectorKeys.length; s++) {
+      _keyAControllers[s] =
+          TextEditingController(text: _card!.sectorKeys[s].keyA.toUpperCase());
+      _keyBControllers[s] =
+          TextEditingController(text: _card!.sectorKeys[s].keyB.toUpperCase());
+    }
+  }
+
+  /// 应用编辑：将控制器中的值写回 _card 模型
+  void _applyEdits() {
+    if (_card == null) return;
+    for (var i = 0; i < _card!.blocks.length; i++) {
+      if (_blockControllers.containsKey(i)) {
+        _card!.blocks[i] = _blockControllers[i]!.text.toUpperCase();
+      }
+    }
+    for (var s = 0; s < _card!.sectorKeys.length; s++) {
+      if (_keyAControllers.containsKey(s)) {
+        _card!.sectorKeys[s].keyA = _keyAControllers[s]!.text.toUpperCase();
+      }
+      if (_keyBControllers.containsKey(s)) {
+        _card!.sectorKeys[s].keyB = _keyBControllers[s]!.text.toUpperCase();
+      }
+    }
+    setState(() {});
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('修改已应用到内存')));
+    }
+  }
+
+  // ======================================================================
+  //  密钥编辑视图
+  // ======================================================================
+  Widget _buildKeyEditorView() {
+    if (_card == null) return const Center(child: Text('无数据'));
+
+    return Row(
+      children: [
+        // 左侧：密钥编辑表
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 操作栏
+                Row(children: [
+                  const Text('🔑 密钥编辑',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  OutlinedButton.icon(
+                    onPressed: _applyEdits,
+                    icon: const Icon(Icons.check, size: 16),
+                    label: const Text('应用修改'),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      // 全部设为默认密钥
+                      for (var s = 0; s < _card!.sectorKeys.length; s++) {
+                        _keyAControllers[s]?.text = 'FFFFFFFFFFFF';
+                        _keyBControllers[s]?.text = 'FFFFFFFFFFFF';
+                      }
+                    },
+                    icon: const Icon(Icons.restore, size: 16),
+                    label: const Text('全部默认'),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+
+                // 密钥编辑表格
+                Table(
+                  border: TableBorder.all(
+                      color: Colors.grey.withValues(alpha: 0.3)),
+                  columnWidths: const {
+                    0: FixedColumnWidth(55),
+                    1: FlexColumnWidth(),
+                    2: FlexColumnWidth(),
+                  },
+                  children: [
+                    const TableRow(
+                        decoration: BoxDecoration(color: Color(0xFF2A2A3C)),
+                        children: [
+                          Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('扇区',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12))),
+                          Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Key A',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12))),
+                          Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Text('Key B',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12))),
+                        ]),
+                    for (var s = 0; s < _card!.sectorKeys.length; s++)
+                      TableRow(children: [
+                        Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text('$s',
+                                style: const TextStyle(
+                                    fontFamily: 'monospace', fontSize: 12))),
+                        Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: SizedBox(
+                            height: 30,
+                            child: TextField(
+                              controller: _keyAControllers[s],
+                              style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  color: Colors.greenAccent),
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                isDense: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9a-fA-F]')),
+                                LengthLimitingTextInputFormatter(12),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: SizedBox(
+                            height: 30,
+                            child: TextField(
+                              controller: _keyBControllers[s],
+                              style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  color: Colors.cyanAccent),
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                isDense: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9a-fA-F]')),
+                                LengthLimitingTextInputFormatter(12),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ]),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        // 右侧：块数据编辑
+        Expanded(
+          flex: 3,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(children: [
+                  const Text('📝 块数据编辑',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  Text('扇区 $_selectedSector',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[400])),
+                ]),
+              ),
+              // 扇区选择器
+              SizedBox(
+                height: 36,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: _card!.cardType.sectorCount,
+                  itemBuilder: (context, index) {
+                    final sel = index == _selectedSector;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: ChoiceChip(
+                        label: Text('$index',
+                            style: const TextStyle(fontSize: 11)),
+                        selected: sel,
+                        onSelected: (_) =>
+                            setState(() => _selectedSector = index),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const Divider(height: 8),
+              // 块编辑器
+              Expanded(
+                child: _buildBlockEditor(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBlockEditor() {
+    if (_card == null) return const SizedBox();
+    final ct = _card!.cardType;
+    final sector = _selectedSector;
+    final firstBlock = ct.sectorFirstBlock[sector];
+    final blockCount = ct.blocksPerSector[sector];
+    final trailerIdx = ct.trailerBlock(sector);
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      itemCount: blockCount,
+      itemBuilder: (context, i) {
+        final block = firstBlock + i;
+        final isTrailer = block == trailerIdx;
+        final isBlock0 = block == 0 && sector == 0;
+
+        String label = '数据';
+        Color labelColor = Colors.grey;
+        if (isBlock0) {
+          label = '制造商';
+          labelColor = Colors.blue;
+        } else if (isTrailer) {
+          label = '尾块';
+          labelColor = Colors.orange;
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isTrailer
+                ? Colors.orange.withValues(alpha: 0.05)
+                : isBlock0
+                    ? Colors.blue.withValues(alpha: 0.05)
+                    : Colors.transparent,
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 55,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('B$block',
+                        style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
+                    Text(label,
+                        style: TextStyle(fontSize: 10, color: labelColor)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SizedBox(
+                  height: 30,
+                  child: TextField(
+                    controller: _blockControllers[block],
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: isTrailer
+                          ? Colors.orangeAccent
+                          : isBlock0
+                              ? Colors.lightBlueAccent
+                              : null,
+                    ),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      isDense: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9a-fA-F]')),
+                      LengthLimitingTextInputFormatter(32),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ======================================================================
+  //  回写/清空 (CUID) 视图
+  // ======================================================================
+  Widget _buildWriteBackView() {
+    if (_card == null) return const Center(child: Text('请先打开转储文件'));
+    final appState = context.watch<AppState>();
+    final isConnected = appState.isConnected;
+    final progress = appState.writeProgress;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // ---- 说明卡片 ----
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(children: [
+              const Row(children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('CUID 卡回写 & 清空',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ]),
+              const SizedBox(height: 8),
+              const Text(
+                'CUID 卡没有后门命令，必须使用已知密钥认证后逐块写入。\n'
+                '• 清空：使用卡片当前密钥认证，将数据块写为全 0\n'
+                '• 回写：使用目标卡密钥认证，将 Dump 数据逐块写入\n'
+                '• 尾块回写：会同时更新密钥和访问控制位\n\n'
+                '⚠️ 写入块 0 需要魔术卡（Gen1A/Gen2）才能修改 UID',
+                style: TextStyle(fontSize: 13),
+              ),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ---- 连接状态 ----
+        if (!isConnected)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(children: [
+              Icon(Icons.warning, color: Colors.redAccent),
+              SizedBox(width: 8),
+              Text('请先连接 PM3 设备',
+                  style: TextStyle(color: Colors.redAccent, fontSize: 14)),
+            ]),
+          ),
+        if (!isConnected) const SizedBox(height: 16),
+
+        // ---- 写入选项 ----
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('⚙️ 写入选项',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
+                Row(children: [
+                  const Text('认证密钥类型：'),
+                  const SizedBox(width: 8),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'A', label: Text('Key A')),
+                      ButtonSegment(value: 'B', label: Text('Key B')),
+                    ],
+                    selected: {_writeKeyType},
+                    onSelectionChanged: (v) =>
+                        setState(() => _writeKeyType = v.first),
+                  ),
+                ]),
+                const SizedBox(height: 8),
+                CheckboxListTile(
+                  title: const Text('跳过块 0 (制造商块)',
+                      style: TextStyle(fontSize: 13)),
+                  subtitle: const Text('除非是魔术卡，否则块 0 无法写入',
+                      style: TextStyle(fontSize: 11)),
+                  value: _skipBlock0,
+                  onChanged: (v) => setState(() => _skipBlock0 = v ?? true),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                CheckboxListTile(
+                  title: const Text('写入尾块 (密钥+访问控制)',
+                      style: TextStyle(fontSize: 13)),
+                  subtitle: const Text('将 Dump 中的尾块数据写入目标卡',
+                      style: TextStyle(fontSize: 11)),
+                  value: _writeTrailers,
+                  onChanged: (v) => setState(() => _writeTrailers = v ?? true),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ---- 密钥概览 (来自 Dump) ----
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('🔑 Dump 密钥 (用于认证)',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 200,
+                  child: SingleChildScrollView(
+                    child: _buildCompactKeyTable(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ---- 操作按钮 ----
+        Row(children: [
+          // CUID 逐块清空
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed:
+                  isConnected ? () => _showCuidClearDialog(appState) : null,
+              icon: const Icon(Icons.delete_sweep),
+              label: const Text('CUID 逐块清空'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // CUID 逐块回写
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed:
+                  isConnected ? () => _showCuidWriteDialog(appState) : null,
+              icon: const Icon(Icons.upload),
+              label: const Text('CUID 逐块回写'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 12),
+
+        // 单扇区回写
+        Row(children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed:
+                  isConnected ? () => _showSectorWriteDialog(appState) : null,
+              icon: const Icon(Icons.edit_note),
+              label: Text('回写扇区 $_selectedSector'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // hf mf restore (标准回写)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: isConnected
+                  ? () {
+                      final sz =
+                          Pm3Commands.cardSizeFlag(_card!.cardType.label);
+                      appState.sendCommand(Pm3Commands.hfMfRestore(sz));
+                    }
+                  : null,
+              icon: const Icon(Icons.restore),
+              label: const Text('标准 restore (有后门)'),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 16),
+
+        // ---- 进度显示 ----
+        if (progress != null && progress.total > 0) ...[
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Text('📊 写入进度',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
+                    const Spacer(),
+                    if (progress.isRunning)
+                      TextButton.icon(
+                        onPressed: () => appState.cancelWriteSequence(),
+                        icon: const Icon(Icons.cancel, size: 16),
+                        label: const Text('取消'),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.redAccent),
+                      ),
+                  ]),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: progress.progress,
+                    backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${progress.completed} / ${progress.total}  '
+                    '(✅ ${progress.succeeded}  ❌ ${progress.failed})',
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                  ),
+                  Text(progress.currentStatus,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+                  const SizedBox(height: 8),
+                  // 逐块结果列表
+                  SizedBox(
+                    height: 200,
+                    child: ListView.builder(
+                      itemCount: progress.results.length,
+                      itemBuilder: (context, index) {
+                        final r = progress.results[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(children: [
+                            Icon(
+                              r.success ? Icons.check_circle : Icons.cancel,
+                              size: 14,
+                              color: r.success
+                                  ? Colors.greenAccent
+                                  : Colors.redAccent,
+                            ),
+                            const SizedBox(width: 6),
+                            Text('块 ${r.block.toString().padLeft(3)}',
+                                style: const TextStyle(
+                                    fontFamily: 'monospace', fontSize: 12)),
+                            const SizedBox(width: 8),
+                            Text(r.message,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: r.success
+                                        ? Colors.greenAccent
+                                        : Colors.redAccent)),
+                          ]),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 16),
+        // ---- 格式转换 (折叠到这里) ----
+        ExpansionTile(
+          title: const Text('📦 格式转换 & 密钥提取',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: _buildConverterView(),
+            ),
+          ],
+        ),
+      ]),
+    );
+  }
+
+  // 简洁的密钥显示表
+  Widget _buildCompactKeyTable() {
+    if (_card == null) return const SizedBox();
+    final keys = _card!.sectorKeys;
+    return Table(
+      border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.3)),
+      columnWidths: const {
+        0: FixedColumnWidth(40),
+        1: FlexColumnWidth(),
+        2: FlexColumnWidth(),
+      },
+      children: [
+        const TableRow(
+            decoration: BoxDecoration(color: Color(0xFF2A2A3C)),
+            children: [
+              Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Text('S',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 11))),
+              Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Text('Key A',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 11))),
+              Padding(
+                  padding: EdgeInsets.all(4),
+                  child: Text('Key B',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 11))),
+            ]),
+        for (var i = 0; i < keys.length; i++)
+          TableRow(children: [
+            Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text('$i',
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 11))),
+            Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text(keys[i].keyA.toUpperCase(),
+                    style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: _isKnownDefault(keys[i].keyA)
+                            ? Colors.orangeAccent
+                            : Colors.greenAccent))),
+            Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text(keys[i].keyB.toUpperCase(),
+                    style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                        color: _isKnownDefault(keys[i].keyB)
+                            ? Colors.orangeAccent
+                            : Colors.cyanAccent))),
+          ]),
+      ],
+    );
+  }
+
+  // ======================================================================
+  //  CUID 清空对话框
+  // ======================================================================
+  void _showCuidClearDialog(AppState appState) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('CUID 逐块清空'),
+        content: SizedBox(
+          width: 400,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text(
+              '将使用 Dump 中的密钥对目标卡进行认证，\n'
+              '然后将每个数据块写为全 0。\n\n'
+              '尾块将被重置为默认值:\n'
+              'Key A = FFFFFFFFFFFF\n'
+              '访问控制 = FF078069\n'
+              'Key B = FFFFFFFFFFFF\n\n'
+              '⚠️ 此操作不可逆！',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '将清空 ${_card!.cardType.blockCount} 块 '
+              '(${_skipBlock0 ? "跳过块0" : "含块0"})',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeCuidClear(appState);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('开始清空', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ======================================================================
+  //  CUID 回写对话框
+  // ======================================================================
+  void _showCuidWriteDialog(AppState appState) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('CUID 逐块回写'),
+        content: SizedBox(
+          width: 400,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text(
+              '将使用 Dump 中的密钥对目标卡进行认证，\n'
+              '然后将 Dump 数据逐块写入目标卡。\n\n'
+              '✅ 数据块: 写入 Dump 中的原始数据\n'
+              '✅ 尾块: 写入 Dump 中的完整尾块数据\n'
+              '    (包含 Key A + 访问控制 + Key B)\n\n'
+              '💡 使用场景: CUID/普通卡的密钥已知,\n'
+              '   需要覆盖写入新数据。',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '将写入 ${_card!.cardType.blockCount} 块 '
+              '(${_skipBlock0 ? "跳过块0" : "含块0"}, '
+              '${_writeTrailers ? "含尾块" : "跳过尾块"})',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeCuidWrite(appState);
+            },
+            child: const Text('开始回写'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ======================================================================
+  //  单扇区回写对话框
+  // ======================================================================
+  void _showSectorWriteDialog(AppState appState) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('回写扇区 $_selectedSector'),
+        content: Text(
+          '将使用 Dump 中的密钥认证，\n'
+          '回写扇区 $_selectedSector 的所有块到目标卡。\n\n'
+          '${_writeTrailers ? "包含尾块" : "不含尾块"}  '
+          '认证密钥: Key $_writeKeyType',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeSectorWrite(appState, _selectedSector);
+            },
+            child: const Text('开始回写'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ======================================================================
+  //  执行 CUID 逐块清空
+  // ======================================================================
+  Future<void> _executeCuidClear(AppState appState) async {
+    if (_card == null) return;
+    _applyEdits(); // 确保最新的密钥
+
+    final commands = <(int, String)>[];
+    final ct = _card!.cardType;
+    final defaultTrailer = Pm3Commands.defaultTrailerData();
+
+    for (var block = 0; block < ct.blockCount; block++) {
+      if (_skipBlock0 && block == 0) continue;
+
+      final sector = _card!.blockToSector(block);
+      final key = _writeKeyType == 'A'
+          ? _card!.sectorKeys[sector].keyA
+          : _card!.sectorKeys[sector].keyB;
+
+      if (_card!.isTrailerBlock(block)) {
+        // 尾块写入默认值
+        commands.add((
+          block,
+          Pm3Commands.hfMfCuidWriteBlock(
+              block, _writeKeyType, key, defaultTrailer)
+        ));
+      } else {
+        // 数据块写入全 0
+        commands.add(
+            (block, Pm3Commands.hfMfCuidClearBlock(block, _writeKeyType, key)));
+      }
+    }
+
+    await appState.sendCommandSequence(commands);
+  }
+
+  // ======================================================================
+  //  执行 CUID 逐块回写
+  // ======================================================================
+  Future<void> _executeCuidWrite(AppState appState) async {
+    if (_card == null) return;
+    _applyEdits(); // 确保最新数据
+
+    final commands = <(int, String)>[];
+    final ct = _card!.cardType;
+
+    for (var block = 0; block < ct.blockCount; block++) {
+      if (_skipBlock0 && block == 0) continue;
+
+      final isTrailer = _card!.isTrailerBlock(block);
+      if (isTrailer && !_writeTrailers) continue;
+
+      final sector = _card!.blockToSector(block);
+      final key = _writeKeyType == 'A'
+          ? _card!.sectorKeys[sector].keyA
+          : _card!.sectorKeys[sector].keyB;
+      final data = _card!.blocks[block];
+
+      commands.add((
+        block,
+        Pm3Commands.hfMfCuidWriteBlock(block, _writeKeyType, key, data)
+      ));
+    }
+
+    await appState.sendCommandSequence(commands);
+  }
+
+  // ======================================================================
+  //  执行单扇区回写
+  // ======================================================================
+  Future<void> _executeSectorWrite(AppState appState, int sector) async {
+    if (_card == null) return;
+    _applyEdits();
+
+    final commands = <(int, String)>[];
+    final ct = _card!.cardType;
+    final firstBlock = ct.sectorFirstBlock[sector];
+    final blockCount = ct.blocksPerSector[sector];
+
+    for (var i = 0; i < blockCount; i++) {
+      final block = firstBlock + i;
+      if (_skipBlock0 && block == 0) continue;
+
+      final isTrailer = _card!.isTrailerBlock(block);
+      if (isTrailer && !_writeTrailers) continue;
+
+      final key = _writeKeyType == 'A'
+          ? _card!.sectorKeys[sector].keyA
+          : _card!.sectorKeys[sector].keyB;
+      final data = _card!.blocks[block];
+
+      commands.add((
+        block,
+        Pm3Commands.hfMfCuidWriteBlock(block, _writeKeyType, key, data)
+      ));
+    }
+
+    await appState.sendCommandSequence(commands);
   }
 }

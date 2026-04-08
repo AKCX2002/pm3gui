@@ -1,0 +1,407 @@
+classes:
+	- class: Hf14aCmd
+		count: 9
+		methods:
+			- search
+			- info
+			- raw
+			- sniff
+			- sim
+			- apdu
+			- config
+			- cuids
+			- ndefRead
+	- class: Hf14bCmd
+		count: 9
+		methods:
+			- reader
+			- info
+			- sniff
+			- dump
+			- rdbl
+			- wrbl
+			- raw
+			- sim
+			- ndefRead
+	- class: HfMfCmd
+		count: 57
+		methods:
+			- info
+			- search
+			- mad
+			- acl
+			- isen
+			- autopwn
+			- chk
+			- fchk
+			- darkside
+			- nested
+			- staticNested
+			- hardnested
+			- nack
+			- brute
+			- decrypt
+			- supercard
+			- keygen
+			- rdbl
+			- rdsc
+			- wrbl
+			- dump
+			- restore
+			- view
+			- wipe
+			- value
+			- sim
+			- eload
+			- esave
+			- eclr
+			- egetblk
+			- esetblk
+			- eview
+			- ecfill
+			- ekeyprn
+			- cgetblk
+			- cgetsc
+			- csetblk
+			- csetuid
+			- cload
+			- csave
+			- cview
+			- cwipe
+			- gen3uid
+			- gen3blk
+			- gen3freeze
+			- ginfo
+			- ggetblk
+			- gsetblk
+			- gload
+			- gsave
+			- gview
+			- gchpwd
+			- ndefRead
+			- ndefWrite
+			- ndefFormat
+			- sniff
+			- traceList
+	- class: HfMfuCmd
+		count: 17
+		methods:
+			- info
+			- dump
+			- rdbl
+			- wrbl
+			- restore
+			- view
+			- wipe
+			- ndefRead
+			- keygen
+			- pwdgen
+			- cauth
+			- cchk
+			- sim
+			- eload
+			- esave
+			- eview
+			- setuid
+	- class: HfMfdesCmd
+		count: 20
+		methods:
+			- info
+			- detect
+			- getuid
+			- freemem
+			- mad
+			- chk
+			- auth
+			- formatpicc
+			- getaids
+			- lsapp
+			- selectapp
+			- createapp
+			- deleteapp
+			- getfileids
+			- lsfiles
+			- read
+			- write
+			- dump
+			- changekey
+			- getkeysettings
+	- class: Hf15Cmd
+		count: 13
+		methods:
+			- reader
+			- info
+			- dump
+			- restore
+			- rdbl
+			- wrbl
+			- view
+			- wipe
+			- sniff
+			- raw
+			- sim
+			- findafi
+			- csetuid
+	- class: HfIclassCmd
+		count: 13
+		methods:
+			- info
+			- reader
+			- dump
+			- rdbl
+			- wrbl
+			- restore
+			- view
+			- sniff
+			- chk
+			- loclass
+			- sim
+			- eload
+			- eview
+	- class: HfFelicaCmd
+		count: 8
+		methods:
+			- reader
+			- info
+			- sniff
+			- dump
+			- rdbl
+			- wrbl
+			- raw
+			- litedump
+	- class: HfLegicCmd
+		count: 7
+		methods:
+			- info
+			- dump
+			- restore
+			- rdbl
+			- wrbl
+			- wipe
+			- sim
+	- class: HfSeosCmd
+		count: 3
+		methods:
+			- info
+			- pacs
+			- sim
+	- class: HfEmvCmd
+		count: 4
+		methods:
+			- search
+			- ppse
+			- exec
+			- test
+	- class: HfFidoCmd
+		count: 3
+		methods:
+			- info
+			- reg
+			- auth
+	- class: HfCmd
+		count: 4
+		methods:
+			- search
+			- tune
+			- sniff
+			- list
+	- class: LfCmd
+		count: 6
+		methods:
+			- search
+			- read
+			- sniff
+			- tune
+			- sim
+			- config
+	- class: LfEmCmd
+		count: 15
+		methods:
+			- em410xReader
+			- em410xClone
+			- em410xSim
+			- em410xBrute
+			- em410xWatch
+			- em4x05Dump
+			- em4x05Info
+			- em4x05Read
+			- em4x05Write
+			- em4x05Unlock
+			- em4x05Wipe
+			- em4x50Info
+			- em4x50Dump
+			- em4x70Info
+			- em4x70Auth
+	- class: LfT55xxCmd
+		count: 12
+		methods:
+			- detect
+			- info
+			- dump
+			- read
+			- write
+			- bruteforce
+			- chk
+			- wipe
+			- trace
+			- sniff
+			- recoverpw
+			- protect
+	- class: LfHidCmd
+		count: 5
+		methods:
+			- reader
+			- demod
+			- clone
+			- sim
+			- brute
+	- class: LfAwidCmd
+		count: 3
+		methods:
+			- reader
+			- clone
+			- sim
+	- class: LfIndalaCmd
+		count: 3
+		methods:
+			- reader
+			- clone
+			- sim
+	- class: LfHitagCmd
+		count: 7
+		methods:
+			- reader
+			- info
+			- dump
+			- sniff
+			- sim
+			- chk
+			- crack
+	- class: LfIoCmd
+		count: 3
+		methods:
+			- reader
+			- clone
+			- sim
+	- class: LfPyramidCmd
+		count: 2
+		methods:
+			- reader
+			- clone
+	- class: LfKeriCmd
+		count: 2
+		methods:
+			- reader
+			- clone
+	- class: LfFdxbCmd
+		count: 2
+		methods:
+			- reader
+			- clone
+	- class: HwCmd
+		count: 14
+		methods:
+			- version
+			- status
+			- tune
+			- ping
+			- dbg
+			- fpgaoff
+			- reset
+			- bootloader
+			- connect
+			- setlfdivisor
+			- tia
+			- tearoff
+			- standalone
+			- detectreader
+	- class: MemCmd
+		count: 4
+		methods:
+			- info
+			- dump
+			- load
+			- wipe
+	- class: DataCmd
+		count: 8
+		methods:
+			- plot
+			- save
+			- load
+			- clear
+			- samples
+			- detectclock
+			- asn1
+			- diff
+	- class: TraceCmd
+		count: 4
+		methods:
+			- list
+			- save
+			- load
+			- extract
+	- class: NfcCmd
+		count: 5
+		methods:
+			- decode
+			- type1
+			- type2
+			- type4a
+			- barcode
+	- class: ScriptCmd
+		count: 2
+		methods:
+			- run
+			- list
+	- class: MiscCmd
+		count: 3
+		methods:
+			- auto
+			- clear
+			- quit
+	- class: Pm3Commands
+		count: 43
+		methods:
+			- hf14aSearch
+			- hf14aInfo
+			- hfMfInfo
+			- hfMfDump
+			- hfMfRestore
+			- hfMfReadBlock
+			- hfMfWriteBlock
+			- hfMfNested
+			- hfMfStaticNested
+			- hfMfHardnested
+			- hfMfDarkside
+			- hfMfCheck
+			- hfMfAutopwn
+			- hfMfView
+			- hfMfEmulatorClear
+			- hfMfEmulatorGetBlock
+			- hfMfEmulatorSetBlock
+			- hfMfEmulatorSim
+			- hfMfMagicGetBlock
+			- hfMfMagicSetBlock
+			- hfMfMagicWipe
+			- hfMfCuidClearBlock
+			- hfMfCuidWriteBlock
+			- hfMfWriteTrailer
+			- defaultTrailerData
+			- hfSniff
+			- hf14aSniff
+			- traceList
+			- lfSearch
+			- lfRead
+			- lfSniff
+			- lfTune
+			- lfEm410xRead
+			- lfEm410xClone
+			- lfT55xxDetect
+			- lfT55xxInfo
+			- lfT55xxDump
+			- lfT55xxReadBlock
+			- lfT55xxWriteBlock
+			- hwVersion
+			- hwStatus
+			- hwTune
+			- cardSizeFlag
