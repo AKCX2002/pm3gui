@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-/// Connection state of the PM3 client process. 
+/// Connection state of the PM3 client process.
 enum Pm3State { disconnected, connecting, connected }
 
 /// Wraps a pm3 CLI process for communication.
@@ -18,6 +18,8 @@ class Pm3Process {
   Process? _process;
   Pm3State _state = Pm3State.disconnected;
   String _version = '';
+  String _lastError = '';
+  DateTime? _lastConnectAttempt;
 
   /// Stream of lines from pm3 stdout/stderr.
   final _outputController = StreamController<String>.broadcast();
@@ -32,13 +34,74 @@ class Pm3Process {
   Stream<Pm3State> get stateStream => _stateController.stream;
   Pm3State get state => _state;
   String get version => _version;
+  String get lastError => _lastError;
   bool get isConnected => _state == Pm3State.connected;
+
+  /// Minimum interval between connect attempts (prevent retry storm).
+  static const _connectCooldown = Duration(seconds: 3);
+
+  /// Resolve pm3 executable path.
+  ///
+  /// Tries in order:
+  ///  1. User-supplied path if it exists as absolute
+  ///  2. User-supplied path relative to common PM3 root dirs
+  ///  3. 'proxmark3' on system PATH
+  ///  4. Guessed locations based on the app's own directory
+  ///
+  /// Returns a record (resolvedPath, workingDirectory?) or null.
+  static (String, String?)? resolvePm3Path(String userPath) {
+    // 1. Try as-is (absolute or cwd-relative)
+    if (File(userPath).existsSync()) {
+      // Determine working directory for relative scripts like "./pm3"
+      final file = File(userPath);
+      return (file.absolute.path, file.absolute.parent.path);
+    }
+
+    // 2. Well-known locations
+    final candidates = [
+      '/root/dev/proxmark3/pm3',
+      '/root/dev/proxmark3/client/proxmark3',
+      '/usr/local/bin/proxmark3',
+      '/usr/bin/proxmark3',
+    ];
+    for (final c in candidates) {
+      if (File(c).existsSync()) {
+        return (c, File(c).parent.path);
+      }
+    }
+
+    // 3. Check PATH via `which`
+    try {
+      final result = Process.runSync('which', [userPath]);
+      if (result.exitCode == 0) {
+        final p = (result.stdout as String).trim();
+        if (p.isNotEmpty && File(p).existsSync()) {
+          return (p, null);
+        }
+      }
+    } catch (_) {}
+
+    return null;
+  }
 
   /// Connect to PM3 device.
   ///
   /// [pm3Path] - path to pm3 executable (e.g., "./pm3" or full path)
   /// [port] - serial port (e.g., "/dev/ttyACM0", "COM3")
   Future<bool> connect(String pm3Path, String port) async {
+    // Cooldown — prevent retry storms
+    if (_lastConnectAttempt != null) {
+      final elapsed = DateTime.now().difference(_lastConnectAttempt!);
+      if (elapsed < _connectCooldown) {
+        final wait = _connectCooldown - elapsed;
+        _lastError = '请等待 ${wait.inSeconds + 1} 秒后再试';
+        _outputController.add('[请等待冷却: ${wait.inSeconds + 1}s]');
+        return false;
+      }
+    }
+    _lastConnectAttempt = DateTime.now();
+    _lastError = '';
+
     if (_state != Pm3State.disconnected) {
       await disconnect();
     }
@@ -46,10 +109,29 @@ class Pm3Process {
     _setState(Pm3State.connecting);
 
     try {
+      // Resolve the actual executable path
+      final resolved = resolvePm3Path(pm3Path);
+      if (resolved == null) {
+        _lastError = '找不到 PM3 程序: $pm3Path\n'
+            '请在连接页面设置正确的 PM3 程序路径，例如:\n'
+            '  /root/dev/proxmark3/pm3\n'
+            '  /usr/local/bin/proxmark3';
+        _outputController.add('[错误] $_lastError');
+        _setState(Pm3State.disconnected);
+        return false;
+      }
+
+      final (execPath, workDir) = resolved;
+      _outputController.add('[使用 PM3: $execPath]');
+      if (workDir != null) {
+        _outputController.add('[工作目录: $workDir]');
+      }
+
       // Launch pm3 with -p port -f (flush mode for real-time output)
       _process = await Process.start(
-        pm3Path,
+        execPath,
         ['-p', port, '-f'],
+        workingDirectory: workDir,
         mode: ProcessStartMode.normal,
       );
 
@@ -63,6 +145,12 @@ class Pm3Process {
           .listen((line) {
         _outputController.add(line);
         _responseBuffer.writeln(line);
+
+        // Detect fatal errors — stop immediately
+        if (_detectFatalError(line)) {
+          if (!completer.isCompleted) completer.complete(false);
+          return;
+        }
 
         // Detect successful connection (pm3 prints OS info on connect)
         if (!connected && _isConnectionPrompt(line)) {
@@ -79,12 +167,15 @@ class Pm3Process {
           .transform(const LineSplitter())
           .listen((line) {
         _outputController.add('[ERR] $line');
+        _detectFatalError(line);
       });
 
       // Handle process exit
       _process!.exitCode.then((code) {
-        _outputController.add('[PM3 process exited with code $code]');
-        _setState(Pm3State.disconnected);
+        _outputController.add('[PM3 进程退出, code=$code]');
+        if (_state != Pm3State.disconnected) {
+          _setState(Pm3State.disconnected);
+        }
         _process = null;
       });
 
@@ -93,14 +184,23 @@ class Pm3Process {
         const Duration(seconds: 15),
         onTimeout: () {
           if (!connected) {
-            _outputController.add('[Timeout waiting for PM3 connection]');
+            _lastError = '连接超时 (15s)，请检查设备是否已连接';
+            _outputController.add('[连接超时]');
             disconnect();
           }
           return false;
         },
       );
+    } on ProcessException catch (e) {
+      _lastError = '无法启动 PM3 程序: ${e.message}\n'
+          '路径: $pm3Path\n'
+          '请检查路径是否正确，程序是否已编译';
+      _outputController.add('[错误] $_lastError');
+      _setState(Pm3State.disconnected);
+      return false;
     } catch (e) {
-      _outputController.add('[Error starting PM3: $e]');
+      _lastError = '连接失败: $e';
+      _outputController.add('[错误] $_lastError');
       _setState(Pm3State.disconnected);
       return false;
     }
@@ -114,9 +214,15 @@ class Pm3Process {
     String command,
   ) async {
     try {
+      final resolved = resolvePm3Path(pm3Path);
+      if (resolved == null) {
+        return '[错误] 找不到 PM3 程序: $pm3Path';
+      }
+      final (execPath, workDir) = resolved;
       final result = await Process.run(
-        pm3Path,
+        execPath,
         ['-p', port, '-c', command],
+        workingDirectory: workDir,
         stdoutEncoding: utf8,
         stderrEncoding: utf8,
       );
@@ -185,11 +291,38 @@ class Pm3Process {
     _stateController.close();
   }
 
+  /// Detect fatal errors that mean we should stop trying.
+  bool _detectFatalError(String line) {
+    final lower = line.toLowerCase();
+
+    if (lower.contains('claimed by another process') ||
+        lower.contains('is claimed by')) {
+      _lastError = '串口 已被其他进程占用\n'
+          '请关闭其他使用该端口的程序（如另一个 pm3 终端）';
+      return true;
+    }
+    if (lower.contains('no such file or directory') &&
+        lower.contains('serial')) {
+      _lastError = '串口设备不存在，请检查 PM3 是否已通过 USB 连接';
+      return true;
+    }
+    if (lower.contains('permission denied')) {
+      _lastError = '串口权限不足\n'
+          '请尝试: sudo chmod 666 /dev/ttyACM0\n'
+          '或将用户加入 dialout 组';
+      return true;
+    }
+    if (lower.contains('error') && lower.contains('serial port')) {
+      _lastError = '串口连接错误: $line';
+      return true;
+    }
+    return false;
+  }
+
   // Detect connection success from output line
   // Matches Proxmark3GUI pattern: QRegularExpression("(os:\\s+|OS\\.+\\s+)")
   bool _isConnectionPrompt(String line) {
-    return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false)
-        .hasMatch(line) ||
+    return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
         line.contains('[usb]') ||
         line.contains('[bt]') ||
         line.contains('pm3 -->');

@@ -1,10 +1,12 @@
 /// Dump viewer page — open/view/edit/export Mifare dump files.
 ///
 /// This is the core offline feature — works without PM3 hardware.
+/// Includes dump viewing, deep analysis, and format conversion.
 library;
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/models/access_bits.dart';
@@ -12,6 +14,8 @@ import 'package:pm3gui/parsers/dump_parser.dart';
 import 'package:pm3gui/parsers/eml_parser.dart';
 import 'package:pm3gui/parsers/bin_parser.dart';
 import 'package:pm3gui/parsers/json_dump_parser.dart';
+import 'package:pm3gui/parsers/key_parser.dart';
+import 'package:pm3gui/services/dump_converter.dart';
 
 class DumpViewerPage extends StatefulWidget {
   const DumpViewerPage({super.key});
@@ -30,10 +34,19 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   int _selectedSector = 0;
   late TabController _tabController;
 
+  // Converter state
+  String? _convertInput;
+  String? _convertInputFormat;
+  DumpFormat? _convertTarget;
+  String? _convertStatus;
+  bool _converting = false;
+  List<SectorKey>? _extractedKeys;
+  String? _keySummary;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -68,7 +81,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   Future<void> _exportAs(String format) async {
     if (_card == null) return;
     String? savePath = await FilePicker.platform.saveFile(
-      dialogTitle: '导出转储文件',
+      dialogTitle: '导出文件',
       fileName: 'dump.$format',
     );
     if (savePath == null) return;
@@ -80,6 +93,14 @@ class _DumpViewerPageState extends State<DumpViewerPage>
           await File(savePath).writeAsBytes(exportToBin(_card!));
         case 'json':
           await File(savePath).writeAsString(exportToJson(_card!));
+        case 'key.bin':
+          await File(savePath).writeAsBytes(exportKeysToBin(_card!.sectorKeys));
+        case 'dic':
+          await File(savePath).writeAsString(
+              exportToDic(_card!.sectorKeys, header: 'UID: ${_card!.uid}'));
+        case 'keys.txt':
+          await File(savePath)
+              .writeAsString(exportKeysAsText(_card!.sectorKeys));
       }
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -126,6 +147,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
               tabs: const [
                 Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
                 Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
+                Tab(text: '格式转换', icon: Icon(Icons.swap_horiz, size: 18)),
               ]),
         if (_card != null)
           Expanded(
@@ -138,6 +160,8 @@ class _DumpViewerPageState extends State<DumpViewerPage>
             ]),
             // Tab 1: 深度分析
             _buildAnalysisView(),
+            // Tab 2: 格式转换 & 密钥提取
+            _buildConverterView(),
           ]))
         else
           const Expanded(
@@ -170,9 +194,15 @@ class _DumpViewerPageState extends State<DumpViewerPage>
             child: const Chip(
                 avatar: Icon(Icons.save_alt, size: 18), label: Text('导出为')),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'eml', child: Text('.eml (文本)')),
-              const PopupMenuItem(value: 'bin', child: Text('.bin (二进制)')),
+              const PopupMenuItem(value: 'eml', child: Text('.eml (文本转储)')),
+              const PopupMenuItem(value: 'bin', child: Text('.bin (二进制转储)')),
               const PopupMenuItem(value: 'json', child: Text('.json (PM3 格式)')),
+              const PopupMenuDivider(),
+              const PopupMenuItem(
+                  value: 'key.bin', child: Text('.key.bin (二进制密钥)')),
+              const PopupMenuItem(value: 'dic', child: Text('.dic (密钥字典)')),
+              const PopupMenuItem(
+                  value: 'keys.txt', child: Text('.keys.txt (密钥列表)')),
             ],
           ),
           const Spacer(),
@@ -677,5 +707,404 @@ class _DumpViewerPageState extends State<DumpViewerPage>
                 style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
       ]),
     );
+  }
+
+  // ======================================================================
+  //  格式转换 & 密钥提取视图
+  // ======================================================================
+  Widget _buildConverterView() {
+    if (_card == null) return const Center(child: Text('无数据'));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // ---- 一键导出全部格式 ----
+        _analysisCard('📦 一键导出全部格式', [
+          const Text('从当前打开的转储文件导出为所有支持的格式:', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _exportButton('导出 .eml', Icons.text_snippet, 'eml'),
+            _exportButton('导出 .bin', Icons.memory, 'bin'),
+            _exportButton('导出 .json', Icons.data_object, 'json'),
+            _exportButton('导出 .key.bin', Icons.key, 'key.bin'),
+            _exportButton('导出 .dic', Icons.list_alt, 'dic'),
+            _exportButton('导出 .keys.txt', Icons.text_fields, 'keys.txt'),
+          ]),
+        ]),
+        const SizedBox(height: 16),
+
+        // ---- 密钥提取 ----
+        _analysisCard('🔑 密钥提取', [
+          const Text('从当前转储中提取的所有密钥:', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 8),
+          _buildKeyTable(),
+          const SizedBox(height: 12),
+          Row(children: [
+            OutlinedButton.icon(
+              onPressed: () => _copyKeysToClipboard(),
+              icon: const Icon(Icons.copy, size: 16),
+              label: const Text('复制全部密钥'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: () => _copyKeysToClipboard(keyAOnly: true),
+              icon: const Icon(Icons.copy, size: 16),
+              label: const Text('仅 Key A'),
+            ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              onPressed: () => _copyKeysToClipboard(keyBOnly: true),
+              icon: const Icon(Icons.copy, size: 16),
+              label: const Text('仅 Key B'),
+            ),
+          ]),
+        ]),
+        const SizedBox(height: 16),
+
+        // ---- 独立格式转换 ----
+        _analysisCard('🔄 文件格式转换', [
+          const Text('选择任意dump/密钥文件, 转换为其他格式:', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 12),
+
+          // Source file
+          Row(children: [
+            ElevatedButton.icon(
+              onPressed: _pickConvertSource,
+              icon: const Icon(Icons.file_open, size: 16),
+              label: const Text('选择源文件'),
+            ),
+            const SizedBox(width: 8),
+            if (_convertInput != null)
+              Expanded(
+                child: Text(
+                  _convertInput!.split('/').last,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ]),
+          const SizedBox(height: 8),
+
+          // Target format
+          if (_convertInput != null) ...[
+            const Text('目标格式:', style: TextStyle(fontSize: 13)),
+            const SizedBox(height: 4),
+            Wrap(spacing: 6, runSpacing: 6, children: [
+              for (final fmt in _getAvailableTargets())
+                ChoiceChip(
+                  label: Text(fmt.label, style: const TextStyle(fontSize: 12)),
+                  selected: _convertTarget == fmt,
+                  onSelected: (sel) {
+                    if (sel) setState(() => _convertTarget = fmt);
+                  },
+                ),
+            ]),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed:
+                  _convertTarget != null && !_converting ? _doConvert : null,
+              icon: _converting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.swap_horiz, size: 16),
+              label: Text(_converting ? '转换中...' : '开始转换'),
+            ),
+          ],
+
+          // Status
+          if (_convertStatus != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _convertStatus!.startsWith('✅')
+                    ? Colors.green.withValues(alpha: 0.15)
+                    : Colors.red.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(_convertStatus!,
+                  style:
+                      const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+            ),
+          ],
+        ]),
+        const SizedBox(height: 16),
+
+        // ---- 密钥比对 -----
+        if (_extractedKeys != null)
+          _analysisCard('📋 外部密钥文件', [
+            const Text('已加载的外部密钥:', style: TextStyle(fontSize: 13)),
+            const SizedBox(height: 8),
+            _buildExternalKeyTable(),
+            const SizedBox(height: 8),
+            if (_keySummary != null)
+              Text(_keySummary!,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ]),
+
+        // ---- 格式说明 ----
+        const SizedBox(height: 16),
+        _analysisCard('ℹ️ 格式说明', [
+          _fmtDesc('.bin', '原始二进制转储 (16字节/块), PM3默认dump格式'),
+          _fmtDesc('.eml', '文本转储 (每行32位十六进制), 用于模拟器加载'),
+          _fmtDesc('.json', 'PM3 JSON格式, 含卡片元数据和密钥'),
+          _fmtDesc('.key.bin', '二进制密钥文件 (6字节KeyA + 6字节KeyB) × 扇区数'),
+          _fmtDesc('.dic', '密钥字典 (每行一个密钥), 用于暴力破解'),
+          _fmtDesc('.keys.txt', '可读密钥表 (扇区号 + KeyA + KeyB)'),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _exportButton(String label, IconData icon, String format) {
+    return OutlinedButton.icon(
+      onPressed: () => _exportAs(format),
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  Widget _fmtDesc(String ext, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        SizedBox(
+            width: 80,
+            child: Text(ext,
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold))),
+        Expanded(child: Text(desc, style: const TextStyle(fontSize: 12))),
+      ]),
+    );
+  }
+
+  // ---- Key table for current dump ----
+  Widget _buildKeyTable() {
+    if (_card == null) return const SizedBox();
+    final keys = _card!.sectorKeys;
+    return Table(
+      border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.3)),
+      columnWidths: const {
+        0: FixedColumnWidth(60),
+        1: FlexColumnWidth(),
+        2: FlexColumnWidth(),
+      },
+      children: [
+        const TableRow(
+            decoration: BoxDecoration(color: Color(0xFF2A2A3C)),
+            children: [
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('扇区',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('Key A',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('Key B',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+            ]),
+        for (var i = 0; i < keys.length; i++)
+          TableRow(children: [
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text('$i',
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: SelectableText(keys[i].keyA.toUpperCase(),
+                    style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: _isKnownDefault(keys[i].keyA)
+                            ? Colors.orangeAccent
+                            : Colors.greenAccent))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: SelectableText(keys[i].keyB.toUpperCase(),
+                    style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: _isKnownDefault(keys[i].keyB)
+                            ? Colors.orangeAccent
+                            : Colors.cyanAccent))),
+          ]),
+      ],
+    );
+  }
+
+  Widget _buildExternalKeyTable() {
+    if (_extractedKeys == null) return const SizedBox();
+    final keys = _extractedKeys!;
+    return Table(
+      border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.3)),
+      columnWidths: const {
+        0: FixedColumnWidth(60),
+        1: FlexColumnWidth(),
+        2: FlexColumnWidth(),
+      },
+      children: [
+        const TableRow(
+            decoration: BoxDecoration(color: Color(0xFF2A2A3C)),
+            children: [
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('扇区',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('Key A',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('Key B',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+            ]),
+        for (var i = 0; i < keys.length; i++)
+          TableRow(children: [
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text('$i',
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(keys[i].keyA.toUpperCase(),
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(keys[i].keyB.toUpperCase(),
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 12))),
+          ]),
+      ],
+    );
+  }
+
+  bool _isKnownDefault(String key) {
+    const defaults = {
+      'FFFFFFFFFFFF',
+      '000000000000',
+      'A0A1A2A3A4A5',
+      'B0B1B2B3B4B5',
+      'D3F7D3F7D3F7',
+      'AABBCCDDEEFF',
+    };
+    return defaults.contains(key.toUpperCase());
+  }
+
+  void _copyKeysToClipboard({bool keyAOnly = false, bool keyBOnly = false}) {
+    if (_card == null) return;
+    final buf = StringBuffer();
+    for (var i = 0; i < _card!.sectorKeys.length; i++) {
+      final k = _card!.sectorKeys[i];
+      if (keyAOnly) {
+        buf.writeln(k.keyA.toUpperCase());
+      } else if (keyBOnly) {
+        buf.writeln(k.keyB.toUpperCase());
+      } else {
+        buf.writeln(
+            '扇区 ${i.toString().padLeft(2)}  A:${k.keyA.toUpperCase()}  B:${k.keyB.toUpperCase()}');
+      }
+    }
+    Clipboard.setData(ClipboardData(text: buf.toString()));
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('已复制到剪贴板')));
+    }
+  }
+
+  // ---- Convert file flow ----
+
+  List<DumpFormat> _getAvailableTargets() {
+    if (_convertInput == null || _convertInputFormat == null) return [];
+    return allowedTargets(_convertInputFormat!);
+  }
+
+  Future<void> _pickConvertSource() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.any,
+      allowMultiple: false,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final path = result.files.single.path;
+    if (path == null) return;
+    setState(() {
+      _convertInput = path;
+      _convertInputFormat = path.split('.').last.toLowerCase();
+      _convertTarget = null;
+      _convertStatus = null;
+    });
+
+    // Also try to extract keys for display
+    try {
+      final (keys, summary) = await extractKeysFromFile(path);
+      setState(() {
+        _extractedKeys = keys;
+        _keySummary = summary;
+      });
+    } catch (_) {
+      // Not a valid key source — that's fine
+    }
+  }
+
+  Future<void> _doConvert() async {
+    if (_convertInput == null || _convertTarget == null) return;
+    setState(() {
+      _converting = true;
+      _convertStatus = null;
+    });
+
+    try {
+      // Suggest output filename
+      final baseName =
+          _convertInput!.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '');
+      final defaultName = '$baseName.${_convertTarget!.ext}';
+
+      final savePath = await FilePicker.platform.saveFile(
+        dialogTitle: '保存转换文件',
+        fileName: defaultName,
+      );
+      if (savePath == null) {
+        setState(() => _converting = false);
+        return;
+      }
+
+      final result = await convertDumpFile(
+        inputPath: _convertInput!,
+        outputPath: savePath,
+        targetFormat: _convertTarget!,
+      );
+
+      setState(() {
+        _converting = false;
+        if (result.success) {
+          _convertStatus = '✅ 转换成功!\n'
+              '输出: ${result.outputPath}\n'
+              '${result.keySummary ?? ''}';
+        } else {
+          _convertStatus = '❌ ${result.error}';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _converting = false;
+        _convertStatus = '❌ 转换异常: $e';
+      });
+    }
   }
 }

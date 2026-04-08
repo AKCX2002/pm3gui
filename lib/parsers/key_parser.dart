@@ -1,0 +1,170 @@
+/// Key file parser and exporter.
+///
+/// PM3 key file formats:
+///   .bin key file — raw binary: sectorCount × 12 bytes (6 KeyA + 6 KeyB)
+///   .dic         — text dictionary: one hex key per line, # comments
+///
+/// This module can:
+///   - Parse .bin key files and .dic key dictionaries
+///   - Export keys from a MifareCard to all key formats
+///   - Merge/compare key sets
+library;
+
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:pm3gui/models/mifare_card.dart';
+
+// ---------------------------------------------------------------------------
+//  Binary key file (.bin)  —  sectorCount × 12 bytes
+// ---------------------------------------------------------------------------
+
+/// Parse a binary key file. Returns keys indexed by sector.
+List<SectorKey> parseKeyBinBytes(Uint8List data) {
+  // Detect card type from key file size
+  CardType? ct;
+  for (final c in [cardMini, card1K, card2K, card4K]) {
+    if (data.length == c.sectorCount * 12) {
+      ct = c;
+      break;
+    }
+  }
+  if (ct == null) {
+    throw FormatException(
+      'Not a valid key file: ${data.length} bytes '
+      '(expected ${cardMini.sectorCount * 12} / ${card1K.sectorCount * 12} / '
+      '${card2K.sectorCount * 12} / ${card4K.sectorCount * 12})',
+    );
+  }
+
+  return List.generate(ct.sectorCount, (s) {
+    final offset = s * 12;
+    return SectorKey(
+      keyA: _bytesToHex(data, offset, 6),
+      keyB: _bytesToHex(data, offset + 6, 6),
+    );
+  });
+}
+
+/// Parse a binary key file from disk.
+Future<List<SectorKey>> parseKeyBinFile(File file) async {
+  final bytes = await file.readAsBytes();
+  return parseKeyBinBytes(Uint8List.fromList(bytes));
+}
+
+/// Export keys to binary format: sectorCount × 12 bytes.
+Uint8List exportKeysToBin(List<SectorKey> keys) {
+  final out = Uint8List(keys.length * 12);
+  for (var i = 0; i < keys.length; i++) {
+    final a = _hexToBytes(keys[i].keyA.padRight(12, '0'));
+    final b = _hexToBytes(keys[i].keyB.padRight(12, '0'));
+    out.setRange(i * 12, i * 12 + 6, a);
+    out.setRange(i * 12 + 6, i * 12 + 12, b);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+//  Text key dictionary (.dic)
+// ---------------------------------------------------------------------------
+
+/// Parse a .dic text key dictionary.
+/// Returns a deduplicated list of 12-char hex key strings.
+List<String> parseDicString(String text) {
+  final keys = <String>{};
+  for (final line in text.split('\n')) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty || trimmed.startsWith('#')) continue;
+    final hex = trimmed.replaceAll(' ', '').toUpperCase();
+    if (hex.length == 12 && RegExp(r'^[0-9A-F]{12}$').hasMatch(hex)) {
+      keys.add(hex);
+    }
+  }
+  return keys.toList();
+}
+
+/// Parse a .dic file from disk.
+Future<List<String>> parseDicFile(File file) async {
+  final text = await file.readAsString();
+  return parseDicString(text);
+}
+
+/// Export a unique set of keys to .dic format string.
+String exportToDic(List<SectorKey> keys, {String header = ''}) {
+  // Collect unique keys
+  final unique = <String>{};
+  for (final k in keys) {
+    if (k.keyA.isNotEmpty) unique.add(k.keyA.toUpperCase());
+    if (k.keyB.isNotEmpty) unique.add(k.keyB.toUpperCase());
+  }
+
+  final buf = StringBuffer();
+  buf.writeln('# PM3GUI Key Dictionary');
+  if (header.isNotEmpty) buf.writeln('# $header');
+  buf.writeln('#');
+  for (final k in unique) {
+    buf.writeln(k);
+  }
+  return buf.toString();
+}
+
+/// Export per-sector key table as human-readable text.
+String exportKeysAsText(List<SectorKey> keys) {
+  final buf = StringBuffer();
+  buf.writeln('# PM3GUI — Sector Key Table');
+  buf.writeln('# Sector | Key A        | Key B');
+  buf.writeln('#--------+--------------+-------------');
+  for (var i = 0; i < keys.length; i++) {
+    buf.writeln(
+      '${i.toString().padLeft(6)}   '
+      '${keys[i].keyA.toUpperCase()}   '
+      '${keys[i].keyB.toUpperCase()}',
+    );
+  }
+  return buf.toString();
+}
+
+// ---------------------------------------------------------------------------
+//  Utility — merge keys into a MifareCard
+// ---------------------------------------------------------------------------
+
+/// Apply a key list to a card, filling only blank/default keys.
+void mergeKeysIntoCard(MifareCard card, List<SectorKey> newKeys,
+    {bool overwrite = false}) {
+  for (var i = 0; i < card.sectorKeys.length && i < newKeys.length; i++) {
+    if (overwrite || _isDefaultKey(card.sectorKeys[i].keyA)) {
+      card.sectorKeys[i].keyA = newKeys[i].keyA.toUpperCase();
+    }
+    if (overwrite || _isDefaultKey(card.sectorKeys[i].keyB)) {
+      card.sectorKeys[i].keyB = newKeys[i].keyB.toUpperCase();
+    }
+  }
+}
+
+bool _isDefaultKey(String key) {
+  return key.isEmpty ||
+      key == 'FFFFFFFFFFFF' ||
+      key == '000000000000' ||
+      key.length != 12;
+}
+
+// ---------------------------------------------------------------------------
+//  Internal helpers
+// ---------------------------------------------------------------------------
+
+String _bytesToHex(Uint8List data, int offset, int length) {
+  final buf = StringBuffer();
+  for (var i = 0; i < length && (offset + i) < data.length; i++) {
+    buf.write(data[offset + i].toRadixString(16).padLeft(2, '0').toUpperCase());
+  }
+  return buf.toString();
+}
+
+Uint8List _hexToBytes(String hex) {
+  final h = hex.toUpperCase();
+  final bytes = Uint8List(h.length ~/ 2);
+  for (var i = 0; i < bytes.length; i++) {
+    bytes[i] = int.parse(h.substring(i * 2, i * 2 + 2), radix: 16);
+  }
+  return bytes;
+}

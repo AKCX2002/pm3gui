@@ -108,7 +108,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     children: [
                       const Text(
                         '串口选择',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
                       IconButton(
@@ -116,7 +117,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.refresh),
                         onPressed: _scanning ? null : _scanPorts,
@@ -136,7 +138,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           ? appState.portName
                           : null,
                       items: appState.availablePorts
-                          .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                          .map(
+                              (p) => DropdownMenuItem(value: p, child: Text(p)))
                           .toList(),
                       onChanged: isConnected
                           ? null
@@ -202,6 +205,46 @@ class _ConnectionPageState extends State<ConnectionPage> {
           ),
           const SizedBox(height: 16),
 
+          // Error display
+          if (!isConnected && appState.lastError.isNotEmpty)
+            Card(
+              color: Colors.red.shade900.withValues(alpha: 0.3),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.redAccent),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '连接失败',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            appState.lastError,
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (!isConnected && appState.lastError.isNotEmpty)
+            const SizedBox(height: 16),
+
           // Device info (when connected)
           if (isConnected)
             Card(
@@ -212,7 +255,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   children: [
                     const Text(
                       '设备信息',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const Divider(),
                     _infoRow('端口', appState.portName),
