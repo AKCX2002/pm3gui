@@ -1,7 +1,7 @@
 # PM3 GUI — Flutter 构建 CI
 #
 # 触发条件: push/PR 到 main 分支时自动触发
-# 构建平台: Linux (x64), Android (APK), Windows (exe), macOS (.app)
+# 构建平台: Linux (x64), Android (APK), Windows (exe)
 
 name: PM3 GUI Build
 
@@ -123,37 +123,3 @@ jobs:
         with:
           name: pm3gui-windows-x64
           path: pm3gui-windows-x64.zip
-
-  # ================================================================
-  #  macOS Desktop
-  # ================================================================
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Flutter doctor
-        run: flutter doctor -v
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Build macOS
-        run: flutter build macos --release
-
-      - name: Package artifacts
-        run: |
-          cd build/macos/Build/Products/Release
-          zip -r "$GITHUB_WORKSPACE/pm3gui-macos.zip" pm3gui.app
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pm3gui-macos
-          path: pm3gui-macos.zip
