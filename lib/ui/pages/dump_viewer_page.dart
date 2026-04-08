@@ -20,12 +20,26 @@ class DumpViewerPage extends StatefulWidget {
   State<DumpViewerPage> createState() => _DumpViewerPageState();
 }
 
-class _DumpViewerPageState extends State<DumpViewerPage> {
+class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProviderStateMixin {
   MifareCard? _card;
+  DumpResult? _dumpResult;
   String? _filePath;
   String? _error;
   String _format = '';
   int _selectedSector = 0;
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   Future<void> _openFile() async {
     try {
@@ -38,6 +52,7 @@ class _DumpViewerPageState extends State<DumpViewerPage> {
       if (path == null) return;
       final dumpResult = await parseDumpFile(path);
       setState(() {
+        _dumpResult = dumpResult;
         _card = dumpResult.card;
         _filePath = path;
         _format = dumpResult.format;
@@ -98,10 +113,20 @@ class _DumpViewerPageState extends State<DumpViewerPage> {
           ),
         const Divider(height: 1),
         if (_card != null)
-          Expanded(child: Row(children: [
-            SizedBox(width: 80, child: _buildSectorList()),
-            const VerticalDivider(width: 1),
-            Expanded(child: _buildSectorView()),
+          TabBar(controller: _tabController, labelColor: Theme.of(context).colorScheme.primary, tabs: const [
+            Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
+            Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
+          ]),
+        if (_card != null)
+          Expanded(child: TabBarView(controller: _tabController, children: [
+            // Tab 0: 扇区视图
+            Row(children: [
+              SizedBox(width: 80, child: _buildSectorList()),
+              const VerticalDivider(width: 1),
+              Expanded(child: _buildSectorView()),
+            ]),
+            // Tab 1: 深度分析
+            _buildAnalysisView(),
           ]))
         else
           const Expanded(child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -285,5 +310,174 @@ class _DumpViewerPageState extends State<DumpViewerPage> {
       buf.write(hex.substring(i, (i + 2).clamp(0, hex.length)));
     }
     return buf.toString();
+  }
+
+  // ======================================================================
+  //  深度分析视图
+  // ======================================================================
+  Widget _buildAnalysisView() {
+    if (_dumpResult == null || _card == null) {
+      return const Center(child: Text('无数据'));
+    }
+    final a = _dumpResult!.analysis;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // --- 概览卡片
+        _analysisCard('📋 概览', [
+          _kvRow('卡片类型', _card!.cardType.label),
+          _kvRow('UID', _card!.uid.isNotEmpty ? _card!.uid : '未知'),
+          _kvRow('总块数', '${a.totalBlocks}'),
+          _kvRow('空白数据块', '${a.emptyBlockCount}'),
+          _kvRow('数据使用率', '${a.usagePercent.toStringAsFixed(1)}%'),
+          _kvRow('值块数', '${a.valueBlocks.length}'),
+        ]),
+        const SizedBox(height: 12),
+
+        // --- 制造商信息
+        if (a.manufacturerInfo != null)
+          _analysisCard('🏭 制造商块 (Block 0)', [
+            _kvRow('UID', a.manufacturerInfo!.uid),
+            _kvRow('BCC', '${a.manufacturerInfo!.bcc} ${a.manufacturerInfo!.bccValid ? "✅" : "❌"}'),
+            _kvRow('SAK', a.manufacturerInfo!.sak),
+            _kvRow('ATQA', a.manufacturerInfo!.atqa),
+            _kvRow('芯片类型', a.manufacturerInfo!.chipType),
+            _kvRow('制造商', a.manufacturerInfo!.manufacturer),
+            _kvRow('原始数据', _fmtHex(a.manufacturerInfo!.rawHex)),
+          ]),
+        if (a.manufacturerInfo != null) const SizedBox(height: 12),
+
+        // --- 密钥分析
+        _analysisCard('🔑 密钥分析', [
+          _kvRow('扇区总数', '${a.keyAnalysis.totalSectors}'),
+          _kvRow('已知 Key A', '${a.keyAnalysis.foundKeyA} / ${a.keyAnalysis.totalSectors}'),
+          _kvRow('已知 Key B', '${a.keyAnalysis.foundKeyB} / ${a.keyAnalysis.totalSectors}'),
+          _kvRow('所有密钥相同', a.keyAnalysis.allKeysIdentical ? '是' : '否'),
+          _kvRow('存在空白密钥', a.keyAnalysis.hasBlankKeys ? '是 ⚠️' : '否'),
+          if (a.keyAnalysis.keyAGroups.isNotEmpty) ...[
+            const Divider(),
+            const Text('Key A 分组:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            for (final e in a.keyAnalysis.keyAGroups.entries)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 2),
+                child: Text('${e.key} → 扇区 ${e.value.join(", ")}',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+              ),
+          ],
+          if (a.keyAnalysis.keyBGroups.isNotEmpty) ...[
+            const Divider(),
+            const Text('Key B 分组:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            for (final e in a.keyAnalysis.keyBGroups.entries)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 2),
+                child: Text('${e.key} → 扇区 ${e.value.join(", ")}',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+              ),
+          ],
+          if (a.keyAnalysis.defaultMatches.isNotEmpty) ...[
+            const Divider(),
+            const Text('⚠️ 默认密钥匹配:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orangeAccent)),
+            for (final m in a.keyAnalysis.defaultMatches)
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 2),
+                child: Text('扇区 ${m.sector} Key${m.keyType}: ${m.keyHex} (${m.keyName})',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.orangeAccent)),
+              ),
+          ],
+        ]),
+        const SizedBox(height: 12),
+
+        // --- MAD
+        if (a.madInfo != null)
+          _analysisCard('📂 MAD 应用目录 (v${a.madInfo!.version})', [
+            _kvRow('CRC', a.madInfo!.crc),
+            _kvRow('Info', a.madInfo!.infoBytes),
+            const Divider(),
+            for (final e in a.madInfo!.entries)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(children: [
+                  SizedBox(width: 60, child: Text('扇区 ${e.sector}', style: const TextStyle(fontSize: 12))),
+                  SizedBox(width: 80, child: Text('0x${e.aid.toRadixString(16).padLeft(4, '0')}',
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+                  Expanded(child: Text(e.description, style: const TextStyle(fontSize: 12))),
+                ]),
+              ),
+          ]),
+        if (a.madInfo != null) const SizedBox(height: 12),
+
+        // --- 值块
+        if (a.valueBlocks.isNotEmpty)
+          _analysisCard('💰 值块', [
+            for (final v in a.valueBlocks)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(children: [
+                  SizedBox(width: 80, child: Text('块 ${v.blockNumber}', style: const TextStyle(fontSize: 12))),
+                  SizedBox(width: 100, child: Text('扇区 ${v.sectorNumber}', style: const TextStyle(fontSize: 12))),
+                  Expanded(child: Text('值: ${v.value}  地址: ${v.address}',
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold))),
+                ]),
+              ),
+          ]),
+        if (a.valueBlocks.isNotEmpty) const SizedBox(height: 12),
+
+        // --- 扇区概览表
+        _analysisCard('📊 扇区概览', [
+          for (final s in a.sectors)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(children: [
+                SizedBox(width: 50, child: Text('S${s.sectorNumber}', style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+                SizedBox(width: 110, child: Text('A:${s.keyA}', style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: s.isKeyADefault ? Colors.orangeAccent : Colors.greenAccent))),
+                SizedBox(width: 110, child: Text('B:${s.keyB}', style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: s.isKeyBDefault ? Colors.orangeAccent : Colors.cyanAccent))),
+                if (s.accessInfo != null)
+                  Text(s.accessInfo!.isValid ? '✅ 访控有效' : '❌ 访控无效', style: const TextStyle(fontSize: 11))
+                else
+                  const Text('- 无访控', style: TextStyle(fontSize: 11, color: Colors.grey)),
+              ]),
+            ),
+        ]),
+        const SizedBox(height: 12),
+
+        // --- 数据块 ASCII
+        _analysisCard('📝 数据块 ASCII 视图', [
+          for (final s in a.sectors)
+            for (final b in s.blocks.where((x) => !x.isTrailer && !x.isEmpty))
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Row(children: [
+                  SizedBox(width: 50, child: Text('B${b.blockNumber}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.grey))),
+                  Expanded(child: Text(b.ascii, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+                ]),
+              ),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _analysisCard(String title, List<Widget> children) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          ...children,
+        ]),
+      ),
+    );
+  }
+
+  Widget _kvRow(String key, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(children: [
+        SizedBox(width: 120, child: Text(key, style: TextStyle(fontSize: 12, color: Colors.grey[400]))),
+        Expanded(child: SelectableText(value, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+      ]),
+    );
   }
 }

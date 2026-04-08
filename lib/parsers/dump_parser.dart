@@ -8,6 +8,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:pm3gui/models/mifare_card.dart';
+import 'package:pm3gui/models/dump_analysis.dart';
 import 'package:pm3gui/parsers/eml_parser.dart';
 import 'package:pm3gui/parsers/bin_parser.dart';
 import 'package:pm3gui/parsers/json_dump_parser.dart';
@@ -17,9 +18,16 @@ class DumpResult {
   final MifareCard card;
   final String format; // 'eml', 'bin', 'json'
   final String? error;
+  DumpAnalysis? _analysis;
 
   DumpResult({required this.card, required this.format, this.error});
   bool get isSuccess => error == null;
+
+  /// 获取或生成深度分析结果 (懒加载)
+  DumpAnalysis get analysis {
+    _analysis ??= DumpAnalyzer.analyze(card);
+    return _analysis!;
+  }
 }
 
 /// Parse a dump file from path, auto-detecting format.

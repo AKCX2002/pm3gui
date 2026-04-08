@@ -1,0 +1,137 @@
+# PM3 GUI — Release 自动构建
+#
+# 触发: 推送 v* tag 时自动构建并创建 GitHub Release
+# 产物: Linux tar.gz, Android APK (arm64/x86_64), Windows zip
+
+name: PM3 GUI Release
+
+on:
+  push:
+    tags: ['v*']
+
+defaults:
+  run:
+    working-directory: pm3gui
+
+permissions:
+  contents: write
+
+jobs:
+  # ================================================================
+  #  Linux
+  # ================================================================
+  release-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libglib2.0-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build linux --release
+
+      - name: Package
+        run: |
+          cd build/linux/x64/release/bundle
+          tar czf ../../../../../pm3gui-linux-x64.tar.gz .
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: pm3gui/pm3gui-linux-x64.tar.gz
+
+  # ================================================================
+  #  Android
+  # ================================================================
+  release-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build apk --release --split-per-abi
+
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          for f in *.apk; do mv "$f" "pm3gui-${f}"; done
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-android
+          path: pm3gui/build/app/outputs/flutter-apk/pm3gui-*.apk
+
+  # ================================================================
+  #  Windows
+  # ================================================================
+  release-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64.zip
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: pm3gui/pm3gui-windows-x64.zip
+
+  # ================================================================
+  #  Publish Release
+  # ================================================================
+  publish:
+    needs: [release-linux, release-android, release-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: List artifacts
+        run: ls -la artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/pm3gui-linux-x64.tar.gz
+            artifacts/pm3gui-*.apk
+            artifacts/pm3gui-windows-x64.zip
