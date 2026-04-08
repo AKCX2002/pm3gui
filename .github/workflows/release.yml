@@ -1,17 +1,13 @@
 # PM3 GUI — Release 自动构建
 #
 # 触发: 推送 v* tag 时自动构建并创建 GitHub Release
-# 产物: Linux tar.gz, Android APK (arm64/x86_64), Windows zip
+# 产物: Linux tar.gz, Android APK (arm64/x86_64), Windows zip, macOS zip
 
 name: PM3 GUI Release
 
 on:
   push:
     tags: ['v*']
-
-defaults:
-  run:
-    working-directory: pm3gui
 
 permissions:
   contents: write
@@ -44,13 +40,13 @@ jobs:
       - name: Package
         run: |
           cd build/linux/x64/release/bundle
-          tar czf ../../../../../pm3gui-linux-x64.tar.gz .
+          tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64.tar.gz" .
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: release-linux
-          path: pm3gui/pm3gui-linux-x64.tar.gz
+          path: pm3gui-linux-x64.tar.gz
 
   # ================================================================
   #  Android
@@ -82,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-android
-          path: pm3gui/build/app/outputs/flutter-apk/pm3gui-*.apk
+          path: build/app/outputs/flutter-apk/pm3gui-*.apk
 
   # ================================================================
   #  Windows
@@ -109,13 +105,40 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-windows
-          path: pm3gui/pm3gui-windows-x64.zip
+          path: pm3gui-windows-x64.zip
+
+  # ================================================================
+  #  macOS
+  # ================================================================
+  release-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+      - run: flutter build macos --release
+
+      - name: Package
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r "$GITHUB_WORKSPACE/pm3gui-macos.zip" pm3gui.app
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: pm3gui-macos.zip
 
   # ================================================================
   #  Publish Release
   # ================================================================
   publish:
-    needs: [release-linux, release-android, release-windows]
+    needs: [release-linux, release-android, release-windows, release-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -135,3 +158,4 @@ jobs:
             artifacts/pm3gui-linux-x64.tar.gz
             artifacts/pm3gui-*.apk
             artifacts/pm3gui-windows-x64.zip
+            artifacts/pm3gui-macos.zip

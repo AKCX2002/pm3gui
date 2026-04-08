@@ -1,22 +1,19 @@
 # PM3 GUI — Flutter 构建 CI
 #
-# 触发条件: push/PR 到 main 分支, 且修改了 pm3gui/ 路径下的文件
-# 构建平台: Linux (x64), Android (APK), Windows (exe)
+# 触发条件: push/PR 到 main 分支时自动触发
+# 构建平台: Linux (x64), Android (APK), Windows (exe), macOS (.app)
 
 name: PM3 GUI Build
 
 on:
   push:
     branches: [main]
-    paths: ['pm3gui/**']
   pull_request:
     branches: [main]
-    paths: ['pm3gui/**']
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: pm3gui
+permissions:
+  contents: read
 
 jobs:
   # ================================================================
@@ -56,13 +53,13 @@ jobs:
       - name: Package artifacts
         run: |
           cd build/linux/x64/release/bundle
-          tar czf ../../../../../pm3gui-linux-x64.tar.gz .
+          tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64.tar.gz" .
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: pm3gui-linux-x64
-          path: pm3gui/pm3gui-linux-x64.tar.gz
+          path: pm3gui-linux-x64.tar.gz
 
   # ================================================================
   #  Android APK
@@ -94,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pm3gui-android-apk
-          path: pm3gui/build/app/outputs/flutter-apk/*.apk
+          path: build/app/outputs/flutter-apk/*.apk
 
   # ================================================================
   #  Windows Desktop
@@ -125,4 +122,38 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pm3gui-windows-x64
-          path: pm3gui/pm3gui-windows-x64.zip
+          path: pm3gui-windows-x64.zip
+
+  # ================================================================
+  #  macOS Desktop
+  # ================================================================
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build macOS
+        run: flutter build macos --release
+
+      - name: Package artifacts
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r "$GITHUB_WORKSPACE/pm3gui-macos.zip" pm3gui.app
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pm3gui-macos
+          path: pm3gui-macos.zip
