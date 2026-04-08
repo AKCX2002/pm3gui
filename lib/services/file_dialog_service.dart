@@ -27,7 +27,7 @@ class FileDialogService {
       return file?.path;
     }
 
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.any,
       allowMultiple: false,
     );
@@ -50,7 +50,7 @@ class FileDialogService {
     }
 
     if (_isMobile) {
-      final path = await FilePicker.platform.saveFile(
+      final path = await FilePicker.saveFile(
         dialogTitle: dialogTitle,
         fileName: suggestedName,
       );
@@ -62,7 +62,7 @@ class FileDialogService {
     }
 
     // Fallback for other platforms
-    final path = await FilePicker.platform.saveFile(
+    final path = await FilePicker.saveFile(
       dialogTitle: dialogTitle,
       fileName: suggestedName,
     );
