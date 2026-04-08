@@ -1,0 +1,2577 @@
+classes:
+  - class: Hf14aCmd
+    count: 9
+    methods:
+      - name: search
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: raw
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: apdu
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: config
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cuids
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: Hf14bCmd
+    count: 9
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: raw
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfMfCmd
+    count: 57
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: search
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: mad
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: acl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: isen
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: autopwn
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: chk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: fchk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: darkside
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: nested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: staticNested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hardnested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: nack
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: brute
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: decrypt
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: supercard
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: keygen
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdsc
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: restore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: view
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: value
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eload
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: esave
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eclr
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: egetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: esetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eview
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ecfill
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ekeyprn
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cgetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cgetsc
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: csetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: csetuid
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cload
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: csave
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cview
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cwipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gen3uid
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gen3blk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gen3freeze
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ginfo
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ggetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gsetblk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gload
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gsave
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gview
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: gchpwd
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefWrite
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefFormat
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: traceList
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfMfuCmd
+    count: 17
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: restore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: view
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ndefRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: keygen
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: pwdgen
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cauth
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cchk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eload
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: esave
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eview
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: setuid
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfMfdesCmd
+    count: 20
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: detect
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: getuid
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: freemem
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: mad
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: chk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: auth
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: formatpicc
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: getaids
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lsapp
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: selectapp
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: createapp
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: deleteapp
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: getfileids
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lsfiles
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: read
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: write
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: changekey
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: getkeysettings
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: Hf15Cmd
+    count: 13
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: restore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: view
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: raw
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: findafi
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: csetuid
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfIclassCmd
+    count: 13
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: restore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: view
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: chk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: loclass
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eload
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: eview
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfFelicaCmd
+    count: 8
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: raw
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: litedump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfLegicCmd
+    count: 7
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: restore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: rdbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wrbl
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfSeosCmd
+    count: 3
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: pacs
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfEmvCmd
+    count: 4
+    methods:
+      - name: search
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ppse
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: exec
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: test
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfFidoCmd
+    count: 3
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: reg
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: auth
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HfCmd
+    count: 4
+    methods:
+      - name: search
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: tune
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: list
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfCmd
+    count: 6
+    methods:
+      - name: search
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: read
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: tune
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: config
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfEmCmd
+    count: 15
+    methods:
+      - name: em410xReader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em410xClone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em410xSim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em410xBrute
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em410xWatch
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Read
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Write
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Unlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x05Wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x50Info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x50Dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x70Info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: em4x70Auth
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfT55xxCmd
+    count: 12
+    methods:
+      - name: detect
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: read
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: write
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: bruteforce
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: chk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: trace
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: recoverpw
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: protect
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfHidCmd
+    count: 5
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: demod
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: brute
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfAwidCmd
+    count: 3
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfIndalaCmd
+    count: 3
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfHitagCmd
+    count: 7
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: chk
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: crack
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfIoCmd
+    count: 3
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: sim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfPyramidCmd
+    count: 2
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfKeriCmd
+    count: 2
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: LfFdxbCmd
+    count: 2
+    methods:
+      - name: reader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: HwCmd
+    count: 14
+    methods:
+      - name: version
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: status
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: tune
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: ping
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dbg
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: fpgaoff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: reset
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: bootloader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: connect
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: setlfdivisor
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: tia
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: tearoff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: standalone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: detectreader
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: MemCmd
+    count: 4
+    methods:
+      - name: info
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: dump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: load
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: wipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: DataCmd
+    count: 8
+    methods:
+      - name: plot
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: save
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: load
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clear
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: samples
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: detectclock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: asn1
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: diff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: TraceCmd
+    count: 4
+    methods:
+      - name: list
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: save
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: load
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: extract
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: NfcCmd
+    count: 5
+    methods:
+      - name: decode
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: type1
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: type2
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: type4a
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: barcode
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: ScriptCmd
+    count: 2
+    methods:
+      - name: run
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: list
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: MiscCmd
+    count: 3
+    methods:
+      - name: auto
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: clear
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: quit
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+  - class: Pm3Commands
+    count: 43
+    methods:
+      - name: hf14aSearch
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hf14aInfo
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfInfo
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfDump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfRestore
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfReadBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfWriteBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfNested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfStaticNested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfHardnested
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfDarkside
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfCheck
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfAutopwn
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfView
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfEmulatorClear
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfEmulatorGetBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfEmulatorSetBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfEmulatorSim
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfMagicGetBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfMagicSetBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfMagicWipe
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfCuidClearBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfCuidWriteBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfMfWriteTrailer
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: defaultTrailerData
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hfSniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hf14aSniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: traceList
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfSearch
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfSniff
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfTune
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfEm410xRead
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfEm410xClone
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfT55xxDetect
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfT55xxInfo
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfT55xxDump
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfT55xxReadBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: lfT55xxWriteBlock
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hwVersion
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hwStatus
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: hwTune
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
+      - name: cardSizeFlag
+        description: "Quick helper script for proxmark3 client when working with a Proxmark3 device"
+        params:
+          - "-h/--help: -h/--help        this help"
+          - "-hh/--helpclient: -hh/--helpclient proxmark3 client help (the script will forward these options)"
+          - "--list: --list           list all detected com ports"
+          - "-n: -n <N>           connect device referred to the N:th number on the --list output"
+          - "-o/--offline: -o/--offline     shortcut to use directly the proxmark3 client without guessing ports"
