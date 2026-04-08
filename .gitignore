@@ -62,3 +62,4 @@ lib/generated_plugin_registrant.dart
 # OS
 Thumbs.db
 desktop.ini
+!/lib/
