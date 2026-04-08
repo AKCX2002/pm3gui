@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/协议-GPL--3.0-blue" alt="License"/>
 </p>
 <p align="center">
-  <b>Proxmark3 跨平台图形界面 — 点击即用，兼容未来更新</b>
+  <b>Proxmark3 跨平台图形界面 </b>
 </p>
 <hr>
 <h2 id="-功能概览">✨ 功能概览</h2>
@@ -20,20 +20,24 @@
 </thead>
 <tbody>
 <tr>
-<td style="text-align:center">🔌 <strong>连接</strong></td>
-<td>自动检测串口、Android USB OTG、手动输入端口</td>
+<td style="text-align:center">🔌 <strong>连接 / 仪表盘</strong></td>
+<td>自动检测串口、连接状态总览、环境信息、PM3 文件自动收集与归类</td>
 </tr>
 <tr>
 <td style="text-align:center">💻 <strong>终端</strong></td>
-<td>完整的 PM3 交互式终端，支持 ANSI 彩色输出和命令历史</td>
+<td>完整的 PM3 交互式终端，支持 ANSI 彩色输出、命令历史和快捷命令按钮</td>
 </tr>
 <tr>
-<td style="text-align:center">📁 <strong>Dump 查看器</strong></td>
-<td>离线打开和查看 <code>.eml</code> / <code>.bin</code> / <code>.json</code> 格式的 Mifare 转储文件</td>
+<td style="text-align:center">📁 <strong>Dump 查看 / 编辑</strong></td>
+<td>扇区视图 · 密钥编辑 · 深度分析 · CUID 回写/清空 · 智能文件合并</td>
 </tr>
 <tr>
-<td style="text-align:center">🔐 <strong>Mifare</strong></td>
-<td>一键检测 / Autopwn / 转储 / 恢复 / Nested / Hardnested / Darkside</td>
+<td style="text-align:center">🔀 <strong>Dump 对比</strong></td>
+<td>两份转储并排对比，字节级差异高亮，差异统计面板</td>
+</tr>
+<tr>
+<td style="text-align:center">🔐 <strong>Mifare 高频</strong></td>
+<td>检测 / Autopwn / 转储 / 恢复 / Nested / Hardnested / Darkside / 魔术卡</td>
 </tr>
 <tr>
 <td style="text-align:center">📡 <strong>低频 (LF)</strong></td>
@@ -41,23 +45,28 @@
 </tr>
 <tr>
 <td style="text-align:center">⚙️ <strong>设置</strong></td>
-<td>PM3 路径配置、主题切换、硬件版本和调谐快捷操作</td>
+<td>PM3 路径配置、莫兰迪色系主题切换、硬件版本和调谐快捷操作</td>
 </tr>
 </tbody>
 </table>
 <h2 id="-架构设计">🏗 架构设计</h2>
-<pre><code>┌──────────────────────────────────────────────────┐
-│                  Flutter GUI                     │
-│  ┌───────────┐  ┌────────┐  ┌────────────────┐  │
-│  │ Provider   │  │  主题   │  │  Dump 解析器   │  │
-│  │ 全局状态   │  │ 深/浅色 │  │ .eml .bin .json│  │
-│  └─────┬─────┘  └────────┘  └────────────────┘  │
-│        │                                         │
-│  ┌─────▼──────────────────────────────────┐      │
-│  │       Pm3Process (dart:io)             │      │
-│  │  stdin/stdout 管道 ⟷ pm3 命令行程序    │      │
-│  └────────────────────────────────────────┘      │
-└──────────────────────────────────────────────────┘
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│                    Flutter GUI (侧边栏导航)               │
+│  ┌─────────────┐  ┌──────────┐  ┌──────────────────────┐ │
+│  │ Provider     │  │ 莫兰迪   │  │   Dump 解析器        │ │
+│  │ 全局状态     │  │ M3 主题  │  │ .eml .bin .json .dic │ │
+│  └──────┬──────┘  └──────────┘  └──────────────────────┘ │
+│         │                                                │
+│  ┌──────▼──────────────────────────────────────────────┐ │
+│  │               Pm3Process (dart:io)                  │ │
+│  │   stdin/stdout 管道 ⟷ pm3 命令行  ⟷ OutputParser   │ │
+│  └─────────────────────────────────────────────────────┘ │
+│         │                                                │
+│  ┌──────▼──────────────────────────────────────────────┐ │
+│  │         FileCollector — 文件自动收集 &amp; 归类          │ │
+│  │   扫描 PM3 工作目录 → 按 UID 分组 → 移动到归类目录  │ │
+│  └─────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
          │  启动子进程
          ▼
 ┌────────────────────┐
@@ -69,40 +78,558 @@
 <p><strong>CLI Wrapper 模式</strong> — 界面通过管道启动原版 <code>pm3</code> / <code>proxmark3</code> 程序。
 上游命令更新自动继承，零维护成本。</p>
 </blockquote>
+<hr>
+<h2 id="-各页面功能详解">📖 各页面功能详解</h2>
+<h3 id="1--连接--仪表盘connection_page">1. 🔌 连接 / 仪表盘（connection_page）</h3>
+<p>进入应用后的首页，采用<strong>左右分栏</strong>布局：</p>
+<p><strong>左栏 — 连接控制</strong></p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>连接状态头</td>
+<td>圆形指示灯 + 端口/版本一行显示</td>
+</tr>
+<tr>
+<td>PM3 程序路径</td>
+<td>输入框 + 文件有效性实时验证（✅/❌）</td>
+</tr>
+<tr>
+<td>串口选择</td>
+<td>下拉菜单 + 刷新按钮；自动扫描 <code>/dev/ttyACM*</code> / <code>ttyUSB*</code>（Linux）或 <code>COM1-20</code>（Windows）</td>
+</tr>
+<tr>
+<td>连接/断开</td>
+<td>带加载动画的主按钮</td>
+</tr>
+<tr>
+<td>设备信息</td>
+<td>连接后显示端口、版本、命令历史数、终端缓冲行数；快捷按钮「硬件版本」「天线调谐」</td>
+</tr>
+<tr>
+<td>环境信息</td>
+<td>平台 / CPU 架构 / Dart 版本 / PM3 路径有效性</td>
+</tr>
+<tr>
+<td>错误信息</td>
+<td>连接失败时显示莫兰迪色错误卡片</td>
+</tr>
+</tbody>
+</table>
+<p><strong>右栏 — PM3 文件收集</strong></p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自动扫描</td>
+<td>自动扫描 PM3 工作目录（<code>pm3</code> 所在目录 + <code>$HOME</code> + 当前目录），检测 dump/key 文件</td>
+</tr>
+<tr>
+<td>按卡片分组</td>
+<td>按 UID 自动分组展示，显示各组的转储数/密钥数/文件总数</td>
+</tr>
+<tr>
+<td>文件详情</td>
+<td>展开卡片组可看到每个文件的名称、大小、修改时间、格式</td>
+</tr>
+<tr>
+<td>归类整理</td>
+<td>点击「归类整理」将散落的文件移动到结构化目录中</td>
+</tr>
+</tbody>
+</table>
+<p><strong>📂 归类整理存放位置：</strong></p>
+<p>默认目标目录为 <code>&lt;当前工作目录&gt;/pm3_files/</code>，可在对话框中自行修改。整理后的目录结构：</p>
+<pre><code>pm3_files/
+├── hf-mf/
+│   ├── A991A280/
+│   │   ├── hf-mf-A991A280-dump.bin
+│   │   ├── hf-mf-A991A280-dump-001.bin
+│   │   ├── hf-mf-A991A280-key.bin
+│   │   └── hf-mf-A991A280-dump.json
+│   └── 3BA66BB9/
+│       ├── hf-mf-3BA66BB9-dump.bin
+│       └── hf-mf-3BA66BB9-key.bin
+└── lf-em/
+    └── 12345678/
+        └── lf-em-12345678-dump.bin
+</code></pre>
+<blockquote>
+<p><strong>规则</strong>：按 <code>&lt;频段&gt;-&lt;卡类型&gt;/&lt;UID&gt;/</code> 二级目录结构存放。已存在于目标位置的同名文件不会被覆盖。整理完成后自动重新扫描。</p>
+</blockquote>
+<p><strong>自动触发时机</strong>：</p>
+<ul>
+<li>应用启动时首次扫描</li>
+<li>连接 PM3 成功时</li>
+<li>PM3 输出中检测到 <code>saved</code> 关键字时（延迟 1 秒后自动刷新）</li>
+</ul>
+<hr>
+<h3 id="2--终端terminal_page">2. 💻 终端（terminal_page）</h3>
+<p>全功能 PM3 交互式终端，直接透传 stdin/stdout。</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命令输入</td>
+<td>底部输入框，回车发送</td>
+</tr>
+<tr>
+<td>输出显示</td>
+<td>带滚动的终端输出区域，自动 ANSI 色彩剥离</td>
+</tr>
+<tr>
+<td>命令历史</td>
+<td>方向键 ↑ 回溯上一条命令</td>
+</tr>
+<tr>
+<td>快捷命令</td>
+<td>按钮组：高频搜索 · 低频搜索 · 14A 信息 · 硬件版本 · 天线调谐 · 低频读取 · 自动破解</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="3--dump-查看--编辑dump_viewer_page">3. 📁 Dump 查看 / 编辑（dump_viewer_page）</h3>
+<p>核心离线功能，<strong>无需连接硬件</strong>即可使用。包含 <strong>4 个选项卡</strong>（无论是否已加载文件均可见）：</p>
+<h4 id="选项卡-扇区视图">选项卡 ①：扇区视图</h4>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>扇区列表</td>
+<td>左侧扇区编号列表（Sec 0 ~ Sec N），点击切换</td>
+</tr>
+<tr>
+<td>块数据 Hex</td>
+<td>每个块 16 字节 32 位十六进制显示</td>
+</tr>
+<tr>
+<td>高亮规则</td>
+<td>制造商块（Block 0）→ 特殊标记；尾块（Trailer）→ 密钥分段高亮</td>
+</tr>
+<tr>
+<td>密钥分段</td>
+<td>Key A（前 6 字节）· 访问控制位（3+1 字节）· Key B（后 6 字节）</td>
+</tr>
+<tr>
+<td>访问控制解码</td>
+<td>中文说明各块的读/写/递增/递减权限</td>
+</tr>
+</tbody>
+</table>
+<h4 id="选项卡-密钥--编辑">选项卡 ②：密钥 / 编辑</h4>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>密钥表格</td>
+<td>按扇区列出 Key A / Key B，带 <code>TextEditingController</code> 可直接编辑</td>
+</tr>
+<tr>
+<td>块数据编辑</td>
+<td>选择扇区后逐块编辑 hex 数据</td>
+</tr>
+<tr>
+<td>复制密钥</td>
+<td>支持仅复制 Key A / Key B / 全部密钥到剪贴板</td>
+</tr>
+<tr>
+<td>应用编辑</td>
+<td>将编辑器中的修改写回内存中的 <code>MifareCard</code> 模型</td>
+</tr>
+</tbody>
+</table>
+<h4 id="选项卡-深度分析">选项卡 ③：深度分析</h4>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>制造商块解码</td>
+<td>UID / SAK / ATQA / 制造商识别</td>
+</tr>
+<tr>
+<td>默认密钥检测</td>
+<td>对照 20+ 已知密钥（NXP / MAD / NDEF / VIGIK / HID 等）标记</td>
+</tr>
+<tr>
+<td>密钥模式分析</td>
+<td>统计各扇区密钥使用模式，识别全 FF / 全 0 / 自定义</td>
+</tr>
+<tr>
+<td>MAD 解析</td>
+<td>解析 MAD（Mifare Application Directory）扇区，显示 AID 描述</td>
+</tr>
+<tr>
+<td>值块检测</td>
+<td>识别符合 Mifare 值块格式的数据块，显示解码值</td>
+</tr>
+<tr>
+<td>数据 ASCII</td>
+<td>非零数据块的可打印 ASCII 预览</td>
+</tr>
+</tbody>
+</table>
+<h4 id="选项卡-回写--清空cuid">选项卡 ④：回写 / 清空（CUID）</h4>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整卡回写</td>
+<td>将内存中的 dump 数据逐块写入 CUID 兼容卡</td>
+</tr>
+<tr>
+<td>扇区回写</td>
+<td>选择单个扇区写入</td>
+</tr>
+<tr>
+<td>整卡清空</td>
+<td>将所有数据块清零（0x00），带确认对话框</td>
+</tr>
+<tr>
+<td>认证密钥选择</td>
+<td><code>Key A</code> / <code>Key B</code> 切换写入认证密钥</td>
+</tr>
+<tr>
+<td>跳过 Block 0</td>
+<td>可选跳过制造商块（Block 0）</td>
+</tr>
+<tr>
+<td>写入尾块</td>
+<td>可选是否写入 Trailer 块（密钥+访问控制位）</td>
+</tr>
+<tr>
+<td>进度显示</td>
+<td>逐块写入进度条，支持取消操作</td>
+</tr>
+</tbody>
+</table>
+<h4 id="-智能文件合并策略">🔑 智能文件合并策略</h4>
+<p>打开文件时的行为因文件类型不同而异：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">打开的文件类型</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>Key 文件</strong>（.dic / 文件名含 <code>-key</code> / .bin 大小匹配密钥布局）</td>
+<td><strong>仅合并密钥</strong>到当前卡片的 <code>sectorKeys</code>，块数据完全不动</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>Dump 文件</strong>（当前已有密钥时）</td>
+<td>弹出对话框：<strong>保留当前密钥</strong> 或 <strong>用转储文件覆盖</strong></td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>Dump 文件</strong>（首次加载）</td>
+<td>正常加载全部数据（块 + 密钥）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>这解决了常见工作流问题：先用 <code>hf mf autopwn</code> 获取密钥文件，再加载 dump 查看数据但不想丢失已破解的密钥。</p>
+</blockquote>
+<p><strong>Key 文件检测规则</strong>（三重判定）：</p>
+<ol>
+<li>扩展名为 <code>.dic</code> → 字典文件</li>
+<li>文件名包含 <code>-key</code> → PM3 标准密钥文件名</li>
+<li><code>.bin</code> 文件大小为 60 / 192 / 384 / 480 字节 → 对应 MINI / 1K / 2K / 4K 密钥布局</li>
+</ol>
+<p><strong>PM3 二进制密钥文件格式</strong>：</p>
+<pre><code>[KeyA_sec0][KeyA_sec1]...[KeyA_secN][KeyB_sec0][KeyB_sec1]...[KeyB_secN]
+ ← sectorCount × 6 字节 →           ← sectorCount × 6 字节 →
+</code></pre>
+<blockquote>
+<p>⚠️ 注意：PM3 密钥文件采用<strong>顺序布局</strong>（先全部 Key A，再全部 Key B），不是交错布局。</p>
+</blockquote>
+<h4 id="导出格式">导出格式</h4>
+<table>
+<thead>
+<tr>
+<th>格式</th>
+<th>扩展名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EML</td>
+<td><code>.eml</code></td>
+<td>文本模拟器格式（每行一个块，32 hex chars）</td>
+</tr>
+<tr>
+<td>二进制转储</td>
+<td><code>.bin</code></td>
+<td>原始 1:1 二进制转储</td>
+</tr>
+<tr>
+<td>JSON</td>
+<td><code>.json</code></td>
+<td>PM3 Jansson 格式（含 UID/ATQA/SAK 元数据）</td>
+</tr>
+<tr>
+<td>二进制密钥</td>
+<td><code>.key.bin</code></td>
+<td>PM3 标准密钥二进制格式</td>
+</tr>
+<tr>
+<td>密钥字典</td>
+<td><code>.dic</code></td>
+<td>一行一个密钥，带注释头</td>
+</tr>
+<tr>
+<td>密钥文本</td>
+<td><code>.keys.txt</code></td>
+<td>按扇区列出 Key A / Key B</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="4--dump-对比dump_compare_page">4. 🔀 Dump 对比（dump_compare_page）</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>双栏加载</td>
+<td>分别选择文件 A 和文件 B</td>
+</tr>
+<tr>
+<td>并排显示</td>
+<td>按块对齐显示两份转储数据</td>
+</tr>
+<tr>
+<td>字节级高亮</td>
+<td>不同的字节标红，相同的保持原色</td>
+</tr>
+<tr>
+<td>差异统计</td>
+<td>显示不同块数 / 不同字节数 / 总块数</td>
+</tr>
+<tr>
+<td>仅显示差异</td>
+<td>过滤开关，可只展示有差异的块</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="5--mifare-高频操作mifare_page">5. 🔐 Mifare 高频操作（mifare_page）</h3>
+<p>需连接 PM3 硬件。包含 <strong>4 个选项卡</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">选项卡</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>快捷操作</strong></td>
+<td>检测卡片 · 卡片信息 · Autopwn 自动破解 · 转储 · 恢复 · 嗅探</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>密钥攻击</strong></td>
+<td>检查默认密钥 · Nested 攻击 · Static Nested · Hardnested · Darkside 攻击</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>读写块</strong></td>
+<td>单块读取 · 数据写入（选择扇区/块/密钥类型/密钥值/数据）</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>魔术卡</strong></td>
+<td>Block 0 读取 · 整卡擦除（带确认） · 模拟器加载 · 支持 Gen1A / Gen2(CUID) / Gen3</td>
+</tr>
+</tbody>
+</table>
+<p>支持卡类型切换：MINI / 1K / 2K / 4K</p>
+<hr>
+<h3 id="6--低频操作lf_page">6. 📡 低频操作（lf_page）</h3>
+<p>需连接 PM3 硬件。包含 <strong>3 个选项卡</strong>：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">选项卡</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>通用</strong></td>
+<td>低频搜索 · 读取 · 嗅探 · 天线调谐</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>EM4x05</strong></td>
+<td>读取 EM410x ID · 克隆到 T55xx（含 hex 格式验证）</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>T55xx</strong></td>
+<td>检测 · 信息 · 转储 · 块 0-7 逐块读写</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="7-️-设置settings_page">7. ⚙️ 设置（settings_page）</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主题切换</td>
+<td>深色 莫兰迪 / 浅色 莫兰迪</td>
+</tr>
+<tr>
+<td>PM3 路径</td>
+<td>独立的路径配置入口</td>
+</tr>
+<tr>
+<td>关于信息</td>
+<td>平台 / 架构 / 支持格式列表</td>
+</tr>
+<tr>
+<td>维护操作</td>
+<td>清除终端 · 查询硬件版本 · 天线调谐</td>
+</tr>
+</tbody>
+</table>
+<hr>
 <h2 id="-项目结构">📂 项目结构</h2>
 <pre><code>pm3gui/
 ├── lib/
-│   ├── main.dart                  # 入口
+│   ├── main.dart                  # 入口，Provider 注入，主题切换
 │   ├── models/
 │   │   ├── mifare_card.dart       # MifareCard / CardType / SectorKey 数据模型
-│   │   └── access_bits.dart       # 访问控制位 编码/解码
+│   │   ├── access_bits.dart       # 访问控制位 编码/解码
+│   │   └── dump_analysis.dart     # 深度分析引擎（MAD/值块/默认密钥/模式）
 │   ├── parsers/
 │   │   ├── dump_parser.dart       # 统一解析入口（自动识别格式）
 │   │   ├── eml_parser.dart        # .eml 文本格式
-│   │   ├── bin_parser.dart        # .bin / .dump 二进制格式
-│   │   └── json_dump_parser.dart  # PM3 Jansson JSON 格式
+│   │   ├── bin_parser.dart        # .bin / .dump 二进制格式 + 密钥文件检测
+│   │   ├── json_dump_parser.dart  # PM3 Jansson JSON 格式
+│   │   ├── key_parser.dart        # 密钥文件解析 / 导出（.bin / .dic / .txt）
+│   │   └── output_parser.dart     # PM3 stdout 正则解析器（UID/密钥/块等）
 │   ├── services/
 │   │   ├── pm3_process.dart       # 进程管理（连接/发送/流读取）
-│   │   ├── pm3_commands.dart      # 命令模板（HF/LF/HW）
-│   │   └── output_parser.dart     # 正则解析器（UID、密钥等）
+│   │   ├── pm3_commands.dart      # 命令模板（HF/LF/HW/魔术卡/CUID）
+│   │   ├── file_collector.dart    # PM3 文件自动收集 / 归类服务
+│   │   ├── dump_converter.dart    # 转储格式转换
+│   │   └── file_dialog_service.dart # 跨平台文件选择对话框
 │   ├── state/
-│   │   └── app_state.dart         # 全局状态（Provider ChangeNotifier）
+│   │   └── app_state.dart         # 全局状态（连接/终端/卡片/文件收集/写入进度）
 │   └── ui/
-│       ├── theme.dart             # Material 3 深色/浅色主题
-│       ├── home_page.dart         # 导航栏（6 个标签页）
+│       ├── theme.dart             # 莫兰迪色系 Material 3 深色/浅色主题
+│       ├── home_page.dart         # 侧边栏导航（7 页 + IndexedStack 状态保持）
 │       └── pages/
-│           ├── connection_page.dart   # 连接页
-│           ├── terminal_page.dart     # 终端页
-│           ├── dump_viewer_page.dart  # Dump 查看页
+│           ├── connection_page.dart   # 连接 / 仪表盘（双栏布局）
+│           ├── terminal_page.dart     # 交互终端
+│           ├── dump_viewer_page.dart  # Dump 查看 / 编辑 / 分析 / 回写
+│           ├── dump_compare_page.dart # Dump 对比（双栏差异高亮）
 │           ├── mifare_page.dart       # Mifare 操作页
 │           ├── lf_page.dart           # 低频操作页
 │           └── settings_page.dart     # 设置页
+├── docs/
+│   └── pm3_commands.yaml          # PM3 命令覆盖率映射（43 项 GUI 封装）
 ├── android/                       # 已配置 USB OTG 权限
 ├── linux/
 ├── windows/
 ├── test/
 └── pubspec.yaml
 </code></pre>
+<h2 id="-莫兰迪色系">🎨 莫兰迪色系</h2>
+<p>界面采用低饱和度莫兰迪色彩体系，长时间使用不易视觉疲劳：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">色彩</th>
+<th style="text-align:center">色值</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">莫兰迪蓝</td>
+<td style="text-align:center"><code>#7E9AAB</code></td>
+<td>主色调、选中状态、链接</td>
+</tr>
+<tr>
+<td style="text-align:center">莫兰迪绿</td>
+<td style="text-align:center"><code>#8FA9A0</code></td>
+<td>成功、连接状态、HF 标识</td>
+</tr>
+<tr>
+<td style="text-align:center">莫兰迪玫瑰</td>
+<td style="text-align:center"><code>#BFA2A2</code></td>
+<td>断开、删除、警告操作</td>
+</tr>
+<tr>
+<td style="text-align:center">莫兰迪暖灰</td>
+<td style="text-align:center"><code>#A89F91</code></td>
+<td>次要信息</td>
+</tr>
+<tr>
+<td style="text-align:center">莫兰迪薰衣草</td>
+<td style="text-align:center"><code>#9B96B4</code></td>
+<td>密钥文件、装饰色</td>
+</tr>
+<tr>
+<td style="text-align:center">柔和红</td>
+<td style="text-align:center"><code>#C47D7D</code></td>
+<td>错误信息</td>
+</tr>
+<tr>
+<td style="text-align:center">柔和绿</td>
+<td style="text-align:center"><code>#8EAD8E</code></td>
+<td>成功状态</td>
+</tr>
+<tr>
+<td style="text-align:center">柔和黄</td>
+<td style="text-align:center"><code>#C9B07F</code></td>
+<td>警告提示</td>
+</tr>
+</tbody>
+</table>
 <h2 id="-快速上手">🚀 快速上手</h2>
 <h3 id="前置条件">前置条件</h3>
 <ul>
@@ -111,7 +638,7 @@
 </ul>
 <h3 id="编译与运行">编译与运行</h3>
 <pre><code class="language-bash"><span class="hljs-comment"># 克隆仓库</span>
-git <span class="hljs-built_in">clone</span> https://github.com/user/pm3gui.git
+git <span class="hljs-built_in">clone</span> https://github.com/AKCX2002/pm3gui.git
 <span class="hljs-built_in">cd</span> pm3gui
 
 <span class="hljs-comment"># 安装依赖</span>
@@ -131,24 +658,69 @@ flutter build windows        <span class="hljs-comment"># → build/windows/x64/
 <blockquote>
 <p>⚠️ Android 运行需要为 ARM 架构交叉编译 PM3 原生程序，这属于单独的编译步骤。</p>
 </blockquote>
-<h2 id="-支持的卡片操作">📋 支持的卡片操作</h2>
-<h3 id="高频-hf1356-mhz">高频 HF（13.56 MHz）</h3>
-<ul>
-<li><strong>Mifare Classic</strong>：检测 · 信息 · Autopwn · 转储 · 恢复 · Nested / Hardnested / Darkside · 块读写 · 模拟器 · 魔术卡（Gen1A / Gen2）</li>
-<li><strong>嗅探</strong>：ISO 14443A 通信捕获</li>
-</ul>
-<h3 id="低频-lf125-khz">低频 LF（125 kHz）</h3>
-<ul>
-<li><strong>通用</strong>：搜索 · 读取 · 嗅探 · 天线调谐</li>
-<li><strong>EM410x</strong>：读取 · 克隆</li>
-<li><strong>T55xx</strong>：检测 · 信息 · 转储 · 块读写</li>
-</ul>
-<h3 id="支持的-dump-格式">支持的 Dump 格式</h3>
+<h2 id="-支持的卡片协议">📋 支持的卡片协议</h2>
+<h3 id="命令覆盖率">命令覆盖率</h3>
+<p>PM3 GUI 封装了 <strong>43 个一级命令模板</strong>（<code>Pm3Commands</code> 类），覆盖以下协议族：</p>
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th style="text-align:center">GUI 命令数</th>
+<th style="text-align:center">原始 CLI 命令数</th>
+<th>覆盖内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HF 14443-A</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">9</td>
+<td>搜索、信息</td>
+</tr>
+<tr>
+<td>HF Mifare Classic</td>
+<td style="text-align:center">25</td>
+<td style="text-align:center">57</td>
+<td>全链路：检测→攻击→读写→模拟器→Gen1A/Gen2(CUID)/Gen3</td>
+</tr>
+<tr>
+<td>LF 通用</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">6</td>
+<td>搜索、读取、嗅探、调谐</td>
+</tr>
+<tr>
+<td>LF EM4x</td>
+<td style="text-align:center">2</td>
+<td style="text-align:center">15</td>
+<td>EM410x 读取/克隆</td>
+</tr>
+<tr>
+<td>LF T55xx</td>
+<td style="text-align:center">5</td>
+<td style="text-align:center">12</td>
+<td>检测/信息/转储/块读写</td>
+</tr>
+<tr>
+<td>HW 硬件</td>
+<td style="text-align:center">3</td>
+<td style="text-align:center">14</td>
+<td>版本/状态/调谐</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>完整命令映射参见 <a href="docs/pm3_commands.yaml"><code>docs/pm3_commands.yaml</code></a>。
+未覆盖的命令仍可通过「终端」页面直接输入执行。</p>
+</blockquote>
+<h3 id="支持的-dumpkey-格式">支持的 Dump/Key 格式</h3>
 <table>
 <thead>
 <tr>
 <th>格式</th>
 <th>扩展名</th>
+<th style="text-align:center">读取</th>
+<th style="text-align:center">导出</th>
 <th>说明</th>
 </tr>
 </thead>
@@ -156,17 +728,44 @@ flutter build windows        <span class="hljs-comment"># → build/windows/x64/
 <tr>
 <td>EML</td>
 <td><code>.eml</code></td>
-<td>文本模拟器格式（每行一个块）</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td>文本模拟器格式</td>
 </tr>
 <tr>
-<td>二进制</td>
+<td>二进制转储</td>
 <td><code>.bin</code> <code>.dump</code></td>
-<td>原始 1:1 二进制转储</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td>原始 1:1 二进制</td>
 </tr>
 <tr>
 <td>JSON</td>
 <td><code>.json</code></td>
-<td>PM3 Jansson 格式（含元数据）</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td>PM3 Jansson 格式</td>
+</tr>
+<tr>
+<td>二进制密钥</td>
+<td><code>.bin</code>（按大小检测）</td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td>PM3 标准密钥格式</td>
+</tr>
+<tr>
+<td>密钥字典</td>
+<td><code>.dic</code></td>
+<td style="text-align:center">✅</td>
+<td style="text-align:center">✅</td>
+<td>一行一个密钥</td>
+</tr>
+<tr>
+<td>密钥文本</td>
+<td><code>.keys.txt</code></td>
+<td style="text-align:center">—</td>
+<td style="text-align:center">✅</td>
+<td>按扇区列出</td>
 </tr>
 </tbody>
 </table>
@@ -187,8 +786,18 @@ flutter build windows        <span class="hljs-comment"># → build/windows/x64/
 </tr>
 <tr>
 <td>主题</td>
-<td>深色</td>
-<td>可在设置页切换深色/浅色</td>
+<td>深色（莫兰迪）</td>
+<td>可在设置页或侧边栏切换</td>
+</tr>
+<tr>
+<td>文件收集目录</td>
+<td>PM3 目录 + <code>$HOME</code> + CWD</td>
+<td>自动扫描的搜索范围</td>
+</tr>
+<tr>
+<td>归类整理目录</td>
+<td><code>&lt;CWD&gt;/pm3_files/</code></td>
+<td>「归类整理」的默认目标（可自定义）</td>
 </tr>
 </tbody>
 </table>
