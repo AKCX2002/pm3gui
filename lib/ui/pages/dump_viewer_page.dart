@@ -20,7 +20,8 @@ class DumpViewerPage extends StatefulWidget {
   State<DumpViewerPage> createState() => _DumpViewerPageState();
 }
 
-class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProviderStateMixin {
+class _DumpViewerPageState extends State<DumpViewerPage>
+    with SingleTickerProviderStateMixin {
   MifareCard? _card;
   DumpResult? _dumpResult;
   String? _filePath;
@@ -81,11 +82,13 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
           await File(savePath).writeAsString(exportToJson(_card!));
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已导出到 $savePath')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('已导出到 $savePath')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出失败: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('导出失败: $e')));
       }
     }
   }
@@ -100,7 +103,8 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
             width: double.infinity,
             padding: const EdgeInsets.all(8),
             color: Colors.red.withValues(alpha: 0.1),
-            child: Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+            child:
+                Text(_error!, style: const TextStyle(color: Colors.redAccent)),
           ),
         if (_filePath != null)
           Padding(
@@ -108,17 +112,24 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
             child: Row(children: [
               Icon(Icons.insert_drive_file, size: 14, color: Colors.grey[500]),
               const SizedBox(width: 4),
-              Expanded(child: Text('$_filePath (format: $_format)', style: TextStyle(fontSize: 12, color: Colors.grey[500]), overflow: TextOverflow.ellipsis)),
+              Expanded(
+                  child: Text('$_filePath (format: $_format)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      overflow: TextOverflow.ellipsis)),
             ]),
           ),
         const Divider(height: 1),
         if (_card != null)
-          TabBar(controller: _tabController, labelColor: Theme.of(context).colorScheme.primary, tabs: const [
-            Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
-            Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
-          ]),
+          TabBar(
+              controller: _tabController,
+              labelColor: Theme.of(context).colorScheme.primary,
+              tabs: const [
+                Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
+                Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
+              ]),
         if (_card != null)
-          Expanded(child: TabBarView(controller: _tabController, children: [
+          Expanded(
+              child: TabBarView(controller: _tabController, children: [
             // Tab 0: 扇区视图
             Row(children: [
               SizedBox(width: 80, child: _buildSectorList()),
@@ -129,12 +140,16 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
             _buildAnalysisView(),
           ]))
         else
-          const Expanded(child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Expanded(
+              child: Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.file_open, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('打开转储文件 (.eml, .bin, .json, .dump)', style: TextStyle(color: Colors.grey, fontSize: 16)),
+            Text('打开转储文件 (.eml, .bin, .json, .dump)',
+                style: TextStyle(color: Colors.grey, fontSize: 16)),
             SizedBox(height: 8),
-            Text('支持 Mifare Classic Mini / 1K / 2K / 4K', style: TextStyle(color: Colors.grey)),
+            Text('支持 Mifare Classic Mini / 1K / 2K / 4K',
+                style: TextStyle(color: Colors.grey)),
           ]))),
       ],
     );
@@ -144,12 +159,16 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
     return Container(
       padding: const EdgeInsets.all(8),
       child: Row(children: [
-        ElevatedButton.icon(onPressed: _openFile, icon: const Icon(Icons.file_open, size: 18), label: const Text('打开文件')),
+        ElevatedButton.icon(
+            onPressed: _openFile,
+            icon: const Icon(Icons.file_open, size: 18),
+            label: const Text('打开文件')),
         const SizedBox(width: 8),
         if (_card != null) ...[
           PopupMenuButton<String>(
             onSelected: _exportAs,
-            child: const Chip(avatar: Icon(Icons.save_alt, size: 18), label: Text('导出为')),
+            child: const Chip(
+                avatar: Icon(Icons.save_alt, size: 18), label: Text('导出为')),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'eml', child: Text('.eml (文本)')),
               const PopupMenuItem(value: 'bin', child: Text('.bin (二进制)')),
@@ -159,7 +178,8 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
           const Spacer(),
           Chip(
             avatar: const Icon(Icons.nfc, size: 18),
-            label: Text('${_card!.cardType.label} | UID: ${_card!.uid}', style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+            label: Text('${_card!.cardType.label} | UID: ${_card!.uid}',
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
           ),
         ],
       ]),
@@ -174,8 +194,12 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
         return ListTile(
           dense: true,
           selected: isSelected,
-          selectedTileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-          title: Text('Sec $index', style: TextStyle(fontSize: 13, fontWeight: isSelected ? FontWeight.bold : null)),
+          selectedTileColor:
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          title: Text('Sec $index',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : null)),
           onTap: () => setState(() => _selectedSector = index),
         );
       },
@@ -201,16 +225,23 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('扩区 $sector  (块 $firstBlock\u2013$trailerBlockIdx)', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        Text('扩区 $sector  (块 $firstBlock\u2013$trailerBlockIdx)',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Row(children: [_keyChip('Key A', sectorKey.keyA), const SizedBox(width: 8), _keyChip('Key B', sectorKey.keyB)]),
+        Row(children: [
+          _keyChip('Key A', sectorKey.keyA),
+          const SizedBox(width: 8),
+          _keyChip('Key B', sectorKey.keyB)
+        ]),
         const SizedBox(height: 12),
         for (var i = 0; i < blockCount; i++)
-          _buildBlockRow(firstBlock + i, firstBlock + i == trailerBlockIdx, accessInfo, i),
+          _buildBlockRow(
+              firstBlock + i, firstBlock + i == trailerBlockIdx, accessInfo, i),
         if (accessInfo != null) ...[
           const SizedBox(height: 16),
           const Divider(),
-          const Text('访问控制条件', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const Text('访问控制条件',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           _buildAccessTable(accessInfo),
         ],
@@ -218,47 +249,88 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
     );
   }
 
-  Widget _buildBlockRow(int block, bool isTrailer, SectorAccessInfo? accessInfo, int blockInSector) {
-    final data = (block < _card!.blocks.length) ? _card!.blocks[block] : '??' * 16;
+  Widget _buildBlockRow(int block, bool isTrailer, SectorAccessInfo? accessInfo,
+      int blockInSector) {
+    final data =
+        (block < _card!.blocks.length) ? _card!.blocks[block] : '??' * 16;
     Color bgColor = Colors.transparent;
     String label = 'Data';
-    if (block == 0 && _selectedSector == 0) { label = '制造商块'; bgColor = Colors.blue.withValues(alpha: 0.1); }
-    else if (isTrailer) { label = '尾块'; bgColor = Colors.orange.withValues(alpha: 0.1); }
+    if (block == 0 && _selectedSector == 0) {
+      label = '制造商块';
+      bgColor = Colors.blue.withValues(alpha: 0.1);
+    } else if (isTrailer) {
+      label = '尾块';
+      bgColor = Colors.orange.withValues(alpha: 0.1);
+    }
 
     int? cValue;
     if (accessInfo != null) {
-      if (isTrailer) { cValue = accessInfo.trailerBits; }
-      else if (blockInSector < accessInfo.dataBlockBits.length) { cValue = accessInfo.dataBlockBits[blockInSector]; }
+      if (isTrailer) {
+        cValue = accessInfo.trailerBits;
+      } else if (blockInSector < accessInfo.dataBlockBits.length) {
+        cValue = accessInfo.dataBlockBits[blockInSector];
+      }
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 2),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(4)),
+      decoration:
+          BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(4)),
       child: Row(children: [
-        SizedBox(width: 50, child: Text('B$block', style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 13))),
-        SizedBox(width: 70, child: Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[400]))),
-        Expanded(child: isTrailer ? _buildTrailerRow(data) : Text(_fmtHex(data), style: const TextStyle(fontFamily: 'monospace', fontSize: 13))),
-        if (cValue != null) Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-          child: Text('C$cValue', style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
-        ),
+        SizedBox(
+            width: 50,
+            child: Text('B$block',
+                style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13))),
+        SizedBox(
+            width: 70,
+            child: Text(label,
+                style: TextStyle(fontSize: 11, color: Colors.grey[400]))),
+        Expanded(
+            child: isTrailer
+                ? _buildTrailerRow(data)
+                : Text(_fmtHex(data),
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 13))),
+        if (cValue != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4)),
+            child: Text('C$cValue',
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 11)),
+          ),
       ]),
     );
   }
 
   Widget _buildTrailerRow(String data) {
-    if (data.length < 32) return Text(_fmtHex(data), style: const TextStyle(fontFamily: 'monospace', fontSize: 13));
+    if (data.length < 32)
+      return Text(_fmtHex(data),
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13));
     final keyA = data.substring(0, 12);
     final access = data.substring(12, 20);
     final keyB = data.substring(20, 32);
     return Row(children: [
-      Text(_fmtHex(keyA), style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: Colors.greenAccent)),
+      Text(_fmtHex(keyA),
+          style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 13,
+              color: Colors.greenAccent)),
       const Text(' '),
-      Text(_fmtHex(access), style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: Colors.orangeAccent)),
+      Text(_fmtHex(access),
+          style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 13,
+              color: Colors.orangeAccent)),
       const Text(' '),
-      Text(_fmtHex(keyB), style: const TextStyle(fontFamily: 'monospace', fontSize: 13, color: Colors.cyanAccent)),
+      Text(_fmtHex(keyB),
+          style: const TextStyle(
+              fontFamily: 'monospace', fontSize: 13, color: Colors.cyanAccent)),
     ]);
   }
 
@@ -266,18 +338,47 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
     final allBits = [...info.dataBlockBits, info.trailerBits];
     return Table(
       border: TableBorder.all(color: Colors.grey.withValues(alpha: 0.3)),
-      columnWidths: const {0: FixedColumnWidth(60), 1: FixedColumnWidth(40), 2: FlexColumnWidth()},
+      columnWidths: const {
+        0: FixedColumnWidth(60),
+        1: FixedColumnWidth(40),
+        2: FlexColumnWidth()
+      },
       children: [
-        const TableRow(decoration: BoxDecoration(color: Color(0xFF2A2A3C)), children: [
-          Padding(padding: EdgeInsets.all(6), child: Text('块', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-          Padding(padding: EdgeInsets.all(6), child: Text('C', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-          Padding(padding: EdgeInsets.all(6), child: Text('说明', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-        ]),
+        const TableRow(
+            decoration: BoxDecoration(color: Color(0xFF2A2A3C)),
+            children: [
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('块',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('C',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+              Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Text('说明',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12))),
+            ]),
         for (var i = 0; i < allBits.length; i++)
           TableRow(children: [
-            Padding(padding: const EdgeInsets.all(6), child: Text(i == allBits.length - 1 ? '尾块' : '数据 $i', style: const TextStyle(fontSize: 12))),
-            Padding(padding: const EdgeInsets.all(6), child: Text('${allBits[i]}', style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
-            Padding(padding: const EdgeInsets.all(6), child: Text(_accessDesc(allBits[i], isTrailer: i == allBits.length - 1), style: const TextStyle(fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(i == allBits.length - 1 ? '尾块' : '数据 $i',
+                    style: const TextStyle(fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text('${allBits[i]}',
+                    style: const TextStyle(
+                        fontFamily: 'monospace', fontSize: 12))),
+            Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(
+                    _accessDesc(allBits[i], isTrailer: i == allBits.length - 1),
+                    style: const TextStyle(fontSize: 12))),
           ]),
       ],
     );
@@ -285,20 +386,45 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
 
   String _accessDesc(int c, {bool isTrailer = false}) {
     if (isTrailer) {
-      const d = {0:'KeyA: 写 KeyA|访控|KeyB', 1:'KeyA: 写 KeyA|访控; KeyB: 读写', 2:'仅可读访控', 3:'KeyA: 写访控; KeyB: 读写', 4:'KeyA: 写 KeyA|访控; KeyB: 读写', 5:'KeyB: 写全部', 6:'已锁定', 7:'已锁定'};
+      const d = {
+        0: 'KeyA: 写 KeyA|访控|KeyB',
+        1: 'KeyA: 写 KeyA|访控; KeyB: 读写',
+        2: '仅可读访控',
+        3: 'KeyA: 写访控; KeyB: 读写',
+        4: 'KeyA: 写 KeyA|访控; KeyB: 读写',
+        5: 'KeyB: 写全部',
+        6: '已锁定',
+        7: '已锁定'
+      };
       return d[c] ?? '未知';
     }
-    const d = {0:'读写 Key A 或 B', 1:'可读 A/B，不可写', 2:'可读 A/B，不可写', 3:'读写仅 Key B', 4:'读: A/B，写: B，减: A/B (值块)', 5:'仅 Key B 可读', 6:'读: A/B，写/加: B，减: A/B (值块)', 7:'已锁定'};
+    const d = {
+      0: '读写 Key A 或 B',
+      1: '可读 A/B，不可写',
+      2: '可读 A/B，不可写',
+      3: '读写仅 Key B',
+      4: '读: A/B，写: B，减: A/B (值块)',
+      5: '仅 Key B 可读',
+      6: '读: A/B，写/加: B，减: A/B (值块)',
+      7: '已锁定'
+    };
     return d[c] ?? '未知';
   }
 
   Widget _keyChip(String label, String key) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(8)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text('$label: ', style: TextStyle(fontSize: 12, color: Colors.grey[400])),
-        Text(key.isEmpty ? '------' : key, style: TextStyle(fontFamily: 'monospace', fontSize: 12, color: key.isEmpty ? Colors.grey : Colors.white)),
+        Text('$label: ',
+            style: TextStyle(fontSize: 12, color: Colors.grey[400])),
+        Text(key.isEmpty ? '------' : key,
+            style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: key.isEmpty ? Colors.grey : Colors.white)),
       ]),
     );
   }
@@ -338,7 +464,8 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
         if (a.manufacturerInfo != null)
           _analysisCard('🏭 制造商块 (Block 0)', [
             _kvRow('UID', a.manufacturerInfo!.uid),
-            _kvRow('BCC', '${a.manufacturerInfo!.bcc} ${a.manufacturerInfo!.bccValid ? "✅" : "❌"}'),
+            _kvRow('BCC',
+                '${a.manufacturerInfo!.bcc} ${a.manufacturerInfo!.bccValid ? "✅" : "❌"}'),
             _kvRow('SAK', a.manufacturerInfo!.sak),
             _kvRow('ATQA', a.manufacturerInfo!.atqa),
             _kvRow('芯片类型', a.manufacturerInfo!.chipType),
@@ -350,38 +477,52 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
         // --- 密钥分析
         _analysisCard('🔑 密钥分析', [
           _kvRow('扇区总数', '${a.keyAnalysis.totalSectors}'),
-          _kvRow('已知 Key A', '${a.keyAnalysis.foundKeyA} / ${a.keyAnalysis.totalSectors}'),
-          _kvRow('已知 Key B', '${a.keyAnalysis.foundKeyB} / ${a.keyAnalysis.totalSectors}'),
+          _kvRow('已知 Key A',
+              '${a.keyAnalysis.foundKeyA} / ${a.keyAnalysis.totalSectors}'),
+          _kvRow('已知 Key B',
+              '${a.keyAnalysis.foundKeyB} / ${a.keyAnalysis.totalSectors}'),
           _kvRow('所有密钥相同', a.keyAnalysis.allKeysIdentical ? '是' : '否'),
           _kvRow('存在空白密钥', a.keyAnalysis.hasBlankKeys ? '是 ⚠️' : '否'),
           if (a.keyAnalysis.keyAGroups.isNotEmpty) ...[
             const Divider(),
-            const Text('Key A 分组:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Key A 分组:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             for (final e in a.keyAnalysis.keyAGroups.entries)
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 2),
                 child: Text('${e.key} → 扇区 ${e.value.join(", ")}',
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 12)),
               ),
           ],
           if (a.keyAnalysis.keyBGroups.isNotEmpty) ...[
             const Divider(),
-            const Text('Key B 分组:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const Text('Key B 分组:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             for (final e in a.keyAnalysis.keyBGroups.entries)
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 2),
                 child: Text('${e.key} → 扇区 ${e.value.join(", ")}',
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 12)),
               ),
           ],
           if (a.keyAnalysis.defaultMatches.isNotEmpty) ...[
             const Divider(),
-            const Text('⚠️ 默认密钥匹配:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orangeAccent)),
+            const Text('⚠️ 默认密钥匹配:',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Colors.orangeAccent)),
             for (final m in a.keyAnalysis.defaultMatches)
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 2),
-                child: Text('扇区 ${m.sector} Key${m.keyType}: ${m.keyHex} (${m.keyName})',
-                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.orangeAccent)),
+                child: Text(
+                    '扇区 ${m.sector} Key${m.keyType}: ${m.keyHex} (${m.keyName})',
+                    style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        color: Colors.orangeAccent)),
               ),
           ],
         ]),
@@ -397,10 +538,19 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
               Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Row(children: [
-                  SizedBox(width: 60, child: Text('扇区 ${e.sector}', style: const TextStyle(fontSize: 12))),
-                  SizedBox(width: 80, child: Text('0x${e.aid.toRadixString(16).padLeft(4, '0')}',
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
-                  Expanded(child: Text(e.description, style: const TextStyle(fontSize: 12))),
+                  SizedBox(
+                      width: 60,
+                      child: Text('扇区 ${e.sector}',
+                          style: const TextStyle(fontSize: 12))),
+                  SizedBox(
+                      width: 80,
+                      child: Text(
+                          '0x${e.aid.toRadixString(16).padLeft(4, '0')}',
+                          style: const TextStyle(
+                              fontFamily: 'monospace', fontSize: 12))),
+                  Expanded(
+                      child: Text(e.description,
+                          style: const TextStyle(fontSize: 12))),
                 ]),
               ),
           ]),
@@ -413,10 +563,20 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Row(children: [
-                  SizedBox(width: 80, child: Text('块 ${v.blockNumber}', style: const TextStyle(fontSize: 12))),
-                  SizedBox(width: 100, child: Text('扇区 ${v.sectorNumber}', style: const TextStyle(fontSize: 12))),
-                  Expanded(child: Text('值: ${v.value}  地址: ${v.address}',
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12, fontWeight: FontWeight.bold))),
+                  SizedBox(
+                      width: 80,
+                      child: Text('块 ${v.blockNumber}',
+                          style: const TextStyle(fontSize: 12))),
+                  SizedBox(
+                      width: 100,
+                      child: Text('扇区 ${v.sectorNumber}',
+                          style: const TextStyle(fontSize: 12))),
+                  Expanded(
+                      child: Text('值: ${v.value}  地址: ${v.address}',
+                          style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold))),
                 ]),
               ),
           ]),
@@ -428,13 +588,35 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Row(children: [
-                SizedBox(width: 50, child: Text('S${s.sectorNumber}', style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
-                SizedBox(width: 110, child: Text('A:${s.keyA}', style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: s.isKeyADefault ? Colors.orangeAccent : Colors.greenAccent))),
-                SizedBox(width: 110, child: Text('B:${s.keyB}', style: TextStyle(fontFamily: 'monospace', fontSize: 11, color: s.isKeyBDefault ? Colors.orangeAccent : Colors.cyanAccent))),
+                SizedBox(
+                    width: 50,
+                    child: Text('S${s.sectorNumber}',
+                        style: const TextStyle(
+                            fontFamily: 'monospace', fontSize: 12))),
+                SizedBox(
+                    width: 110,
+                    child: Text('A:${s.keyA}',
+                        style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: s.isKeyADefault
+                                ? Colors.orangeAccent
+                                : Colors.greenAccent))),
+                SizedBox(
+                    width: 110,
+                    child: Text('B:${s.keyB}',
+                        style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: s.isKeyBDefault
+                                ? Colors.orangeAccent
+                                : Colors.cyanAccent))),
                 if (s.accessInfo != null)
-                  Text(s.accessInfo!.isValid ? '✅ 访控有效' : '❌ 访控无效', style: const TextStyle(fontSize: 11))
+                  Text(s.accessInfo!.isValid ? '✅ 访控有效' : '❌ 访控无效',
+                      style: const TextStyle(fontSize: 11))
                 else
-                  const Text('- 无访控', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                  const Text('- 无访控',
+                      style: TextStyle(fontSize: 11, color: Colors.grey)),
               ]),
             ),
         ]),
@@ -447,8 +629,17 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
               Padding(
                 padding: const EdgeInsets.only(top: 1),
                 child: Row(children: [
-                  SizedBox(width: 50, child: Text('B${b.blockNumber}', style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.grey))),
-                  Expanded(child: Text(b.ascii, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+                  SizedBox(
+                      width: 50,
+                      child: Text('B${b.blockNumber}',
+                          style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                              color: Colors.grey))),
+                  Expanded(
+                      child: Text(b.ascii,
+                          style: const TextStyle(
+                              fontFamily: 'monospace', fontSize: 12))),
                 ]),
               ),
         ]),
@@ -463,7 +654,9 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           ...children,
         ]),
@@ -475,8 +668,13 @@ class _DumpViewerPageState extends State<DumpViewerPage> with SingleTickerProvid
     return Padding(
       padding: const EdgeInsets.only(top: 3),
       child: Row(children: [
-        SizedBox(width: 120, child: Text(key, style: TextStyle(fontSize: 12, color: Colors.grey[400]))),
-        Expanded(child: SelectableText(value, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
+        SizedBox(
+            width: 120,
+            child: Text(key,
+                style: TextStyle(fontSize: 12, color: Colors.grey[400]))),
+        Expanded(
+            child: SelectableText(value,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
       ]),
     );
   }

@@ -166,7 +166,7 @@ class KeyAnalysis {
   final int totalSectors;
   final int foundKeyA;
   final int foundKeyB;
-  final Map<String, List<int>> keyAGroups;   // key hex → 扇区列表
+  final Map<String, List<int>> keyAGroups; // key hex → 扇区列表
   final Map<String, List<int>> keyBGroups;
   final List<DefaultKeyMatch> defaultMatches; // 默认密钥匹配
   final bool allKeysIdentical;
@@ -285,11 +285,13 @@ class DumpAnalyzer {
 
       // 访问位
       SectorAccessInfo? access;
-      if (trailerIdx < card.blocks.length && card.blocks[trailerIdx].length >= 20) {
+      if (trailerIdx < card.blocks.length &&
+          card.blocks[trailerIdx].length >= 20) {
         access = decodeSectorAccess(card, s);
       }
 
-      final sKey = s < card.sectorKeys.length ? card.sectorKeys[s] : SectorKey();
+      final sKey =
+          s < card.sectorKeys.length ? card.sectorKeys[s] : SectorKey();
       final isADefault = knownDefaultKeys.contains(sKey.keyA.toUpperCase());
       final isBDefault = knownDefaultKeys.contains(sKey.keyB.toUpperCase());
 
@@ -405,46 +407,81 @@ class DumpAnalyzer {
 
   static String _guessChipType(String sak) {
     switch (sak.toUpperCase()) {
-      case '08': return 'MIFARE Classic 1K';
-      case '09': return 'MIFARE Mini';
-      case '18': return 'MIFARE Classic 4K';
-      case '10': return 'MIFARE Plus 2K SL2';
-      case '11': return 'MIFARE Plus 4K SL2';
-      case '20': return 'MIFARE DESFire / Plus SL3';
-      case '28': return 'Smart MX + Classic 1K';
-      case '38': return 'Smart MX + Classic 4K';
-      case '00': return 'MIFARE Ultralight / NTAG';
-      case '01': return 'TNP3xxx (NXP)';
-      default:   return '未知 (SAK=$sak)';
+      case '08':
+        return 'MIFARE Classic 1K';
+      case '09':
+        return 'MIFARE Mini';
+      case '18':
+        return 'MIFARE Classic 4K';
+      case '10':
+        return 'MIFARE Plus 2K SL2';
+      case '11':
+        return 'MIFARE Plus 4K SL2';
+      case '20':
+        return 'MIFARE DESFire / Plus SL3';
+      case '28':
+        return 'Smart MX + Classic 1K';
+      case '38':
+        return 'Smart MX + Classic 4K';
+      case '00':
+        return 'MIFARE Ultralight / NTAG';
+      case '01':
+        return 'TNP3xxx (NXP)';
+      default:
+        return '未知 (SAK=$sak)';
     }
   }
 
   static String _getManufacturer(int byte0) {
     switch (byte0) {
-      case 0x01: return 'Motorola';
-      case 0x02: return 'STMicroelectronics';
-      case 0x03: return 'Hitachi';
-      case 0x04: return 'NXP Semiconductors';
-      case 0x05: return 'Infineon Technologies';
-      case 0x06: return 'Cylink';
-      case 0x07: return 'Texas Instruments';
-      case 0x08: return 'Fujitsu';
-      case 0x09: return 'Matsushita/Panasonic';
-      case 0x0A: return 'NEC';
-      case 0x0B: return 'Oki Electric';
-      case 0x0C: return 'Toshiba';
-      case 0x0D: return 'Mitsubishi Electric';
-      case 0x0E: return 'Samsung';
-      case 0x0F: return 'Hynix';
-      case 0x10: return 'LG Semiconductors';
-      case 0x16: return 'EM Microelectronic';
-      case 0x1E: return 'ZMD AG';
-      case 0x1F: return 'XICOR';
-      case 0x22: return 'Atmel';
-      case 0x57: return 'Silicon Craft Technology';
-      case 0x5F: return 'Adesto Technologies';
-      case 0x97: return 'Qualcomm';
-      default:   return '未知 (0x${byte0.toRadixString(16).padLeft(2, '0')})';
+      case 0x01:
+        return 'Motorola';
+      case 0x02:
+        return 'STMicroelectronics';
+      case 0x03:
+        return 'Hitachi';
+      case 0x04:
+        return 'NXP Semiconductors';
+      case 0x05:
+        return 'Infineon Technologies';
+      case 0x06:
+        return 'Cylink';
+      case 0x07:
+        return 'Texas Instruments';
+      case 0x08:
+        return 'Fujitsu';
+      case 0x09:
+        return 'Matsushita/Panasonic';
+      case 0x0A:
+        return 'NEC';
+      case 0x0B:
+        return 'Oki Electric';
+      case 0x0C:
+        return 'Toshiba';
+      case 0x0D:
+        return 'Mitsubishi Electric';
+      case 0x0E:
+        return 'Samsung';
+      case 0x0F:
+        return 'Hynix';
+      case 0x10:
+        return 'LG Semiconductors';
+      case 0x16:
+        return 'EM Microelectronic';
+      case 0x1E:
+        return 'ZMD AG';
+      case 0x1F:
+        return 'XICOR';
+      case 0x22:
+        return 'Atmel';
+      case 0x57:
+        return 'Silicon Craft Technology';
+      case 0x5F:
+        return 'Adesto Technologies';
+      case 0x97:
+        return 'Qualcomm';
+      default:
+        return '未知 (0x${byte0.toRadixString(16).padLeft(2, '0')})';
     }
   }
 
@@ -486,7 +523,8 @@ class DumpAnalyzer {
       final aid = (hi << 8) | lo;
       if (aid != 0) hasNonZero = true;
 
-      final desc = madAidDescriptions[aid] ?? '应用 0x${aid.toRadixString(16).padLeft(4, '0')}';
+      final desc = madAidDescriptions[aid] ??
+          '应用 0x${aid.toRadixString(16).padLeft(4, '0')}';
       entries.add(MadEntry(sector: i + 1, aid: aid, description: desc));
     }
 
@@ -524,7 +562,8 @@ class DumpAnalyzer {
         keyAGroups.putIfAbsent(ka, () => []).add(s);
         final defName = _findDefaultKeyName(ka);
         if (defName != null) {
-          defaults.add(DefaultKeyMatch(keyHex: ka, keyType: 'A', sector: s, keyName: defName));
+          defaults.add(DefaultKeyMatch(
+              keyHex: ka, keyType: 'A', sector: s, keyName: defName));
         }
       } else {
         hasBlank = true;
@@ -535,7 +574,8 @@ class DumpAnalyzer {
         keyBGroups.putIfAbsent(kb, () => []).add(s);
         final defName = _findDefaultKeyName(kb);
         if (defName != null) {
-          defaults.add(DefaultKeyMatch(keyHex: kb, keyType: 'B', sector: s, keyName: defName));
+          defaults.add(DefaultKeyMatch(
+              keyHex: kb, keyType: 'B', sector: s, keyName: defName));
         }
       } else {
         hasBlank = true;
@@ -574,7 +614,8 @@ class DumpAnalyzer {
   }
 
   // --- 值块检测 ---
-  static ValueBlockInfo? _detectValueBlock(String hex, int blockIdx, int sector) {
+  static ValueBlockInfo? _detectValueBlock(
+      String hex, int blockIdx, int sector) {
     if (hex.length != 32) return null;
     final bytes = _hexToBytes(hex);
     if (bytes.length != 16) return null;
