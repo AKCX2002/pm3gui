@@ -17,7 +17,8 @@ Future<MifareCard> parseBinFile(File file) async {
 /// Parse binary dump from raw bytes.
 MifareCard parseBinBytes(Uint8List data) {
   if (data.length < 16) {
-    throw FormatException('File too small for a card dump: ${data.length} bytes');
+    throw FormatException(
+        'File too small for a card dump: ${data.length} bytes');
   }
 
   // Check if this is a key file (sector_count * 12 bytes for KeyA + KeyB)
@@ -61,8 +62,7 @@ Uint8List exportToBin(MifareCard card) {
   for (var i = 0; i < card.blocks.length; i++) {
     final hex = card.blocks[i];
     for (var j = 0; j < 16; j++) {
-      bytes[i * 16 + j] =
-          int.parse(hex.substring(j * 2, j * 2 + 2), radix: 16);
+      bytes[i * 16 + j] = int.parse(hex.substring(j * 2, j * 2 + 2), radix: 16);
     }
   }
   return bytes;
@@ -81,11 +81,14 @@ CardType? _isKeyFile(int length) {
 
 MifareCard _parseKeyFile(Uint8List data, CardType cardType) {
   final card = MifareCard(cardType: cardType);
-  card.sectorKeys = List.generate(cardType.sectorCount, (s) {
-    final offset = s * 12;
+  // PM3 key file layout: [KeyA_s0..KeyA_sN][KeyB_s0..KeyB_sN]
+  // First half: all Key A (sectorCount × 6 bytes)
+  // Second half: all Key B (sectorCount × 6 bytes)
+  final n = cardType.sectorCount;
+  card.sectorKeys = List.generate(n, (s) {
     return SectorKey(
-      keyA: _bytesToHex(data, offset, 6),
-      keyB: _bytesToHex(data, offset + 6, 6),
+      keyA: _bytesToHex(data, s * 6, 6),
+      keyB: _bytesToHex(data, n * 6 + s * 6, 6),
     );
   });
   return card;

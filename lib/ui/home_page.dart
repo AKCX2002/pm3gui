@@ -273,8 +273,13 @@ class _HomePageState extends State<HomePage> {
           VerticalDivider(
               width: 1,
               color: isDark ? const Color(0xFF2A2A3C) : Colors.grey[300]),
-          // ========== 主内容区 ==========
-          Expanded(child: _pages[_currentIndex]),
+          // ========== 主内容区 (IndexedStack 保持页面状态) ==========
+          Expanded(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _pages,
+            ),
+          ),
         ],
       ),
     );

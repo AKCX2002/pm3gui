@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/services/pm3_process.dart';
+import 'package:pm3gui/services/file_collector.dart';
 
 /// 逐块写入任务的进度状态
 class WriteProgress {
@@ -61,6 +62,12 @@ class AppState extends ChangeNotifier {
   // 逐块写入进度
   WriteProgress? writeProgress;
 
+  // PM3 文件自动收集
+  List<CollectedFile> collectedFiles = [];
+  List<CardGroup> cardGroups = [];
+  bool isScanning = false;
+  String? collectBaseDir; // 归类存放的根目录
+
   // Connection state passthrough
   Pm3State get connectionState => pm3.state;
   String get pm3Version => pm3.version;
@@ -77,6 +84,12 @@ class AppState extends ChangeNotifier {
       if (terminalOutput.length > 5000) {
         terminalOutput.removeRange(0, 1000);
       }
+      // Auto-scan for new files when PM3 saves something
+      if (line.toLowerCase().contains('saved') ||
+          line.toLowerCase().contains('saved to')) {
+        // Delay slightly to let the file system flush
+        Future.delayed(const Duration(seconds: 1), () => scanForFiles());
+      }
       notifyListeners();
     });
 
@@ -88,6 +101,8 @@ class AppState extends ChangeNotifier {
   Future<bool> connect() async {
     if (portName.isEmpty) return false;
     final result = await pm3.connect(pm3Path, portName);
+    // Auto scan files on connect
+    if (result) scanForFiles();
     notifyListeners();
     return result;
   }
@@ -191,6 +206,37 @@ class AppState extends ChangeNotifier {
   void updateCard(MifareCard card) {
     currentCard = card;
     notifyListeners();
+  }
+
+  // ──────────────────────────────────────────────────────────
+  //  PM3 文件自动扫描 & 归类
+  // ──────────────────────────────────────────────────────────
+
+  /// 扫描 PM3 工作目录，收集 dump / key 文件
+  Future<void> scanForFiles() async {
+    if (isScanning) return;
+    isScanning = true;
+    notifyListeners();
+
+    try {
+      final dirs = FileCollector.defaultScanDirs(pm3Path);
+      collectedFiles = await FileCollector.scan(dirs);
+      cardGroups = FileCollector.groupByCard(collectedFiles);
+    } catch (e) {
+      terminalOutput.add('[文件扫描错误] $e');
+    }
+
+    isScanning = false;
+    notifyListeners();
+  }
+
+  /// 将已收集的文件整理归类到指定目录
+  Future<int> organizeCollectedFiles(String baseDir) async {
+    collectBaseDir = baseDir;
+    final count = await FileCollector.organizeFiles(collectedFiles, baseDir);
+    // 重新扫描以更新路径
+    await scanForFiles();
+    return count;
   }
 
   @override

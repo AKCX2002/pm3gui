@@ -21,6 +21,8 @@ import 'package:pm3gui/services/file_dialog_service.dart';
 import 'package:pm3gui/services/pm3_commands.dart';
 import 'package:pm3gui/state/app_state.dart';
 
+enum _KeyOverride { preserve, overwrite }
+
 class DumpViewerPage extends StatefulWidget {
   const DumpViewerPage({super.key});
 
@@ -90,7 +92,139 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         ],
       );
       if (path == null) return;
+
+      // ── Detect if it's a key-only file ──
+      final isKey = await _isKeyFile(path);
+
+      if (isKey) {
+        // KEY file → only merge keys, never touch blocks
+        await _loadKeyFileOnly(path);
+      } else {
+        // DUMP file → optionally preserve existing keys
+        await _loadDumpFile(path);
+      }
+    } catch (e) {
+      setState(() => _error = 'Error: $e');
+    }
+  }
+
+  /// Detect if a file is a key-only file (.dic text, or .bin with key-file size).
+  Future<bool> _isKeyFile(String path) async {
+    final ext = path.split('.').last.toLowerCase();
+
+    // .dic / .txt are always key files
+    if (ext == 'dic') return true;
+
+    // Check filename pattern: *-key*.bin
+    final name = path.split('/').last.split('\\').last.toLowerCase();
+    if (name.contains('-key')) return true;
+
+    // For .bin files, check if the size matches a key file layout
+    if (ext == 'bin' || ext == 'dump') {
+      final file = File(path);
+      if (await file.exists()) {
+        final size = await file.length();
+        // Key file sizes: sectorCount × 12
+        const keySizes = {
+          5 * 12, // MINI: 60
+          16 * 12, // 1K: 192
+          32 * 12, // 2K: 384
+          40 * 12, // 4K: 480
+        };
+        if (keySizes.contains(size)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// Load a key-only file: merge keys into existing card without overwriting blocks.
+  Future<void> _loadKeyFileOnly(String path) async {
+    final ext = path.split('.').last.toLowerCase();
+    List<SectorKey> newKeys;
+
+    if (ext == 'dic') {
+      // Text dictionary — extract unique keys (no sector mapping)
+      final text = await File(path).readAsString();
+      final keyList = parseDicString(text);
+      // Show info only
+      setState(() {
+        _extractedKeys = null;
+        _keySummary = '字典文件: ${keyList.length} 个唯一密钥';
+        _error = null;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加载字典: ${keyList.length} 个密钥')),
+      );
+      return;
+    }
+
+    // Binary key file
+    final bytes = await File(path).readAsBytes();
+    newKeys = parseKeyBinBytes(Uint8List.fromList(bytes));
+
+    if (_card != null) {
+      // Merge keys into existing card WITHOUT touching block data
+      _mergeKeys(newKeys);
+      setState(() {
+        _error = null;
+        _initEditControllers();
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('已合并 ${newKeys.length} 个扇区的密钥（块数据保持不变）'),
+          backgroundColor: Colors.green.withValues(alpha: 0.8),
+        ),
+      );
+    } else {
+      // No card loaded yet — create keys-only card
       final dumpResult = await parseDumpFile(path);
+      setState(() {
+        _dumpResult = dumpResult;
+        _card = dumpResult.card;
+        _filePath = path;
+        _format = 'key';
+        _error = null;
+        _selectedSector = 0;
+        _initEditControllers();
+      });
+    }
+  }
+
+  /// Load a dump file, optionally preserving existing keys.
+  Future<void> _loadDumpFile(String path) async {
+    final dumpResult = await parseDumpFile(path);
+
+    if (_card != null && _card!.sectorKeys.isNotEmpty) {
+      // Already have a card with keys — ask user what to do
+      if (!mounted) return;
+      final choice = await _showKeyOverrideDialog();
+      if (choice == null) return; // cancelled
+
+      final oldKeys = _card!.sectorKeys
+          .map((k) => SectorKey(keyA: k.keyA, keyB: k.keyB))
+          .toList();
+
+      setState(() {
+        _dumpResult = dumpResult;
+        _card = dumpResult.card;
+        _filePath = path;
+        _format = dumpResult.format;
+        _error = dumpResult.error;
+        _selectedSector = 0;
+      });
+
+      if (choice == _KeyOverride.preserve) {
+        // Restore previously held keys
+        _mergeKeys(oldKeys);
+      }
+      // else: choice == overwrite → use dump's own keys (already set)
+
+      setState(() => _initEditControllers());
+    } else {
+      // No previous card — just load normally
       setState(() {
         _dumpResult = dumpResult;
         _card = dumpResult.card;
@@ -100,9 +234,69 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         _selectedSector = 0;
         _initEditControllers();
       });
-    } catch (e) {
-      setState(() => _error = 'Error: $e');
     }
+  }
+
+  /// Merge keys from [newKeys] into the current card's sectorKeys.
+  void _mergeKeys(List<SectorKey> newKeys) {
+    if (_card == null) return;
+    final limit = _card!.sectorKeys.length < newKeys.length
+        ? _card!.sectorKeys.length
+        : newKeys.length;
+    for (var s = 0; s < limit; s++) {
+      _card!.sectorKeys[s].keyA = newKeys[s].keyA;
+      _card!.sectorKeys[s].keyB = newKeys[s].keyB;
+    }
+  }
+
+  /// Show dialog asking whether to overwrite keys when loading a dump file.
+  Future<_KeyOverride?> _showKeyOverrideDialog() async {
+    return showDialog<_KeyOverride>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(children: [
+          Icon(Icons.vpn_key, size: 20),
+          SizedBox(width: 8),
+          Text('密钥处理'),
+        ]),
+        content: const SizedBox(
+          width: 360,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text(
+              '当前已有密钥数据。加载新的转储文件时，如何处理密钥？',
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 16),
+            Row(children: [
+              Icon(Icons.info_outline, size: 16, color: Colors.grey),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '转储文件的密钥区通常为 FF，而实际密钥可能来自单独的 key 文件',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            ]),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.pop(ctx, _KeyOverride.preserve),
+            icon: const Icon(Icons.shield, size: 16),
+            label: const Text('保留当前密钥'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, _KeyOverride.overwrite),
+            icon: const Icon(Icons.sync, size: 16),
+            label: const Text('用转储覆盖'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _exportAs(String format) async {
@@ -167,45 +361,57 @@ class _DumpViewerPageState extends State<DumpViewerPage>
             ]),
           ),
         const Divider(height: 1),
-        if (_card != null)
-          TabBar(
-              controller: _tabController,
-              labelColor: Theme.of(context).colorScheme.primary,
-              tabs: const [
-                Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
-                Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
-                Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
-                Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
-              ]),
-        if (_card != null)
-          Expanded(
-              child: TabBarView(controller: _tabController, children: [
-            // Tab 0: 扇区视图
-            Row(children: [
-              SizedBox(width: 80, child: _buildSectorList()),
-              const VerticalDivider(width: 1),
-              Expanded(child: _buildSectorView()),
+        // Tab bar — always visible
+        TabBar(
+            controller: _tabController,
+            labelColor: Theme.of(context).colorScheme.primary,
+            tabs: const [
+              Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
+              Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
+              Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
+              Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
             ]),
-            // Tab 1: 密钥编辑 & 块数据编辑
-            _buildKeyEditorView(),
-            // Tab 2: 深度分析
-            _buildAnalysisView(),
-            // Tab 3: 回写/清空 (CUID)
-            _buildWriteBackView(),
-          ]))
-        else
-          const Expanded(
-              child: Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.file_open, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('打开转储文件 (.eml, .bin, .json, .dump)',
-                style: TextStyle(color: Colors.grey, fontSize: 16)),
-            SizedBox(height: 8),
-            Text('支持 Mifare Classic Mini / 1K / 2K / 4K',
-                style: TextStyle(color: Colors.grey)),
-          ]))),
+        Expanded(
+            child: TabBarView(controller: _tabController, children: [
+          // Tab 0: 扇区视图
+          _card != null
+              ? Row(children: [
+                  SizedBox(width: 80, child: _buildSectorList()),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: _buildSectorView()),
+                ])
+              : _buildEmptyHint('打开转储文件查看扇区数据', Icons.grid_view),
+          // Tab 1: 密钥编辑 & 块数据编辑
+          _card != null
+              ? _buildKeyEditorView()
+              : _buildEmptyHint('打开转储文件或密钥文件以编辑', Icons.edit),
+          // Tab 2: 深度分析
+          _card != null
+              ? _buildAnalysisView()
+              : _buildEmptyHint('打开转储文件后可查看深度分析', Icons.analytics),
+          // Tab 3: 回写/清空 (CUID)
+          _buildWriteBackView(),
+        ])),
       ],
+    );
+  }
+
+  Widget _buildEmptyHint(String message, IconData icon) {
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 56, color: Colors.grey.withValues(alpha: 0.3)),
+        const SizedBox(height: 16),
+        Text(message, style: TextStyle(color: Colors.grey[500], fontSize: 15)),
+        const SizedBox(height: 8),
+        Text('支持 .eml / .bin / .json / .dump / .dic',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _openFile,
+          icon: const Icon(Icons.file_open, size: 16),
+          label: const Text('打开文件'),
+        ),
+      ]),
     );
   }
 

@@ -37,11 +37,14 @@ List<SectorKey> parseKeyBinBytes(Uint8List data) {
     );
   }
 
-  return List.generate(ct.sectorCount, (s) {
-    final offset = s * 12;
+  // PM3 key file layout: [KeyA_s0..KeyA_sN][KeyB_s0..KeyB_sN]
+  // First half: all Key A (sectorCount × 6 bytes)
+  // Second half: all Key B (sectorCount × 6 bytes)
+  final n = ct.sectorCount;
+  return List.generate(n, (s) {
     return SectorKey(
-      keyA: _bytesToHex(data, offset, 6),
-      keyB: _bytesToHex(data, offset + 6, 6),
+      keyA: _bytesToHex(data, s * 6, 6),
+      keyB: _bytesToHex(data, n * 6 + s * 6, 6),
     );
   });
 }
@@ -53,13 +56,15 @@ Future<List<SectorKey>> parseKeyBinFile(File file) async {
 }
 
 /// Export keys to binary format: sectorCount × 12 bytes.
+/// PM3 layout: [KeyA_s0..KeyA_sN][KeyB_s0..KeyB_sN]
 Uint8List exportKeysToBin(List<SectorKey> keys) {
-  final out = Uint8List(keys.length * 12);
-  for (var i = 0; i < keys.length; i++) {
+  final n = keys.length;
+  final out = Uint8List(n * 12);
+  for (var i = 0; i < n; i++) {
     final a = _hexToBytes(keys[i].keyA.padRight(12, '0'));
     final b = _hexToBytes(keys[i].keyB.padRight(12, '0'));
-    out.setRange(i * 12, i * 12 + 6, a);
-    out.setRange(i * 12 + 6, i * 12 + 12, b);
+    out.setRange(i * 6, i * 6 + 6, a); // first half: all Key A
+    out.setRange(n * 6 + i * 6, n * 6 + i * 6 + 6, b); // second half: all Key B
   }
   return out;
 }

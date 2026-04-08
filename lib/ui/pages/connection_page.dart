@@ -1,4 +1,4 @@
-/// Connection page — select port, connect/disconnect, show device info.
+/// Connection & Dashboard page — PM3 connection, device info, file browser.
 library;
 
 import 'dart:io';
@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pm3gui/state/app_state.dart';
 import 'package:pm3gui/services/pm3_process.dart';
+import 'package:pm3gui/services/file_collector.dart';
+import 'package:pm3gui/ui/theme.dart';
 
 class ConnectionPage extends StatefulWidget {
   const ConnectionPage({super.key});
@@ -21,6 +23,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
   void initState() {
     super.initState();
     _scanPorts();
+    // Initial file scan
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AppState>().scanForFiles();
+    });
   }
 
   Future<void> _scanPorts() async {
@@ -31,7 +37,6 @@ class _ConnectionPageState extends State<ConnectionPage> {
       final ports = <String>[];
 
       if (Platform.isLinux) {
-        // Scan /dev/ttyACM* and /dev/ttyUSB*
         final devDir = Directory('/dev');
         if (devDir.existsSync()) {
           for (final entity in devDir.listSync()) {
@@ -42,7 +47,6 @@ class _ConnectionPageState extends State<ConnectionPage> {
           }
         }
       } else if (Platform.isWindows) {
-        // Try COM1-COM20
         for (var i = 1; i <= 20; i++) {
           ports.add('COM$i');
         }
@@ -65,202 +69,485 @@ class _ConnectionPageState extends State<ConnectionPage> {
     final appState = context.watch<AppState>();
     final isConnected = appState.connectionState == Pm3State.connected;
     final isConnecting = appState.connectionState == Pm3State.connecting;
+    final theme = Theme.of(context);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // PM3 Path
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'PM3 程序路径',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
+    return Row(
+      children: [
+        // ═══════ 左栏: 连接 & 设备信息 ═══════
+        SizedBox(
+          width: 360,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── 连接状态头 ──
+                _buildConnectionHeader(appState, isConnected, theme),
+                const SizedBox(height: 16),
+
+                // ── PM3 路径 ──
+                _buildSection(
+                  icon: Icons.folder_open,
+                  title: 'PM3 程序路径',
+                  child: TextFormField(
                     initialValue: appState.pm3Path,
-                    decoration: const InputDecoration(
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: './pm3 或 /usr/bin/proxmark3',
-                      prefixIcon: Icon(Icons.folder_open),
+                      prefixIcon: const Icon(Icons.terminal, size: 18),
+                      suffixIcon: File(appState.pm3Path).existsSync()
+                          ? Icon(Icons.check_circle,
+                              size: 18, color: AppTheme.morandiSuccess)
+                          : Icon(Icons.warning,
+                              size: 18, color: AppTheme.morandiWarning),
                     ),
                     onChanged: appState.setPm3Path,
                   ),
+                ),
+                const SizedBox(height: 12),
+
+                // ── 串口选择 ──
+                _buildSection(
+                  icon: Icons.usb,
+                  title: '串口选择',
+                  trailing: IconButton(
+                    icon: _scanning
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.refresh, size: 18),
+                    onPressed: _scanning ? null : _scanPorts,
+                    tooltip: '刷新端口',
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: appState.availablePorts.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color:
+                                AppTheme.morandiWarning.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(children: [
+                            Icon(Icons.info_outline,
+                                size: 16, color: AppTheme.morandiWarning),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text('未找到串口，请连接 PM3 设备',
+                                  style: TextStyle(fontSize: 13)),
+                            ),
+                          ]),
+                        )
+                      : DropdownButtonFormField<String>(
+                          value: appState.availablePorts
+                                  .contains(appState.portName)
+                              ? appState.portName
+                              : null,
+                          items: appState.availablePorts
+                              .map((p) =>
+                                  DropdownMenuItem(value: p, child: Text(p)))
+                              .toList(),
+                          onChanged: isConnected
+                              ? null
+                              : (v) {
+                                  if (v != null) appState.setPort(v);
+                                },
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.usb, size: 18),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── 连接按钮 ──
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: isConnecting
+                        ? null
+                        : () async {
+                            if (isConnected) {
+                              await appState.disconnect();
+                            } else {
+                              await appState.connect();
+                            }
+                          },
+                    icon: isConnecting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : Icon(isConnected ? Icons.link_off : Icons.link,
+                            size: 18),
+                    label: Text(
+                      isConnecting
+                          ? '连接中...'
+                          : isConnected
+                              ? '断开连接'
+                              : '连接 PM3',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isConnected ? AppTheme.morandiRose : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ── 错误信息 ──
+                if (!isConnected && appState.lastError.isNotEmpty)
+                  _buildErrorCard(appState.lastError),
+
+                // ── 设备信息（已连接时） ──
+                if (isConnected) ...[
+                  const SizedBox(height: 12),
+                  _buildSection(
+                    icon: Icons.developer_board,
+                    title: '设备信息',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _infoRow('端口', appState.portName),
+                        _infoRow('版本', appState.pm3Version),
+                        _infoRow('状态', '已连接',
+                            valueColor: AppTheme.morandiSuccess),
+                        _infoRow('命令历史', '${appState.commandHistory.length} 条'),
+                        _infoRow('终端缓冲', '${appState.terminalOutput.length} 行'),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  appState.sendCommand('hw version'),
+                              icon: const Icon(Icons.info, size: 14),
+                              label: const Text('硬件版本',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => appState.sendCommand('hw tune'),
+                              icon: const Icon(Icons.wifi_tethering, size: 14),
+                              label: const Text('天线调谐',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                        ]),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+
+                // ── 平台信息 ──
+                const SizedBox(height: 16),
+                _buildSection(
+                  icon: Icons.computer,
+                  title: '环境信息',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _infoRow('平台', Platform.operatingSystem),
+                      _infoRow('架构', _getArch()),
+                      _infoRow('Dart', Platform.version.split(' ').first),
+                      _infoRow(
+                          'PM3 路径',
+                          File(appState.pm3Path).existsSync()
+                              ? '✅ 有效'
+                              : '❌ 无效'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
+        ),
+        VerticalDivider(width: 1, color: theme.dividerColor),
 
-          // Port Selection
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+        // ═══════ 右栏: 文件收集 & 概览 ═══════
+        Expanded(
+          child: Column(
+            children: [
+              // 文件收集工具栏
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Row(children: [
+                  Icon(Icons.folder_special,
+                      size: 20, color: AppTheme.morandiBlue),
+                  const SizedBox(width: 8),
+                  const Text('PM3 文件收集',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${appState.collectedFiles.length} 个文件, '
+                    '${appState.cardGroups.length} 张卡',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
+                  const Spacer(),
+                  if (appState.isScanning)
+                    const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2)),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: appState.isScanning
+                        ? null
+                        : () => appState.scanForFiles(),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('扫描', style: TextStyle(fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: appState.collectedFiles.isEmpty
+                        ? null
+                        : () => _showOrganizeDialog(appState),
+                    icon: const Icon(Icons.create_new_folder, size: 16),
+                    label: const Text('归类整理', style: TextStyle(fontSize: 12)),
+                  ),
+                ]),
+              ),
+              const Divider(height: 1),
+
+              // 文件列表（按卡片分组）
+              Expanded(
+                child: appState.cardGroups.isEmpty
+                    ? Center(
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(Icons.search_off,
+                              size: 48,
+                              color: Colors.grey.withValues(alpha: 0.3)),
+                          const SizedBox(height: 12),
+                          Text('未发现 PM3 导出文件',
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text('连接设备并执行 dump/autopwn 后自动收集',
+                              style: TextStyle(
+                                  color: Colors.grey[600], fontSize: 12)),
+                        ]),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: appState.cardGroups.length,
+                        itemBuilder: (context, i) =>
+                            _buildCardGroupTile(appState.cardGroups[i], theme),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Connection header ──────────────────────────────────────────────────
+
+  Widget _buildConnectionHeader(
+      AppState appState, bool isConnected, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isConnected
+              ? [
+                  AppTheme.morandiGreen.withValues(alpha: 0.15),
+                  AppTheme.morandiBlue.withValues(alpha: 0.08),
+                ]
+              : [
+                  AppTheme.morandiTaupe.withValues(alpha: 0.1),
+                  Colors.transparent,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isConnected
+              ? AppTheme.morandiGreen.withValues(alpha: 0.3)
+              : theme.dividerColor,
+        ),
+      ),
+      child: Row(children: [
+        // Status icon
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isConnected
+                ? AppTheme.morandiGreen.withValues(alpha: 0.2)
+                : AppTheme.morandiTaupe.withValues(alpha: 0.15),
+          ),
+          child: Icon(
+            isConnected ? Icons.nfc : Icons.usb_off,
+            color: isConnected ? AppTheme.morandiGreen : Colors.grey,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isConnected ? 'PM3 已连接' : 'PM3 未连接',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                isConnected
+                    ? '${appState.portName}  •  ${appState.pm3Version}'
+                    : '请选择串口并连接设备',
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      ]),
+    );
+  }
+
+  // ── Reusable section card ──────────────────────────────────────────────
+
+  Widget _buildSection({
+    required IconData icon,
+    required String title,
+    Widget? trailing,
+    required Widget child,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(icon, size: 18, color: AppTheme.morandiBlue),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold)),
+              if (trailing != null) ...[const Spacer(), trailing],
+            ]),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Error card ─────────────────────────────────────────────────────────
+
+  Widget _buildErrorCard(String error) {
+    return Card(
+      color: AppTheme.morandiError.withValues(alpha: 0.12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error_outline, color: AppTheme.morandiError, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Text(
-                        '串口选择',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: _scanning
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.refresh),
-                        onPressed: _scanning ? null : _scanPorts,
-                        tooltip: '刷新端口',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  if (appState.availablePorts.isEmpty)
-                    const Text(
-                      '未找到串口。请连接 PM3 设备。',
-                      style: TextStyle(color: Colors.orange),
-                    )
-                  else
-                    DropdownButtonFormField<String>(
-                      value: appState.availablePorts.contains(appState.portName)
-                          ? appState.portName
-                          : null,
-                      items: appState.availablePorts
-                          .map(
-                              (p) => DropdownMenuItem(value: p, child: Text(p)))
-                          .toList(),
-                      onChanged: isConnected
-                          ? null
-                          : (v) {
-                              if (v != null) appState.setPort(v);
-                            },
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.usb),
-                      ),
-                    ),
+                  Text('连接失败',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.morandiError,
+                          fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Text(error,
+                      style: const TextStyle(
+                          fontFamily: 'monospace', fontSize: 12)),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Connect/Disconnect button
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: isConnecting
-                  ? null
-                  : () async {
-                      if (isConnected) {
-                        await appState.disconnect();
-                      } else {
-                        await appState.connect();
-                      }
+  // ── Card group tile ────────────────────────────────────────────────────
+
+  Widget _buildCardGroupTile(CardGroup group, ThemeData theme) {
+    final bandColor = group.band == FreqBand.hf
+        ? AppTheme.morandiBlue
+        : AppTheme.morandiGreen;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 6),
+      child: ExpansionTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: bandColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            group.band == FreqBand.hf ? Icons.nfc : Icons.radio,
+            color: bandColor,
+            size: 20,
+          ),
+        ),
+        title: Text(group.label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: Text(
+          '${group.dumpCount} 份转储  •  ${group.keyCount} 份密钥  •  '
+          '${group.files.length} 个文件',
+          style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+        ),
+        children: [
+          for (final f in group.files)
+            ListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              leading: Icon(
+                f.fileType == CardFileType.dump
+                    ? Icons.sd_storage
+                    : f.fileType == CardFileType.key
+                        ? Icons.vpn_key
+                        : Icons.insert_drive_file,
+                size: 16,
+                color: f.fileType == CardFileType.dump
+                    ? AppTheme.morandiBlue
+                    : AppTheme.morandiLavender,
+              ),
+              title: Text(f.fileName,
+                  style:
+                      const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+              subtitle: Text(
+                '${_formatBytes(f.sizeBytes)}  •  '
+                '${_formatTime(f.modified)}  •  ${f.format}',
+                style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.folder_open, size: 16),
+                    tooltip: '在 Dump 查看器中打开',
+                    onPressed: () {
+                      // TODO: Switch to dump viewer and load this file
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('文件: ${f.path}')),
+                      );
                     },
-              icon: isConnecting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(isConnected ? Icons.link_off : Icons.link),
-              label: Text(
-                isConnecting
-                    ? '连接中...'
-                    : isConnected
-                        ? '断开连接'
-                        : '连接',
-                style: const TextStyle(fontSize: 16),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isConnected ? Colors.red : null,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Error display
-          if (!isConnected && appState.lastError.isNotEmpty)
-            Card(
-              color: Colors.red.shade900.withValues(alpha: 0.3),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.redAccent),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '连接失败',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.redAccent,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            appState.lastError,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          if (!isConnected && appState.lastError.isNotEmpty)
-            const SizedBox(height: 16),
-
-          // Device info (when connected)
-          if (isConnected)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '设备信息',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const Divider(),
-                    _infoRow('端口', appState.portName),
-                    _infoRow('版本', appState.pm3Version),
-                    _infoRow('状态', '已连接'),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () {
-                        appState.sendCommand('hw version');
-                      },
-                      child: const Text('查询硬件版本'),
-                    ),
-                  ],
-                ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
             ),
         ],
@@ -268,26 +555,108 @@ class _ConnectionPageState extends State<ConnectionPage> {
     );
   }
 
-  Widget _infoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.grey),
+  // ── Organize dialog ────────────────────────────────────────────────────
+
+  void _showOrganizeDialog(AppState appState) {
+    final controller = TextEditingController(
+      text: appState.collectBaseDir ?? '${Directory.current.path}/pm3_files',
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('归类整理 PM3 文件'),
+        content: SizedBox(
+          width: 400,
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text(
+              '将收集到的 PM3 导出文件按卡片 UID 分类整理到子目录中。\n\n'
+              '目录结构：\n'
+              '  📁 hf-mf/A991A280/\n'
+              '    ├── hf-mf-A991A280-dump.bin\n'
+              '    ├── hf-mf-A991A280-key.bin\n'
+              '    └── ...\n',
+              style: TextStyle(fontSize: 13),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: '目标目录',
+                prefixIcon: Icon(Icons.folder, size: 18),
+              ),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '共 ${appState.collectedFiles.length} 个文件将被整理',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontFamily: 'monospace'),
-            ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final count =
+                  await appState.organizeCollectedFiles(controller.text);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('已整理 $count 个文件')),
+                );
+              }
+            },
+            child: const Text('开始整理'),
           ),
         ],
       ),
     );
+    // controller will be disposed when dialog closes (TextField is StatefulWidget)
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+
+  Widget _infoRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(label,
+                style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: TextStyle(
+                    fontFamily: 'monospace', fontSize: 12, color: valueColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+  }
+
+  static String _formatTime(DateTime dt) {
+    return '${dt.month}/${dt.day} '
+        '${dt.hour.toString().padLeft(2, '0')}:'
+        '${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  static String _getArch() {
+    try {
+      final r = Process.runSync('uname', ['-m']);
+      if (r.exitCode == 0) return (r.stdout as String).trim();
+    } catch (_) {}
+    return 'unknown';
   }
 }

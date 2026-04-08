@@ -17,9 +17,15 @@ void main() {
   for (var i = 0; i < classMatches.length; i++) {
     final className = classMatches[i].group(1)!;
     final start = classMatches[i].end;
-    final end = (i + 1 < classMatches.length) ? classMatches[i + 1].start : text.length;
+    final end =
+        (i + 1 < classMatches.length) ? classMatches[i + 1].start : text.length;
     final body = text.substring(start, end);
-    final methods = methodRegex.allMatches(body).map((m) => m.group(1)).where((s) => s != null).cast<String>().toList();
+    final methods = methodRegex
+        .allMatches(body)
+        .map((m) => m.group(1))
+        .where((s) => s != null)
+        .cast<String>()
+        .toList();
     final methodList = methods.join('|');
     lines.add('"$className",${methods.length},"$methodList"');
   }
