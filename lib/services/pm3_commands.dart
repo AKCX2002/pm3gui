@@ -86,7 +86,7 @@ class HfMfCmd {
   static String rdsc(int sec, String kt, String key) =>
       'hf mf rdsc --sec $sec -${kt.toLowerCase()} -k $key';
   static String wrbl(int blk, String kt, String key, String data) =>
-      'hf mf wrbl --blk $blk -${kt.toLowerCase()} -k $key -d $data';
+      'hf mf wrbl --blk $blk -${kt.toLowerCase()} -k $key -d $data${blk == 0 ? ' --force' : ''}';
   static String dump(String sz, {String? file}) {
     final sb = StringBuffer('hf mf dump --$sz');
     if (file != null) sb.write(' -f $file');
@@ -652,7 +652,7 @@ class Pm3Commands {
 
   static String hfMfWriteBlock(
           int block, String keyType, String key, String data) =>
-      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $data';
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $data${block == 0 ? ' --force' : ''}';
 
   static String hfMfNested(
           String cardSize, int block, String keyType, String key) =>
@@ -692,7 +692,7 @@ class Pm3Commands {
   /// [keyType] — 'A' 或 'B'
   /// [key] — 12位 hex 密钥
   static String hfMfCuidClearBlock(int block, String keyType, String key) =>
-      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d 00000000000000000000000000000000';
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d 00000000000000000000000000000000${block == 0 ? ' --force' : ''}';
 
   /// CUID 卡逐块回写：使用目标卡密钥认证后写入指定数据
   /// [block] — 块号
@@ -701,12 +701,12 @@ class Pm3Commands {
   /// [data] — 32位 hex 数据
   static String hfMfCuidWriteBlock(
           int block, String keyType, String key, String data) =>
-      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $data';
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $data${block == 0 ? ' --force' : ''}';
 
   /// 尾块回写 (Key A + 访问控制 + Key B)
   static String hfMfWriteTrailer(
           int block, String keyType, String key, String trailerData) =>
-      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $trailerData';
+      'hf mf wrbl --blk $block -${keyType.toLowerCase()} -k $key -d $trailerData${block == 0 ? ' --force' : ''}';
 
   /// 生成 1K 卡默认尾块数据
   static String defaultTrailerData(
