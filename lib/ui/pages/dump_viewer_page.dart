@@ -190,6 +190,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         _selectedSector = 0;
         _initEditControllers();
       });
+      context.read<AppState>().updateCard(_card!);
     }
   }
 
@@ -223,6 +224,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
       // else: choice == overwrite → use dump's own keys (already set)
 
       setState(() => _initEditControllers());
+      context.read<AppState>()
+        ..updateCard(_card!)
+        ..setPreferredMfDumpFile(path);
     } else {
       // No previous card — just load normally
       setState(() {
@@ -234,6 +238,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         _selectedSector = 0;
         _initEditControllers();
       });
+      context.read<AppState>()
+        ..updateCard(_card!)
+        ..setPreferredMfDumpFile(path);
     }
   }
 
@@ -299,39 +306,31 @@ class _DumpViewerPageState extends State<DumpViewerPage>
     );
   }
 
-  Future<void> _exportAs(String format) async {
+  Future<void> _setAsPreferredKeyFile() async {
     if (_card == null) return;
-    String? savePath = await FileDialogService.pickSaveFilePath(
-      dialogTitle: '导出文件',
-      suggestedName: 'dump.$format',
-    );
-    if (savePath == null) return;
-    try {
-      switch (format) {
-        case 'eml':
-          await File(savePath).writeAsString(exportToEml(_card!));
-        case 'bin':
-          await File(savePath).writeAsBytes(exportToBin(_card!));
-        case 'json':
-          await File(savePath).writeAsString(exportToJson(_card!));
-        case 'key.bin':
-          await File(savePath).writeAsBytes(exportKeysToBin(_card!.sectorKeys));
-        case 'dic':
-          await File(savePath).writeAsString(
-              exportToDic(_card!.sectorKeys, header: 'UID: ${_card!.uid}'));
-        case 'keys.txt':
-          await File(savePath)
-              .writeAsString(exportKeysAsText(_card!.sectorKeys));
-      }
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('已导出到 $savePath')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('导出失败: $e')));
-      }
+    _applyEdits();
+    final appState = context.read<AppState>();
+    final tmp = File('${Directory.systemTemp.path}/pm3gui-current-keys.bin');
+    await tmp.writeAsBytes(exportKeysToBin(_card!.sectorKeys), flush: true);
+    appState.setPreferredMfKeyFile(tmp.path);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已设为默认密钥文件: ${tmp.path}')),
+      );
+    }
+  }
+
+  Future<void> _setAsPreferredDumpFile() async {
+    if (_card == null) return;
+    _applyEdits();
+    final appState = context.read<AppState>();
+    final tmp = File('${Directory.systemTemp.path}/pm3gui-current-dump.bin');
+    await tmp.writeAsBytes(exportToBin(_card!), flush: true);
+    appState.setPreferredMfDumpFile(tmp.path);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已设为默认转储文件: ${tmp.path}')),
+      );
     }
   }
 
@@ -355,43 +354,46 @@ class _DumpViewerPageState extends State<DumpViewerPage>
               Icon(Icons.insert_drive_file, size: 14, color: Colors.grey[500]),
               const SizedBox(width: 4),
               Expanded(
-                  child: Text('$_filePath (format: $_format)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                      overflow: TextOverflow.ellipsis)),
+                child: Text(
+                  '$_filePath (format: $_format)',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ]),
           ),
         const Divider(height: 1),
-        // Tab bar — always visible
         TabBar(
-            controller: _tabController,
-            labelColor: Theme.of(context).colorScheme.primary,
-            tabs: const [
-              Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
-              Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
-              Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
-              Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
-            ]),
+          controller: _tabController,
+          labelColor: Theme.of(context).colorScheme.primary,
+          tabs: const [
+            Tab(text: '扇区视图', icon: Icon(Icons.grid_view, size: 18)),
+            Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
+            Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
+            Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
+          ],
+        ),
         Expanded(
-            child: TabBarView(controller: _tabController, children: [
-          // Tab 0: 扇区视图
-          _card != null
-              ? Row(children: [
-                  SizedBox(width: 80, child: _buildSectorList()),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: _buildSectorView()),
-                ])
-              : _buildEmptyHint('打开转储文件查看扇区数据', Icons.grid_view),
-          // Tab 1: 密钥编辑 & 块数据编辑
-          _card != null
-              ? _buildKeyEditorView()
-              : _buildEmptyHint('打开转储文件或密钥文件以编辑', Icons.edit),
-          // Tab 2: 深度分析
-          _card != null
-              ? _buildAnalysisView()
-              : _buildEmptyHint('打开转储文件后可查看深度分析', Icons.analytics),
-          // Tab 3: 回写/清空 (CUID)
-          _buildWriteBackView(),
-        ])),
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _card != null
+                  ? Row(children: [
+                      SizedBox(width: 80, child: _buildSectorList()),
+                      const VerticalDivider(width: 1),
+                      Expanded(child: _buildSectorView()),
+                    ])
+                  : _buildEmptyHint('打开转储文件查看扇区数据', Icons.grid_view),
+              _card != null
+                  ? _buildKeyEditorView()
+                  : _buildEmptyHint('打开转储文件或密钥文件以编辑', Icons.edit),
+              _card != null
+                  ? _buildAnalysisView()
+                  : _buildEmptyHint('打开转储文件后可查看深度分析', Icons.analytics),
+              _buildWriteBackView(),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -420,15 +422,30 @@ class _DumpViewerPageState extends State<DumpViewerPage>
       padding: const EdgeInsets.all(8),
       child: Row(children: [
         ElevatedButton.icon(
-            onPressed: _openFile,
-            icon: const Icon(Icons.file_open, size: 18),
-            label: const Text('打开文件')),
+          onPressed: _openFile,
+          icon: const Icon(Icons.file_open, size: 18),
+          label: const Text('打开文件'),
+        ),
         const SizedBox(width: 8),
         if (_card != null) ...[
+          OutlinedButton.icon(
+            onPressed: _setAsPreferredKeyFile,
+            icon: const Icon(Icons.vpn_key, size: 16),
+            label: const Text('设为默认密钥'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: _setAsPreferredDumpFile,
+            icon: const Icon(Icons.save, size: 16),
+            label: const Text('设为默认转储'),
+          ),
+          const SizedBox(width: 8),
           PopupMenuButton<String>(
             onSelected: _exportAs,
             child: const Chip(
-                avatar: Icon(Icons.save_alt, size: 18), label: Text('导出为')),
+              avatar: Icon(Icons.save_alt, size: 18),
+              label: Text('导出为'),
+            ),
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'eml', child: Text('.eml (文本转储)')),
               const PopupMenuItem(value: 'bin', child: Text('.bin (二进制转储)')),
@@ -444,12 +461,118 @@ class _DumpViewerPageState extends State<DumpViewerPage>
           const Spacer(),
           Chip(
             avatar: const Icon(Icons.nfc, size: 18),
-            label: Text('${_card!.cardType.label} | UID: ${_card!.uid}',
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 12)),
+            label: Text(
+              '${_card!.cardType.label} | UID: ${_card!.uid}',
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            ),
           ),
         ],
       ]),
     );
+  }
+
+  Future<void> _exportAs(String format) async {
+    if (_card == null) return;
+
+    _applyEdits();
+    final appState = context.read<AppState>();
+
+    final autoPath = _buildCategorizedExportPath(format, appState);
+    try {
+      await _writeExportToPath(autoPath, format);
+      _afterExportSuccess(autoPath, format, appState, autoSaved: true);
+      return;
+    } catch (_) {
+      // fallback to manual save
+    }
+
+    final savePath = await FileDialogService.pickSaveFilePath(
+      suggestedName: _suggestedExportFileName(format),
+    );
+    if (savePath == null) return;
+
+    try {
+      await _writeExportToPath(savePath, format);
+      _afterExportSuccess(savePath, format, appState, autoSaved: false);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('导出失败: $e')));
+      }
+    }
+  }
+
+  String _suggestedExportFileName(String format) {
+    final uid = _card!.uid.toUpperCase().replaceAll(RegExp(r'[^0-9A-F]'), '');
+    return switch (format) {
+      'eml' => 'hf-mf-$uid-dump.eml',
+      'bin' => 'hf-mf-$uid-dump.bin',
+      'json' => 'hf-mf-$uid-dump.json',
+      'key.bin' => 'hf-mf-$uid-key.bin',
+      'dic' => 'hf-mf-$uid-key.dic',
+      'keys.txt' => 'hf-mf-$uid-keys.txt',
+      _ => 'hf-mf-$uid-export.dat',
+    };
+  }
+
+  String _buildCategorizedExportPath(String format, AppState appState) {
+    final uid = _card!.uid.toUpperCase().replaceAll(RegExp(r'[^0-9A-F]'), '');
+    final baseDir = (appState.collectBaseDir != null &&
+            appState.collectBaseDir!.trim().isNotEmpty)
+        ? appState.collectBaseDir!.trim()
+        : '${Directory.current.path}/pm3_files';
+    return '$baseDir/hf-mf/$uid/${_suggestedExportFileName(format)}';
+  }
+
+  Future<void> _writeExportToPath(String path, String format) async {
+    await File(path).parent.create(recursive: true);
+    switch (format) {
+      case 'eml':
+        await File(path).writeAsString(exportToEml(_card!));
+      case 'bin':
+        await File(path).writeAsBytes(exportToBin(_card!));
+      case 'json':
+        await File(path).writeAsString(exportToJson(_card!));
+      case 'key.bin':
+        await File(path).writeAsBytes(exportKeysToBin(_card!.sectorKeys));
+      case 'dic':
+        await File(path).writeAsString(
+          exportToDic(_card!.sectorKeys, header: 'UID: ${_card!.uid}'),
+        );
+      case 'keys.txt':
+        await File(path).writeAsString(exportKeysAsText(_card!.sectorKeys));
+    }
+  }
+
+  void _afterExportSuccess(
+    String savePath,
+    String format,
+    AppState appState, {
+    required bool autoSaved,
+  }) {
+    const baseMarker = '/hf-mf/';
+    if (savePath.contains(baseMarker)) {
+      final baseDir = savePath.substring(0, savePath.indexOf(baseMarker));
+      appState.setCollectBaseDir(baseDir);
+    }
+
+    if (format == 'key.bin') {
+      appState.setPreferredMfKeyFile(savePath);
+    }
+    if (format == 'bin') {
+      appState.setPreferredMfDumpFile(savePath);
+    }
+    appState.scanForFiles();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            autoSaved ? '已自动归类导出: $savePath' : '已导出: $savePath',
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildSectorList() {
@@ -1397,6 +1520,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
       }
     }
     setState(() {});
+    context.read<AppState>().updateCard(_card!);
     if (mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('修改已应用到内存')));
@@ -1710,11 +1834,12 @@ class _DumpViewerPageState extends State<DumpViewerPage>
               ]),
               const SizedBox(height: 8),
               const Text(
-                'CUID 卡没有后门命令，必须使用已知密钥认证后逐块写入。\n'
-                '• 清空：使用卡片当前密钥认证，将数据块写为全 0\n'
-                '• 回写：使用目标卡密钥认证，将 Dump 数据逐块写入\n'
-                '• 尾块回写：会同时更新密钥和访问控制位\n\n'
-                '⚠️ 写入块 0 需要魔术卡（Gen1A/Gen2）才能修改 UID',
+                'CUID（Gen2）卡没有后门命令，必须使用已知密钥认证后逐块写入。\n'
+                '• 整卡清空：使用卡片当前密钥认证，将数据块写为全 0\n'
+                '• 整卡回写：使用目标卡密钥认证，将 Dump 数据逐块写入\n'
+                '• 回写扇区：仅写入当前选中的单个扇区\n'
+                '• Gen1A 后门恢复：使用 hf mf restore 后门命令整卡恢复（仅 Gen1A 卡）\n\n'
+                '⚠️ CUID 卡写入块 0 会自动加 --force 参数',
                 style: TextStyle(fontSize: 13),
               ),
             ]),
@@ -1817,59 +1942,79 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         Row(children: [
           // CUID 逐块清空
           Expanded(
-            child: ElevatedButton.icon(
-              onPressed:
-                  isConnected ? () => _showCuidClearDialog(appState) : null,
-              icon: const Icon(Icons.delete_sweep),
-              label: const Text('CUID 逐块清空'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Tooltip(
+              message: '使用 Dump 中的密钥认证，将所有数据块写为全 0\n'
+                  '尾块恢复为默认密钥和访问控制位\n'
+                  '适用于 CUID / Gen2 卡（无后门）',
+              child: ElevatedButton.icon(
+                onPressed:
+                    isConnected ? () => _showCuidClearDialog(appState) : null,
+                icon: const Icon(Icons.delete_sweep),
+                label: const Text('CUID 整卡清空'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 12),
           // CUID 逐块回写
           Expanded(
-            child: ElevatedButton.icon(
-              onPressed:
-                  isConnected ? () => _showCuidWriteDialog(appState) : null,
-              icon: const Icon(Icons.upload),
-              label: const Text('CUID 逐块回写'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Tooltip(
+              message: '使用目标卡密钥认证，将 Dump 数据逐块写入\n'
+                  '适用于 CUID / Gen2 卡（无后门）\n'
+                  '需要已知目标卡的密钥才能写入',
+              child: ElevatedButton.icon(
+                onPressed:
+                    isConnected ? () => _showCuidWriteDialog(appState) : null,
+                icon: const Icon(Icons.upload),
+                label: const Text('CUID 整卡回写'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ),
           ),
         ]),
         const SizedBox(height: 12),
 
-        // 单扇区回写
+        // 单扇区回写 + Gen1A restore
         Row(children: [
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed:
-                  isConnected ? () => _showSectorWriteDialog(appState) : null,
-              icon: const Icon(Icons.edit_note),
-              label: Text('回写扇区 $_selectedSector'),
+            child: Tooltip(
+              message: '仅回写当前选中的扇区 $_selectedSector\n'
+                  '使用 Dump 密钥认证，逐块写入该扇区\n'
+                  '适合修改单个扇区后的局部更新',
+              child: OutlinedButton.icon(
+                onPressed:
+                    isConnected ? () => _showSectorWriteDialog(appState) : null,
+                icon: const Icon(Icons.edit_note),
+                label: Text('回写扇区 $_selectedSector'),
+              ),
             ),
           ),
           const SizedBox(width: 12),
-          // hf mf restore (标准回写)
+          // hf mf restore (Gen1A 后门回写)
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: isConnected
-                  ? () {
-                      final sz =
-                          Pm3Commands.cardSizeFlag(_card!.cardType.label);
-                      appState.sendCommand(Pm3Commands.hfMfRestore(sz));
-                    }
-                  : null,
-              icon: const Icon(Icons.restore),
-              label: const Text('标准 restore (有后门)'),
+            child: Tooltip(
+              message: '使用 PM3 的 hf mf restore 命令整卡恢复\n'
+                  '仅适用于 Gen1A 后门卡，无需密钥\n'
+                  '通过 0x40/0x43 后门指令直接写入所有块',
+              child: OutlinedButton.icon(
+                onPressed: isConnected
+                    ? () {
+                        final sz =
+                            Pm3Commands.cardSizeFlag(_card!.cardType.label);
+                        appState.sendCommand(Pm3Commands.hfMfRestore(sz));
+                      }
+                    : null,
+                icon: const Icon(Icons.restore),
+                label: const Text('Gen1A 后门恢复'),
+              ),
             ),
           ),
         ]),

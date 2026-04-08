@@ -68,6 +68,23 @@ class AppState extends ChangeNotifier {
   bool isScanning = false;
   String? collectBaseDir; // 归类存放的根目录
 
+  // Mifare dump/restore 可复用的默认文件
+  String? preferredMfKeyFile;
+  String? preferredMfDumpFile;
+
+  // 硬件详细信息（从 hw version 解析）
+  String hwModel = ''; // 硬件型号 (如 "PM3 RDV4")
+  String hwFirmware = ''; // 固件版本
+  String hwBootrom = ''; // Bootrom 版本
+  String hwMcu = ''; // MCU 型号 (如 "AT91SAM7S512")
+  String hwFlashSize = ''; // Flash 大小
+  String hwSmartcard = ''; // 智能卡模块
+  String hwFpga = ''; // FPGA 版本
+  String hwUniqueId = ''; // 设备唯一 ID
+  int hwFlashFree = 0; // Flash 空闲字节
+  int hwFlashTotal = 0; // Flash 总字节
+  bool hwInfoParsed = false; // 是否已解析硬件信息
+
   // Connection state passthrough
   Pm3State get connectionState => pm3.state;
   String get pm3Version => pm3.version;
@@ -100,15 +117,22 @@ class AppState extends ChangeNotifier {
 
   Future<bool> connect() async {
     if (portName.isEmpty) return false;
+    // 重置硬件信息
+    _resetHwInfo();
     final result = await pm3.connect(pm3Path, portName);
     // Auto scan files on connect
-    if (result) scanForFiles();
+    if (result) {
+      scanForFiles();
+      // 自动查询硬件信息
+      _queryHwVersion();
+    }
     notifyListeners();
     return result;
   }
 
   Future<void> disconnect() async {
     await pm3.disconnect();
+    _resetHwInfo();
     notifyListeners();
   }
 
@@ -208,6 +232,23 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPreferredMfKeyFile(String? path) {
+    preferredMfKeyFile = (path != null && path.trim().isNotEmpty) ? path : null;
+    notifyListeners();
+  }
+
+  void setPreferredMfDumpFile(String? path) {
+    preferredMfDumpFile =
+        (path != null && path.trim().isNotEmpty) ? path : null;
+    notifyListeners();
+  }
+
+  void setCollectBaseDir(String? baseDir) {
+    collectBaseDir =
+        (baseDir != null && baseDir.trim().isNotEmpty) ? baseDir : null;
+    notifyListeners();
+  }
+
   // ──────────────────────────────────────────────────────────
   //  PM3 文件自动扫描 & 归类
   // ──────────────────────────────────────────────────────────
@@ -251,6 +292,133 @@ class AppState extends ChangeNotifier {
     // 重新扫描以更新路径
     await scanForFiles();
     return count;
+  }
+
+  // ──────────────────────────────────────────────────────────
+  //  硬件信息解析
+  // ──────────────────────────────────────────────────────────
+
+  void _resetHwInfo() {
+    hwModel = '';
+    hwFirmware = '';
+    hwBootrom = '';
+    hwMcu = '';
+    hwFlashSize = '';
+    hwSmartcard = '';
+    hwFpga = '';
+    hwUniqueId = '';
+    hwFlashFree = 0;
+    hwFlashTotal = 0;
+    hwInfoParsed = false;
+  }
+
+  /// 连接后自动查询硬件版本，监听输出解析
+  void _queryHwVersion() {
+    final buffer = StringBuffer();
+    StreamSubscription<String>? sub;
+
+    sub = pm3.outputStream.listen((line) {
+      buffer.writeln(line);
+    });
+
+    pm3.sendCommand('hw version');
+
+    // 等待 3 秒后解析缓冲区
+    Future.delayed(const Duration(seconds: 3), () {
+      sub?.cancel();
+      _parseHwVersion(buffer.toString());
+      notifyListeners();
+    });
+  }
+
+  /// 解析 `hw version` 的输出提取硬件信息
+  void _parseHwVersion(String output) {
+    hwInfoParsed = true;
+
+    // 设备型号: [#]  [ Proxmark3 GENERIC ] / [#]  [ RDV4 ]
+    final modelMatch = RegExp(
+      r'\[\s*(Proxmark3[^\]]*|RDV[^\]]*|PM3[^\]]*)\s*\]',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (modelMatch != null) {
+      hwModel = modelMatch.group(1)!.trim();
+    }
+
+    // 固件版本: [=]  compiled with.............. GCC xxx
+    //           [=] firmware................... Iceman/master/v4.xxxxx-xxx-xxxx 2024-xx-xx
+    final fwMatch = RegExp(
+      r'firmware[.\s]+([\w/\-. ]+)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (fwMatch != null) {
+      hwFirmware = fwMatch.group(1)!.trim();
+    }
+
+    // Bootrom: [=] bootrom................... Iceman/master/...
+    final bootMatch = RegExp(
+      r'bootrom[.\s]+([\w/\-. ]+)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (bootMatch != null) {
+      hwBootrom = bootMatch.group(1)!.trim();
+    }
+
+    // MCU: [=] uC: AT91SAM7S512 Rev ...
+    final mcuMatch = RegExp(
+      r'uC:\s*(AT\w+)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (mcuMatch != null) {
+      hwMcu = mcuMatch.group(1)!.trim();
+    }
+
+    // Flash: [=]  256K (0x40000) or similar
+    final flashMatch = RegExp(
+      r'Embedded\s+Flash\s*[:.]?\s*(\d+\w?)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (flashMatch != null) {
+      hwFlashSize = flashMatch.group(1)!.trim();
+    }
+
+    // FPGA: [=] FPGA fingerprint.......... xxx
+    final fpgaMatch = RegExp(
+      r'FPGA\s+fingerprint[.\s]+([\w.\- ]+)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (fpgaMatch != null) {
+      hwFpga = fpgaMatch.group(1)!.trim();
+    }
+
+    // Unique ID: [=] PRNG............. xxx
+    final uidMatch = RegExp(
+      r'Unique\s+ID[.\s:]+([0-9A-Fa-f\s]+)',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (uidMatch != null) {
+      hwUniqueId = uidMatch.group(1)!.replaceAll(RegExp(r'\s+'), ' ').trim();
+    }
+
+    // Smart card module
+    if (output.toLowerCase().contains('smartcard module (sim)')) {
+      hwSmartcard = '已安装';
+    }
+
+    // Flash memory usage: [=] available flash mem for firmware and target ...  xxx / xxx
+    final memMatch = RegExp(
+      r'(\d+)\s*/\s*(\d+)\s*bytes',
+      caseSensitive: false,
+    ).firstMatch(output);
+    if (memMatch != null) {
+      hwFlashFree = int.tryParse(memMatch.group(1)!) ?? 0;
+      hwFlashTotal = int.tryParse(memMatch.group(2)!) ?? 0;
+    }
+  }
+
+  /// 手动刷新硬件信息
+  Future<void> refreshHwInfo() async {
+    if (!isConnected) return;
+    _queryHwVersion();
   }
 
   @override

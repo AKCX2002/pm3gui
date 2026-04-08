@@ -642,10 +642,35 @@ class Pm3Commands {
 
   static String hfMfInfo() => 'hf mf info';
 
-  static String hfMfDump(String cardSize) => 'hf mf dump --$cardSize';
+  static String hfMfDump(
+    String cardSize, {
+    String? keyFile,
+    String? dumpFile,
+  }) {
+    final parts = <String>['hf mf dump', '--$cardSize'];
+    if (keyFile != null && keyFile.trim().isNotEmpty) {
+      parts.add('--keys ${_quotePath(keyFile)}');
+    }
+    if (dumpFile != null && dumpFile.trim().isNotEmpty) {
+      parts.add('--file ${_quotePath(dumpFile)}');
+    }
+    return parts.join(' ');
+  }
 
-  static String hfMfRestore(String cardSize) =>
-      'hf mf restore --$cardSize --force';
+  static String hfMfRestore(
+    String cardSize, {
+    String? keyFile,
+    String? dumpFile,
+  }) {
+    final parts = <String>['hf mf restore', '--$cardSize', '--force'];
+    if (keyFile != null && keyFile.trim().isNotEmpty) {
+      parts.add('--keys ${_quotePath(keyFile)}');
+    }
+    if (dumpFile != null && dumpFile.trim().isNotEmpty) {
+      parts.add('--file ${_quotePath(dumpFile)}');
+    }
+    return parts.join(' ');
+  }
 
   static String hfMfReadBlock(int block, String keyType, String key) =>
       'hf mf rdbl --blk $block -${keyType.toLowerCase()} -k $key';
@@ -740,6 +765,11 @@ class Pm3Commands {
   static String hwVersion() => 'hw version';
   static String hwStatus() => 'hw status';
   static String hwTune() => 'hw tune';
+
+  static String _quotePath(String path) {
+    final escaped = path.replaceAll('"', '\\"');
+    return '"$escaped"';
+  }
 
   // Card size label to CLI flag
   static String cardSizeFlag(String label) {

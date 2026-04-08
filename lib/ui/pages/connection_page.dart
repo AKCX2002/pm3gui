@@ -209,6 +209,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   _buildSection(
                     icon: Icons.developer_board,
                     title: '设备信息',
+                    trailing: IconButton(
+                      icon: const Icon(Icons.refresh, size: 16),
+                      tooltip: '刷新硬件信息',
+                      onPressed: () => appState.refreshHwInfo(),
+                      visualDensity: VisualDensity.compact,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -216,6 +222,41 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         _infoRow('版本', appState.pm3Version),
                         _infoRow('状态', '已连接',
                             valueColor: AppTheme.morandiSuccess),
+                        if (appState.hwInfoParsed) ...[
+                          const Divider(height: 16),
+                          if (appState.hwModel.isNotEmpty)
+                            _infoRow('设备型号', appState.hwModel),
+                          if (appState.hwMcu.isNotEmpty)
+                            _infoRow('MCU', appState.hwMcu),
+                          if (appState.hwFlashSize.isNotEmpty)
+                            _infoRow('Flash', appState.hwFlashSize),
+                          if (appState.hwFirmware.isNotEmpty)
+                            _infoRow('固件', appState.hwFirmware),
+                          if (appState.hwBootrom.isNotEmpty)
+                            _infoRow('Bootrom', appState.hwBootrom),
+                          if (appState.hwFpga.isNotEmpty)
+                            _infoRow('FPGA', appState.hwFpga),
+                          if (appState.hwSmartcard.isNotEmpty)
+                            _infoRow('智能卡模块', appState.hwSmartcard),
+                          if (appState.hwUniqueId.isNotEmpty)
+                            _infoRow('设备 ID', appState.hwUniqueId),
+                          if (appState.hwFlashTotal > 0)
+                            _buildFlashUsage(appState),
+                        ] else ...[
+                          const Divider(height: 16),
+                          Row(children: [
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 8),
+                            Text('正在获取硬件信息...',
+                                style: TextStyle(
+                                    fontSize: 12, color: Colors.grey[500])),
+                          ]),
+                        ],
+                        const Divider(height: 16),
                         _infoRow('命令历史', '${appState.commandHistory.length} 条'),
                         _infoRow('终端缓冲', '${appState.terminalOutput.length} 行'),
                         const SizedBox(height: 8),
@@ -235,6 +276,28 @@ class _ConnectionPageState extends State<ConnectionPage> {
                               onPressed: () => appState.sendCommand('hw tune'),
                               icon: const Icon(Icons.wifi_tethering, size: 14),
                               label: const Text('天线调谐',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                        ]),
+                        const SizedBox(height: 6),
+                        Row(children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  appState.sendCommand('hw status'),
+                              icon: const Icon(Icons.monitor_heart, size: 14),
+                              label: const Text('硬件状态',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  appState.sendCommand('hw dbg -4'),
+                              icon: const Icon(Icons.bug_report, size: 14),
+                              label: const Text('调试级别',
                                   style: TextStyle(fontSize: 12)),
                             ),
                           ),
@@ -631,9 +694,53 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 style: TextStyle(color: Colors.grey[500], fontSize: 12)),
           ),
           Expanded(
-            child: Text(value,
+            child: SelectableText(value,
                 style: TextStyle(
                     fontFamily: 'monospace', fontSize: 12, color: valueColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlashUsage(AppState appState) {
+    final free = appState.hwFlashFree;
+    final total = appState.hwFlashTotal;
+    final used = total - free;
+    final usedPct = total > 0 ? used / total : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            SizedBox(
+              width: 80,
+              child: Text('Flash 用量',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+            ),
+            Expanded(
+              child: Text(
+                '${_formatBytes(used)} / ${_formatBytes(total)} '
+                '(${(usedPct * 100).toStringAsFixed(1)}%)',
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: usedPct,
+              backgroundColor: Colors.grey.withValues(alpha: 0.2),
+              color: usedPct > 0.9
+                  ? AppTheme.morandiError
+                  : usedPct > 0.7
+                      ? AppTheme.morandiWarning
+                      : AppTheme.morandiGreen,
+              minHeight: 6,
+            ),
           ),
         ],
       ),
