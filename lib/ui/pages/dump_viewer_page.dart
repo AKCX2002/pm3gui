@@ -23,6 +23,16 @@ import 'package:pm3gui/state/app_state.dart';
 
 enum _KeyOverride { preserve, overwrite }
 
+enum _QuickWriteMode {
+  auto,
+  uid,
+  cuid,
+  fuid,
+  gen1a,
+  gen3,
+  gen4,
+}
+
 class DumpViewerPage extends StatefulWidget {
   const DumpViewerPage({super.key});
 
@@ -59,6 +69,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   String _writeKeyType = 'B'; // default use Key B for auth
   bool _skipBlock0 = true;
   bool _writeTrailers = true;
+  bool _processingExternalOpenRequest = false;
+  _QuickWriteMode _quickWriteMode = _QuickWriteMode.auto;
+  String _gen4Pwd = '';
 
   @override
   void initState() {
@@ -106,6 +119,41 @@ class _DumpViewerPageState extends State<DumpViewerPage>
     } catch (e) {
       setState(() => _error = 'Error: $e');
     }
+  }
+
+  Future<void> _openPath(String path) async {
+    try {
+      final isKey = await _isKeyFile(path);
+      if (isKey) {
+        await _loadKeyFileOnly(path);
+      } else {
+        await _loadDumpFile(path);
+      }
+    } catch (e) {
+      setState(() => _error = 'Error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('打开失败: $e')),
+      );
+    }
+  }
+
+  void _consumePendingOpenRequest(AppState appState) {
+    if (_processingExternalOpenRequest) return;
+    final pending = appState.pendingIntent;
+    if (pending == null || pending.page != AppPage.dumpViewer) return;
+
+    _processingExternalOpenRequest = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final intent = appState.takePendingIntentFor(AppPage.dumpViewer);
+      if (intent != null && intent.action == 'open_file') {
+        final path = intent.params['path'];
+        if (path != null && path.trim().isNotEmpty) {
+          await _openPath(path);
+        }
+      }
+      _processingExternalOpenRequest = false;
+    });
   }
 
   /// Detect if a file is a key-only file (.dic text, or .bin with key-file size).
@@ -339,6 +387,9 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    _consumePendingOpenRequest(appState);
+
     return Column(
       children: [
         _buildToolbar(),
@@ -1943,6 +1994,86 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         const SizedBox(height: 16),
 
         // ---- 操作按钮 ----
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('🚀 一键智能回写',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
+                const Text(
+                  '按目标卡类型选择最佳回写路径（可用于 UID/CUID/FUID/Gen1A/Gen3/Gen4）。',
+                  style: TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<_QuickWriteMode>(
+                  initialValue: _quickWriteMode,
+                  decoration: const InputDecoration(
+                    labelText: '目标卡类型/模式',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.auto, child: Text('AUTO (默认)')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.uid, child: Text('UID 普通卡')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.cuid,
+                        child: Text('CUID / Gen2')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.fuid,
+                        child: Text('FUID (一次性 UID 可改)')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.gen1a, child: Text('Gen1A 后门卡')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.gen3, child: Text('Gen3 魔术卡')),
+                    DropdownMenuItem(
+                        value: _QuickWriteMode.gen4, child: Text('Gen4 GTU')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _quickWriteMode = v);
+                  },
+                ),
+                const SizedBox(height: 8),
+                if (_quickWriteMode == _QuickWriteMode.gen4)
+                  TextFormField(
+                    initialValue: _gen4Pwd,
+                    decoration: const InputDecoration(
+                      labelText: 'Gen4 密码 (可选)',
+                      hintText: '8 hex，例如 00000000',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (v) => _gen4Pwd = v.trim(),
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                  ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: isConnected
+                        ? () => _executeQuickWriteBack(appState)
+                        : null,
+                    icon: const Icon(Icons.flash_on),
+                    label: const Text('一键智能回写'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
         Row(children: [
           // CUID 逐块清空
           Expanded(
@@ -2114,6 +2245,80 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         ),
       ]),
     );
+  }
+
+  Future<String> _prepareTempDumpBin(AppState appState) async {
+    _applyEdits();
+    final file = File(
+      '${Directory.systemTemp.path}/pm3gui-quick-write-${DateTime.now().millisecondsSinceEpoch}.bin',
+    );
+    await file.writeAsBytes(exportToBin(_card!), flush: true);
+    appState.setPreferredMfDumpFile(file.path);
+    return file.path;
+  }
+
+  Future<void> _executeQuickWriteBack(AppState appState) async {
+    if (_card == null) return;
+
+    switch (_quickWriteMode) {
+      case _QuickWriteMode.auto:
+      case _QuickWriteMode.cuid:
+        await _executeCuidWrite(appState);
+        return;
+
+      case _QuickWriteMode.uid:
+        final old = _skipBlock0;
+        setState(() => _skipBlock0 = true);
+        try {
+          await _executeCuidWrite(appState);
+        } finally {
+          if (mounted) setState(() => _skipBlock0 = old);
+        }
+        return;
+
+      case _QuickWriteMode.fuid:
+      case _QuickWriteMode.gen3:
+        final uid =
+            _card!.uid.toUpperCase().replaceAll(RegExp(r'[^0-9A-F]'), '');
+        if (uid.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('未找到有效 UID，无法执行 UID 写入')));
+          }
+          return;
+        }
+        await appState.sendCommand(HfMfCmd.gen3uid(uid));
+        final old = _skipBlock0;
+        setState(() => _skipBlock0 = true);
+        try {
+          await _executeCuidWrite(appState);
+        } finally {
+          if (mounted) setState(() => _skipBlock0 = old);
+        }
+        return;
+
+      case _QuickWriteMode.gen1a:
+        final sz = Pm3Commands.cardSizeFlag(_card!.cardType.label);
+        final dumpPath = await _prepareTempDumpBin(appState);
+        await appState.sendCommand(
+          Pm3Commands.hfMfRestore(
+            sz,
+            keyFile: appState.preferredMfKeyFile,
+            dumpFile: dumpPath,
+          ),
+        );
+        return;
+
+      case _QuickWriteMode.gen4:
+        final dumpPath = await _prepareTempDumpBin(appState);
+        await appState.sendCommand(
+          HfMfCmd.gload(
+            dumpPath,
+            pwd: _gen4Pwd.isNotEmpty ? _gen4Pwd : null,
+          ),
+        );
+        return;
+    }
   }
 
   // 简洁的密钥显示表

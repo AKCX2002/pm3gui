@@ -8,6 +8,32 @@ import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/services/pm3_process.dart';
 import 'package:pm3gui/services/file_collector.dart';
 
+/// App shell page index mapping (must match HomePage sidebar order).
+enum AppPage {
+  connection,
+  terminal,
+  dumpViewer,
+  dumpCompare,
+  mifare,
+  lf,
+  settings,
+}
+
+/// Cross-page navigation intent with optional action and params.
+class NavigationIntent {
+  final AppPage page;
+  final String action;
+  final Map<String, String> params;
+  final int timestamp;
+
+  const NavigationIntent({
+    required this.page,
+    required this.action,
+    this.params = const {},
+    required this.timestamp,
+  });
+}
+
 /// 逐块写入任务的进度状态
 class WriteProgress {
   final int total;
@@ -42,6 +68,13 @@ class WriteBlockResult {
 
 class AppState extends ChangeNotifier {
   final Pm3Process pm3 = Pm3Process();
+
+  // Global page navigation state (HomePage sidebar index)
+  int currentPageIndex = 0;
+
+  // Cross-page generic intent bus.
+  NavigationIntent? _pendingIntent;
+  NavigationIntent? get pendingIntent => _pendingIntent;
 
   // Connection settings
   String pm3Path = '';
@@ -225,6 +258,53 @@ class AppState extends ChangeNotifier {
   void clearTerminal() {
     terminalOutput.clear();
     notifyListeners();
+  }
+
+  void setCurrentPage(int index) {
+    if (index == currentPageIndex) return;
+    currentPageIndex = index;
+    notifyListeners();
+  }
+
+  void navigateTo(AppPage page) {
+    setCurrentPage(page.index);
+  }
+
+  /// Send a cross-page intent (for page switch + in-page action/params).
+  void requestNavigationIntent(
+    AppPage page, {
+    required String action,
+    Map<String, String> params = const {},
+  }) {
+    currentPageIndex = page.index;
+    _pendingIntent = NavigationIntent(
+      page: page,
+      action: action,
+      params: params,
+      timestamp: DateTime.now().microsecondsSinceEpoch,
+    );
+    notifyListeners();
+  }
+
+  /// Consume pending intent for [page]. Returns null if not targeting [page].
+  NavigationIntent? takePendingIntentFor(AppPage page) {
+    final intent = _pendingIntent;
+    if (intent == null || intent.page != page) return null;
+    _pendingIntent = null;
+    return intent;
+  }
+
+  /// Request switching to Dump Viewer page and opening [path].
+  void requestOpenDumpInViewer(String path) {
+    final normalized = path.trim();
+    if (normalized.isEmpty) return;
+
+    preferredMfDumpFile = normalized;
+    requestNavigationIntent(
+      AppPage.dumpViewer,
+      action: 'open_file',
+      params: {'path': normalized},
+    );
   }
 
   void updateCard(MifareCard card) {

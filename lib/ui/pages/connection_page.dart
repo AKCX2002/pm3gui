@@ -140,7 +140,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                             ),
                           ]),
                         )
-                        : DropdownButtonFormField<String>(
+                      : DropdownButtonFormField<String>(
                           initialValue: appState.availablePorts
                                   .contains(appState.portName)
                               ? appState.portName
@@ -603,9 +603,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     icon: const Icon(Icons.folder_open, size: 16),
                     tooltip: '在 Dump 查看器中打开',
                     onPressed: () {
-                      // TODO: Switch to dump viewer and load this file
+                      context.read<AppState>().requestOpenDumpInViewer(f.path);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('文件: ${f.path}')),
+                        SnackBar(content: Text('已切换到 Dump 查看器: ${f.fileName}')),
                       );
                     },
                     visualDensity: VisualDensity.compact,

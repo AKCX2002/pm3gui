@@ -27,6 +27,7 @@ class _MifarePageState extends State<MifarePage>
   String _writeData = '';
   String _quickKeyFile = '';
   String _quickDumpFile = '';
+  String _scriptName = '';
 
   // 命令结果
   String _lastResult = '';
@@ -278,6 +279,77 @@ class _MifarePageState extends State<MifarePage>
           _actionCard('喗探', '捕获卡片通信', Icons.hearing, () {
             _execute(Pm3Commands.hf14aSniff());
           }),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('更多卡型破解/诊断（参考命令文档）',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _execute(HfMfuCmd.cchk()),
+                        icon: const Icon(Icons.security, size: 16),
+                        label: const Text('MFU CCheck'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _execute(HfMfdesCmd.chk()),
+                        icon: const Icon(Icons.lock_open, size: 16),
+                        label: const Text('DESFire CHK'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _execute(Hf14bCmd.info()),
+                        icon: const Icon(Icons.contactless, size: 16),
+                        label: const Text('ISO14443-B INFO'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => _execute(Hf14aCmd.cuids(count: 20)),
+                        icon: const Icon(Icons.qr_code, size: 16),
+                        label: const Text('采集 CUID'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    initialValue: _scriptName,
+                    decoration: const InputDecoration(
+                      labelText: 'PM3 脚本名 (script run <name>)',
+                      hintText: '例如: mifare/mf_autopwn',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (v) => _scriptName = v.trim(),
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => _execute(ScriptCmd.list()),
+                        icon: const Icon(Icons.list, size: 16),
+                        label: const Text('列出脚本'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _scriptName.isEmpty
+                            ? null
+                            : () => _execute(ScriptCmd.run(_scriptName)),
+                        icon: const Icon(Icons.play_arrow, size: 16),
+                        label: const Text('运行脚本'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

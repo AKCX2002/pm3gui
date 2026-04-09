@@ -23,7 +23,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
   bool _sidebarExpanded = true;
 
   final _pages = const [
@@ -152,7 +151,7 @@ class _HomePageState extends State<HomePage> {
                           horizontal: 8, vertical: 4),
                       itemBuilder: (context, index) {
                         final item = _navItems[index];
-                        final selected = index == _currentIndex;
+                        final selected = index == appState.currentPageIndex;
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 2),
                           child: Material(
@@ -163,8 +162,7 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(10),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(10),
-                              onTap: () =>
-                                  setState(() => _currentIndex = index),
+                              onTap: () => appState.setCurrentPage(index),
                               child: Container(
                                 height: 44,
                                 padding:
@@ -276,7 +274,7 @@ class _HomePageState extends State<HomePage> {
           // ========== 主内容区 (IndexedStack 保持页面状态) ==========
           Expanded(
             child: IndexedStack(
-              index: _currentIndex,
+              index: appState.currentPageIndex,
               children: _pages,
             ),
           ),
