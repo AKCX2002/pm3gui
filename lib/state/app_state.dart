@@ -18,12 +18,39 @@ import 'package:pm3gui/services/file_collector.dart';
 
 /// 应用页面索引映射（必须与HomePage侧边栏顺序匹配）
 enum AppPage {
+  // ── 通用 ──
   connection, // 连接页面
   terminal, // 终端页面
   dumpViewer, // Dump查看器
   dumpCompare, // Dump比较
-  mifare, // Mifare高频操作
-  lf, // 低频操作
+  // ── 高频 HF ──
+  mifare, // Mifare Classic
+  mifareUltralight, // Mifare Ultralight / NTAG
+  desfire, // Mifare DESFire
+  iclass, // iCLASS / Picopass
+  iso15693, // ISO 15693
+  iso14443b, // ISO 14443-B
+  felica, // FeliCa
+  legic, // Legic
+  emv, // EMV
+  seos, // SEOS
+  fido, // FIDO / FIDO2
+  hfSniff, // HF Sniff / 搜索 / 调谐
+  // ── 低频 LF ──
+  lf, // LF 通用 + EM + T55xx
+  lfHid, // HID Prox
+  lfHitag, // Hitag
+  lfAwid, // AWID
+  lfIndala, // Indala
+  lfIo, // ioProx
+  lfPyramid, // Pyramid
+  lfKeri, // Keri
+  lfFdxb, // FDX-B
+  // ── 工具 ──
+  data, // Data 数据处理
+  trace, // Trace 捕获分析
+  nfc, // NFC
+  script, // Script 脚本
   settings, // 设置页面
 }
 
@@ -96,8 +123,6 @@ class AppState extends ChangeNotifier {
   final List<String> terminalOutput = [];
   final List<String> commandHistory = [];
   int historyIndex = -1;
-
-
 
   // 逐块写入进度
   WriteProgress? writeProgress;
@@ -275,8 +300,6 @@ class AppState extends ChangeNotifier {
     pm3Path = path;
     notifyListeners();
   }
-
-
 
   void clearTerminal() {
     terminalOutput.clear();
