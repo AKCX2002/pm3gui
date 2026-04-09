@@ -82,70 +82,60 @@ class _DataPageState extends State<DataPage>
   }
 
   Widget _buildBasicTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '绘图',
-                      subtitle: '显示数据图表',
-                      icon: Icons.show_chart,
-                      onTap: () => _execute(DataCmd.plot())),
-                  ActionCard(
-                      title: '清除',
-                      subtitle: '清除绘图缓冲区',
-                      icon: Icons.clear_all,
-                      onTap: () => _execute(DataCmd.clear())),
-                  ActionCard(
-                      title: '检测时钟',
-                      subtitle: '自动检测时钟速率',
-                      icon: Icons.timer,
-                      onTap: () => _execute(DataCmd.detectclock())),
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('采样',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                    labelText: '采样数', isDense: true),
-                                initialValue: _sampleCount,
-                                onChanged: (v) => _sampleCount = v,
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                  onPressed: () => _execute(DataCmd.samples(
-                                      count:
-                                          int.tryParse(_sampleCount) ?? 20000)),
-                                  icon: const Icon(Icons.memory, size: 18),
-                                  label: const Text('读取采样')),
-                            ],
-                          ))),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '绘图',
+              subtitle: '显示数据图表',
+              icon: Icons.show_chart,
+              onTap: () => _execute(DataCmd.plot())),
+          ActionCard(
+              title: '清除',
+              subtitle: '清除绘图缓冲区',
+              icon: Icons.clear_all,
+              onTap: () => _execute(DataCmd.clear())),
+          ActionCard(
+              title: '检测时钟',
+              subtitle: '自动检测时钟速率',
+              icon: Icons.timer,
+              onTap: () => _execute(DataCmd.detectclock())),
+          Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('采样',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: '采样数', isDense: true),
+                        initialValue: _sampleCount,
+                        onChanged: (v) => _sampleCount = v,
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                          onPressed: () => _execute(DataCmd.samples(
+                              count: int.tryParse(_sampleCount) ?? 20000)),
+                          icon: const Icon(Icons.memory, size: 18),
+                          label: const Text('读取采样')),
+                    ],
+                  ))),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildAnalyzeTab() {

@@ -81,39 +81,31 @@ class _LfHidPageState extends State<LfHidPage>
   }
 
   Widget _buildReadTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取 HID 卡',
-                      subtitle: '读取 HID Prox 卡片',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(LfHidCmd.reader())),
-                  ActionCard(
-                      title: '解调信号',
-                      subtitle: '解调 HID 低频信号',
-                      icon: Icons.radio,
-                      onTap: () => _execute(LfHidCmd.demod())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取 HID 卡',
+              subtitle: '读取 HID Prox 卡片',
+              icon: Icons.nfc,
+              onTap: () => _execute(LfHidCmd.reader())),
+          ActionCard(
+              title: '解调信号',
+              subtitle: '解调 HID 低频信号',
+              icon: Icons.radio,
+              onTap: () => _execute(LfHidCmd.demod())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildCloneSimTab() {

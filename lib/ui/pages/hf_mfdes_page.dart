@@ -87,59 +87,51 @@ class _HfMfdesPageState extends State<HfMfdesPage>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '检测',
-                      subtitle: '检测 DESFire 卡片',
-                      icon: Icons.search,
-                      onTap: () => _execute(HfMfdesCmd.detect())),
-                  ActionCard(
-                      title: '信息',
-                      subtitle: '读取卡片基本信息',
-                      icon: Icons.info_outline,
-                      onTap: () => _execute(HfMfdesCmd.info())),
-                  ActionCard(
-                      title: '获取 UID',
-                      subtitle: '获取卡片 UID',
-                      icon: Icons.credit_card,
-                      onTap: () => _execute(HfMfdesCmd.getuid())),
-                  ActionCard(
-                      title: '空闲内存',
-                      subtitle: '查看可用内存',
-                      icon: Icons.storage,
-                      onTap: () => _execute(HfMfdesCmd.freemem())),
-                  ActionCard(
-                      title: '检查密钥',
-                      subtitle: '检查默认密钥',
-                      icon: Icons.security,
-                      onTap: () => _execute(HfMfdesCmd.chk())),
-                  ActionCard(
-                      title: 'MAD',
-                      subtitle: '查看应用目录',
-                      icon: Icons.list_alt,
-                      onTap: () => _execute(HfMfdesCmd.mad())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '检测',
+              subtitle: '检测 DESFire 卡片',
+              icon: Icons.search,
+              onTap: () => _execute(HfMfdesCmd.detect())),
+          ActionCard(
+              title: '信息',
+              subtitle: '读取卡片基本信息',
+              icon: Icons.info_outline,
+              onTap: () => _execute(HfMfdesCmd.info())),
+          ActionCard(
+              title: '获取 UID',
+              subtitle: '获取卡片 UID',
+              icon: Icons.credit_card,
+              onTap: () => _execute(HfMfdesCmd.getuid())),
+          ActionCard(
+              title: '空闲内存',
+              subtitle: '查看可用内存',
+              icon: Icons.storage,
+              onTap: () => _execute(HfMfdesCmd.freemem())),
+          ActionCard(
+              title: '检查密钥',
+              subtitle: '检查默认密钥',
+              icon: Icons.security,
+              onTap: () => _execute(HfMfdesCmd.chk())),
+          ActionCard(
+              title: 'MAD',
+              subtitle: '查看应用目录',
+              icon: Icons.list_alt,
+              onTap: () => _execute(HfMfdesCmd.mad())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildAppTab() {

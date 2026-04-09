@@ -79,50 +79,42 @@ class _HfLegicPageState extends State<HfLegicPage>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '标签信息',
-                      subtitle: '读取 Legic 标签',
-                      icon: Icons.info_outline,
-                      onTap: () => _execute(HfLegicCmd.info())),
-                  ActionCard(
-                      title: '转储',
-                      subtitle: '转储全部数据',
-                      icon: Icons.download,
-                      onTap: () => _execute(HfLegicCmd.dump())),
-                  ActionCard(
-                      title: '擦除',
-                      subtitle: '清空卡片数据',
-                      icon: Icons.delete_forever,
-                      onTap: () => _confirmThenExecute(
-                          '确认擦除', '此操作不可恢复！', HfLegicCmd.wipe())),
-                  ActionCard(
-                      title: '模拟',
-                      subtitle: '模拟 Legic 标签',
-                      icon: Icons.play_arrow,
-                      onTap: () => _execute(HfLegicCmd.sim())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '标签信息',
+              subtitle: '读取 Legic 标签',
+              icon: Icons.info_outline,
+              onTap: () => _execute(HfLegicCmd.info())),
+          ActionCard(
+              title: '转储',
+              subtitle: '转储全部数据',
+              icon: Icons.download,
+              onTap: () => _execute(HfLegicCmd.dump())),
+          ActionCard(
+              title: '擦除',
+              subtitle: '清空卡片数据',
+              icon: Icons.delete_forever,
+              onTap: () =>
+                  _confirmThenExecute('确认擦除', '此操作不可恢复！', HfLegicCmd.wipe())),
+          ActionCard(
+              title: '模拟',
+              subtitle: '模拟 Legic 标签',
+              icon: Icons.play_arrow,
+              onTap: () => _execute(HfLegicCmd.sim())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildReadWriteTab() {

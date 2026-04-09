@@ -88,49 +88,38 @@ class _HfIclassPageState extends State<HfIclassPage>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-        width: 220,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ActionCard(
-                  title: '获取信息',
-                  subtitle: '读取 iCLASS 标签',
-                  icon: Icons.info_outline,
-                  onTap: () => _execute(HfIclassCmd.info())),
-              ActionCard(
-                  title: '读取卡片',
-                  subtitle: 'reader 模式',
-                  icon: Icons.nfc,
-                  onTap: () => _execute(HfIclassCmd.reader())),
-              ActionCard(
-                  title: '转储卡片',
-                  subtitle: '转储全部块到文件',
-                  icon: Icons.download,
-                  onTap: () => _execute(
-                      HfIclassCmd.dump(key: _key.isEmpty ? null : _key))),
-            ],
-          ),
-        ),
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '获取信息',
+              subtitle: '读取 iCLASS 标签',
+              icon: Icons.info_outline,
+              onTap: () => _execute(HfIclassCmd.info())),
+          ActionCard(
+              title: '读取卡片',
+              subtitle: 'reader 模式',
+              icon: Icons.nfc,
+              onTap: () => _execute(HfIclassCmd.reader())),
+          ActionCard(
+              title: '转储卡片',
+              subtitle: '转储全部块到文件',
+              icon: Icons.download,
+              onTap: () =>
+                  _execute(HfIclassCmd.dump(key: _key.isEmpty ? null : _key))),
+        ],
       ),
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-              _result = '';
-              _lastCmd = '';
-            }),
-          ),
-        ),
+      main: ResultDisplay(
+        command: _lastCmd,
+        result: _result,
+        isLoading: _isLoading,
+        onClear: () => setState(() {
+          _result = '';
+          _lastCmd = '';
+        }),
       ),
-    ]);
+    );
   }
 
   Widget _buildReadWriteTab() {

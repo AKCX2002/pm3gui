@@ -62,74 +62,64 @@ class _HfSniffPageState extends State<HfSniffPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-          width: 240,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: 'HF 搜索',
-                      subtitle: '搜索高频标签',
-                      icon: Icons.search,
-                      onTap: () => _execute(HfCmd.search())),
-                  ActionCard(
-                      title: 'HF 嗅探',
-                      subtitle: '捕获高频通信',
-                      icon: Icons.hearing,
-                      onTap: () => _execute(HfCmd.sniff())),
-                  ActionCard(
-                      title: 'HF 调谐',
-                      subtitle: '调谐高频天线',
-                      icon: Icons.tune,
-                      onTap: () => _execute(HfCmd.tune())),
-                  const SizedBox(height: 8),
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('协议列表',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                initialValue: _listProtocol,
-                                decoration: const InputDecoration(
-                                    labelText: '协议', isDense: true),
-                                items: _protocols
-                                    .map((p) => DropdownMenuItem(
-                                        value: p, child: Text(p)))
-                                    .toList(),
-                                onChanged: (v) =>
-                                    setState(() => _listProtocol = v ?? '14a'),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _execute(HfCmd.list(_listProtocol)),
-                                  icon: const Icon(Icons.list, size: 18),
-                                  label: const Text('列表解码')),
-                            ],
-                          ))),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: 'HF 搜索',
+              subtitle: '搜索高频标签',
+              icon: Icons.search,
+              onTap: () => _execute(HfCmd.search())),
+          ActionCard(
+              title: 'HF 嗅探',
+              subtitle: '捕获高频通信',
+              icon: Icons.hearing,
+              onTap: () => _execute(HfCmd.sniff())),
+          ActionCard(
+              title: 'HF 调谐',
+              subtitle: '调谐高频天线',
+              icon: Icons.tune,
+              onTap: () => _execute(HfCmd.tune())),
+          const SizedBox(height: 8),
+          Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('协议列表',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: _listProtocol,
+                        decoration: const InputDecoration(
+                            labelText: '协议', isDense: true),
+                        items: _protocols
+                            .map((p) =>
+                                DropdownMenuItem(value: p, child: Text(p)))
+                            .toList(),
+                        onChanged: (v) =>
+                            setState(() => _listProtocol = v ?? '14a'),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                          onPressed: () => _execute(HfCmd.list(_listProtocol)),
+                          icon: const Icon(Icons.list, size: 18),
+                          label: const Text('列表解码')),
+                    ],
+                  ))),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 }

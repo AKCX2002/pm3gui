@@ -52,59 +52,48 @@ class _LfFdxbPageState extends State<LfFdxbPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取',
-                      subtitle: '读取 FDX-B 标签',
-                      icon: Icons.pets,
-                      onTap: () => _execute(LfFdxbCmd.reader())),
-                  const SizedBox(height: 8),
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('克隆',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              HexInputField(
-                                  label: 'RAW 数据',
-                                  onChanged: (v) =>
-                                      setState(() => _rawData = v)),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                  onPressed: _rawData.isNotEmpty
-                                      ? () =>
-                                          _execute(LfFdxbCmd.clone(_rawData))
-                                      : null,
-                                  icon: const Icon(Icons.copy, size: 18),
-                                  label: const Text('克隆到 T55xx')),
-                            ],
-                          ))),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取',
+              subtitle: '读取 FDX-B 标签',
+              icon: Icons.pets,
+              onTap: () => _execute(LfFdxbCmd.reader())),
+          const SizedBox(height: 8),
+          Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('克隆',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      HexInputField(
+                          label: 'RAW 数据',
+                          onChanged: (v) => setState(() => _rawData = v)),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                          onPressed: _rawData.isNotEmpty
+                              ? () => _execute(LfFdxbCmd.clone(_rawData))
+                              : null,
+                          icon: const Icon(Icons.copy, size: 18),
+                          label: const Text('克隆到 T55xx')),
+                    ],
+                  ))),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 }

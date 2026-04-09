@@ -51,39 +51,39 @@ class _HomePageState extends State<HomePage> {
   /// Pages ordered to match [AppPage] enum indices exactly.
   final _pages = const <Widget>[
     // General
-    ConnectionPage(),     // 0  connection
-    TerminalPage(),       // 1  terminal
-    DumpViewerPage(),     // 2  dumpViewer
-    DumpComparePage(),    // 3  dumpCompare
+    ConnectionPage(), // 0  connection
+    TerminalPage(), // 1  terminal
+    DumpViewerPage(), // 2  dumpViewer
+    DumpComparePage(), // 3  dumpCompare
     // HF
-    MifarePage(),         // 4  mifare
-    HfMfuPage(),          // 5  mifareUltralight
-    HfMfdesPage(),        // 6  desfire
-    HfIclassPage(),       // 7  iclass
-    Hf15Page(),           // 8  iso15693
-    Hf14bPage(),          // 9  iso14443b
-    HfFelicaPage(),       // 10 felica
-    HfLegicPage(),        // 11 legic
-    HfEmvPage(),          // 12 emv
-    HfSeosPage(),         // 13 seos
-    HfFidoPage(),         // 14 fido
-    HfSniffPage(),        // 15 hfSniff
+    MifarePage(), // 4  mifare
+    HfMfuPage(), // 5  mifareUltralight
+    HfMfdesPage(), // 6  desfire
+    HfIclassPage(), // 7  iclass
+    Hf15Page(), // 8  iso15693
+    Hf14bPage(), // 9  iso14443b
+    HfFelicaPage(), // 10 felica
+    HfLegicPage(), // 11 legic
+    HfEmvPage(), // 12 emv
+    HfSeosPage(), // 13 seos
+    HfFidoPage(), // 14 fido
+    HfSniffPage(), // 15 hfSniff
     // LF
-    LfPage(),             // 16 lf
-    LfHidPage(),          // 17 lfHid
-    LfHitagPage(),        // 18 lfHitag
-    LfAwidPage(),         // 19 lfAwid
-    LfIndalaPage(),       // 20 lfIndala
-    LfIoPage(),           // 21 lfIo
-    LfPyramidPage(),      // 22 lfPyramid
-    LfKeriPage(),         // 23 lfKeri
-    LfFdxbPage(),         // 24 lfFdxb
+    LfPage(), // 16 lf
+    LfHidPage(), // 17 lfHid
+    LfHitagPage(), // 18 lfHitag
+    LfAwidPage(), // 19 lfAwid
+    LfIndalaPage(), // 20 lfIndala
+    LfIoPage(), // 21 lfIo
+    LfPyramidPage(), // 22 lfPyramid
+    LfKeriPage(), // 23 lfKeri
+    LfFdxbPage(), // 24 lfFdxb
     // Tools
-    DataPage(),           // 25 data
-    TracePage(),          // 26 trace
-    NfcPage(),            // 27 nfc
-    ScriptPage(),         // 28 script
-    SettingsPage(),       // 29 settings
+    DataPage(), // 25 data
+    TracePage(), // 26 trace
+    NfcPage(), // 27 nfc
+    ScriptPage(), // 28 script
+    SettingsPage(), // 29 settings
   ];
 
   static const _generalItems = [
@@ -151,7 +151,8 @@ class _HomePageState extends State<HomePage> {
                     child: Row(
                       children: [
                         Icon(Icons.nfc,
-                            color: isConnected ? Colors.greenAccent : Colors.grey,
+                            color:
+                                isConnected ? Colors.greenAccent : Colors.grey,
                             size: 28),
                         if (_sidebarExpanded) ...[
                           const SizedBox(width: 10),
@@ -161,10 +162,14 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text('PM3 GUI',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold)),
                                 if (appState.pm3Version.isNotEmpty)
                                   Text(appState.pm3Version,
-                                      style: TextStyle(fontSize: 10, color: Colors.grey[500]),
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[500]),
                                       overflow: TextOverflow.ellipsis),
                               ],
                             ),
@@ -190,10 +195,13 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            width: 8, height: 8,
+                            width: 8,
+                            height: 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                              color: isConnected
+                                  ? Colors.greenAccent
+                                  : Colors.redAccent,
                             ),
                           ),
                           if (_sidebarExpanded) ...[
@@ -203,7 +211,9 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                                color: isConnected
+                                    ? Colors.greenAccent
+                                    : Colors.redAccent,
                               ),
                             ),
                           ],
@@ -221,19 +231,24 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.all(8),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
-                      onTap: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
+                      onTap: () =>
+                          setState(() => _sidebarExpanded = !_sidebarExpanded),
                       child: Container(
                         height: 40,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Row(
                           children: [
                             Icon(
-                              _sidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
-                              size: 20, color: Colors.grey,
+                              _sidebarExpanded
+                                  ? Icons.chevron_left
+                                  : Icons.chevron_right,
+                              size: 20,
+                              color: Colors.grey,
                             ),
                             if (_sidebarExpanded) ...[
                               const SizedBox(width: 12),
-                              const Text('收起菜单', style: TextStyle(fontSize: 13)),
+                              const Text('收起菜单',
+                                  style: TextStyle(fontSize: 13)),
                             ],
                           ],
                         ),
@@ -245,7 +260,8 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           VerticalDivider(
-              width: 1, color: isDark ? const Color(0xFF2A2A3C) : Colors.grey[300]),
+              width: 1,
+              color: isDark ? const Color(0xFF2A2A3C) : Colors.grey[300]),
           Expanded(
             child: IndexedStack(
               index: appState.currentPageIndex,
@@ -291,8 +307,10 @@ class _HomePageState extends State<HomePage> {
                 child: SizedBox(
                   height: 40,
                   child: Center(
-                    child: Icon(n.icon, size: 20,
-                        color: selected ? theme.colorScheme.primary : Colors.grey),
+                    child: Icon(n.icon,
+                        size: 20,
+                        color:
+                            selected ? theme.colorScheme.primary : Colors.grey),
                   ),
                 ),
               ),
@@ -303,15 +321,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _groupTile(String title, List<_NavItem> items, AppState appState, ThemeData theme) {
-    final anySelected = items.any((n) => n.page.index == appState.currentPageIndex);
+  Widget _groupTile(
+      String title, List<_NavItem> items, AppState appState, ThemeData theme) {
+    final anySelected =
+        items.any((n) => n.page.index == appState.currentPageIndex);
     return Theme(
       data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        title: Text(title, style: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w600,
-          color: anySelected ? theme.colorScheme.primary : Colors.grey[500],
-        )),
+        title: Text(title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: anySelected ? theme.colorScheme.primary : Colors.grey[500],
+            )),
         dense: true,
         initiallyExpanded: anySelected,
         tilePadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -338,7 +360,8 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                Icon(item.icon, size: 18,
+                Icon(item.icon,
+                    size: 18,
                     color: selected ? theme.colorScheme.primary : Colors.grey),
                 const SizedBox(width: 10),
                 Expanded(
@@ -346,7 +369,8 @@ class _HomePageState extends State<HomePage> {
                     item.label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.normal,
                       color: selected ? theme.colorScheme.primary : null,
                     ),
                     overflow: TextOverflow.ellipsis,

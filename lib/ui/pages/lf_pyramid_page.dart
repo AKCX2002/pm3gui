@@ -54,74 +54,64 @@ class _LfPyramidPageState extends State<LfPyramidPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-          width: 240,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取',
-                      subtitle: '读取 Pyramid 卡片',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(LfPyramidCmd.reader())),
-                  const SizedBox(height: 8),
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('克隆',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                    labelText: 'FC (设施码)', isDense: true),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                onChanged: (v) => setState(() => _fc = v),
-                              ),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                    labelText: 'CN (卡号)', isDense: true),
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly
-                                ],
-                                onChanged: (v) => setState(() => _cn = v),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                  onPressed: _fc.isNotEmpty && _cn.isNotEmpty
-                                      ? () =>
-                                          _execute(LfPyramidCmd.clone(_fc, _cn))
-                                      : null,
-                                  icon: const Icon(Icons.copy, size: 18),
-                                  label: const Text('克隆到 T55xx')),
-                            ],
-                          ))),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取',
+              subtitle: '读取 Pyramid 卡片',
+              icon: Icons.nfc,
+              onTap: () => _execute(LfPyramidCmd.reader())),
+          const SizedBox(height: 8),
+          Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('克隆',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: 'FC (设施码)', isDense: true),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        onChanged: (v) => setState(() => _fc = v),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: 'CN (卡号)', isDense: true),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        onChanged: (v) => setState(() => _cn = v),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                          onPressed: _fc.isNotEmpty && _cn.isNotEmpty
+                              ? () => _execute(LfPyramidCmd.clone(_fc, _cn))
+                              : null,
+                          icon: const Icon(Icons.copy, size: 18),
+                          label: const Text('克隆到 T55xx')),
+                    ],
+                  ))),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 }

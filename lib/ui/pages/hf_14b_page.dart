@@ -82,54 +82,46 @@ class _Hf14bPageState extends State<Hf14bPage>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取器',
-                      subtitle: '读取 14443-B 卡片',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(Hf14bCmd.reader())),
-                  ActionCard(
-                      title: '标签信息',
-                      subtitle: '读取标签详情',
-                      icon: Icons.info_outline,
-                      onTap: () => _execute(Hf14bCmd.info())),
-                  ActionCard(
-                      title: '嗅探',
-                      subtitle: '捕获 14443-B 通信',
-                      icon: Icons.hearing,
-                      onTap: () => _execute(Hf14bCmd.sniff())),
-                  ActionCard(
-                      title: '转储',
-                      subtitle: '读取全部数据',
-                      icon: Icons.download,
-                      onTap: () => _execute(Hf14bCmd.dump())),
-                  ActionCard(
-                      title: 'NDEF',
-                      subtitle: '读取 NDEF 数据',
-                      icon: Icons.article,
-                      onTap: () => _execute(Hf14bCmd.ndefRead())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取器',
+              subtitle: '读取 14443-B 卡片',
+              icon: Icons.nfc,
+              onTap: () => _execute(Hf14bCmd.reader())),
+          ActionCard(
+              title: '标签信息',
+              subtitle: '读取标签详情',
+              icon: Icons.info_outline,
+              onTap: () => _execute(Hf14bCmd.info())),
+          ActionCard(
+              title: '嗅探',
+              subtitle: '捕获 14443-B 通信',
+              icon: Icons.hearing,
+              onTap: () => _execute(Hf14bCmd.sniff())),
+          ActionCard(
+              title: '转储',
+              subtitle: '读取全部数据',
+              icon: Icons.download,
+              onTap: () => _execute(Hf14bCmd.dump())),
+          ActionCard(
+              title: 'NDEF',
+              subtitle: '读取 NDEF 数据',
+              icon: Icons.article,
+              onTap: () => _execute(Hf14bCmd.ndefRead())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildReadWriteTab() {

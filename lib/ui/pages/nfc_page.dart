@@ -52,72 +52,62 @@ class _NfcPageState extends State<NfcPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-          width: 240,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: 'Type 1',
-                      subtitle: 'NFC Type 1 Tag',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(NfcCmd.type1())),
-                  ActionCard(
-                      title: 'Type 2',
-                      subtitle: 'NFC Type 2 Tag',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(NfcCmd.type2())),
-                  ActionCard(
-                      title: 'Type 4A',
-                      subtitle: 'NFC Type 4A Tag',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(NfcCmd.type4a())),
-                  ActionCard(
-                      title: 'Barcode',
-                      subtitle: 'NFC Barcode',
-                      icon: Icons.qr_code,
-                      onTap: () => _execute(NfcCmd.barcode())),
-                  const SizedBox(height: 8),
-                  Card(
-                      child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('NDEF 解码',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              const SizedBox(height: 8),
-                              HexInputField(
-                                  label: 'Hex 数据',
-                                  onChanged: (v) => _hexData = v),
-                              const SizedBox(height: 8),
-                              ElevatedButton.icon(
-                                  onPressed: _hexData.isNotEmpty
-                                      ? () => _execute(NfcCmd.decode(_hexData))
-                                      : null,
-                                  icon: const Icon(Icons.code, size: 18),
-                                  label: const Text('解码')),
-                            ],
-                          ))),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: 'Type 1',
+              subtitle: 'NFC Type 1 Tag',
+              icon: Icons.nfc,
+              onTap: () => _execute(NfcCmd.type1())),
+          ActionCard(
+              title: 'Type 2',
+              subtitle: 'NFC Type 2 Tag',
+              icon: Icons.nfc,
+              onTap: () => _execute(NfcCmd.type2())),
+          ActionCard(
+              title: 'Type 4A',
+              subtitle: 'NFC Type 4A Tag',
+              icon: Icons.nfc,
+              onTap: () => _execute(NfcCmd.type4a())),
+          ActionCard(
+              title: 'Barcode',
+              subtitle: 'NFC Barcode',
+              icon: Icons.qr_code,
+              onTap: () => _execute(NfcCmd.barcode())),
+          const SizedBox(height: 8),
+          Card(
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('NDEF 解码',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      HexInputField(
+                          label: 'Hex 数据', onChanged: (v) => _hexData = v),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                          onPressed: _hexData.isNotEmpty
+                              ? () => _execute(NfcCmd.decode(_hexData))
+                              : null,
+                          icon: const Icon(Icons.code, size: 18),
+                          label: const Text('解码')),
+                    ],
+                  ))),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 }

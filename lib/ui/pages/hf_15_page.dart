@@ -82,50 +82,42 @@ class _Hf15PageState extends State<Hf15Page>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取器',
-                      subtitle: '自动读取 ISO15693',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(Hf15Cmd.reader())),
-                  ActionCard(
-                      title: '标签信息',
-                      subtitle: '读取标签基本信息',
-                      icon: Icons.info_outline,
-                      onTap: () => _execute(Hf15Cmd.info())),
-                  ActionCard(
-                      title: '转储卡片',
-                      subtitle: '读取全部数据',
-                      icon: Icons.download,
-                      onTap: () => _execute(Hf15Cmd.dump())),
-                  ActionCard(
-                      title: '擦除卡片',
-                      subtitle: '清空卡片数据',
-                      icon: Icons.delete_forever,
-                      onTap: () => _confirmThenExecute(
-                          '确认擦除', '此操作不可恢复！', Hf15Cmd.wipe())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取器',
+              subtitle: '自动读取 ISO15693',
+              icon: Icons.nfc,
+              onTap: () => _execute(Hf15Cmd.reader())),
+          ActionCard(
+              title: '标签信息',
+              subtitle: '读取标签基本信息',
+              icon: Icons.info_outline,
+              onTap: () => _execute(Hf15Cmd.info())),
+          ActionCard(
+              title: '转储卡片',
+              subtitle: '读取全部数据',
+              icon: Icons.download,
+              onTap: () => _execute(Hf15Cmd.dump())),
+          ActionCard(
+              title: '擦除卡片',
+              subtitle: '清空卡片数据',
+              icon: Icons.delete_forever,
+              onTap: () =>
+                  _confirmThenExecute('确认擦除', '此操作不可恢复！', Hf15Cmd.wipe())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildReadWriteTab() {

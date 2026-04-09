@@ -51,48 +51,40 @@ class _HfEmvPageState extends State<HfEmvPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '搜索',
-                      subtitle: '搜索 EMV 卡片',
-                      icon: Icons.search,
-                      onTap: () => _execute(HfEmvCmd.search())),
-                  ActionCard(
-                      title: 'PPSE',
-                      subtitle: '选择 PPSE 应用',
-                      icon: Icons.payment,
-                      onTap: () => _execute(HfEmvCmd.ppse())),
-                  ActionCard(
-                      title: '执行交易',
-                      subtitle: '模拟 EMV 交易流程',
-                      icon: Icons.receipt_long,
-                      onTap: () => _execute(HfEmvCmd.exec())),
-                  ActionCard(
-                      title: '测试',
-                      subtitle: 'EMV 自检',
-                      icon: Icons.check_circle,
-                      onTap: () => _execute(HfEmvCmd.test())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '搜索',
+              subtitle: '搜索 EMV 卡片',
+              icon: Icons.search,
+              onTap: () => _execute(HfEmvCmd.search())),
+          ActionCard(
+              title: 'PPSE',
+              subtitle: '选择 PPSE 应用',
+              icon: Icons.payment,
+              onTap: () => _execute(HfEmvCmd.ppse())),
+          ActionCard(
+              title: '执行交易',
+              subtitle: '模拟 EMV 交易流程',
+              icon: Icons.receipt_long,
+              onTap: () => _execute(HfEmvCmd.exec())),
+          ActionCard(
+              title: '测试',
+              subtitle: 'EMV 自检',
+              icon: Icons.check_circle,
+              onTap: () => _execute(HfEmvCmd.test())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 }

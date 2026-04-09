@@ -79,54 +79,46 @@ class _HfFelicaPageState extends State<HfFelicaPage>
   }
 
   Widget _buildInfoTab() {
-    return Row(children: [
-      SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ActionCard(
-                      title: '读取器',
-                      subtitle: '读取 FeliCa 卡片',
-                      icon: Icons.nfc,
-                      onTap: () => _execute(HfFelicaCmd.reader())),
-                  ActionCard(
-                      title: '标签信息',
-                      subtitle: '获取 FeliCa 详情',
-                      icon: Icons.info_outline,
-                      onTap: () => _execute(HfFelicaCmd.info())),
-                  ActionCard(
-                      title: '转储',
-                      subtitle: '转储卡片数据',
-                      icon: Icons.download,
-                      onTap: () => _execute(HfFelicaCmd.dump())),
-                  ActionCard(
-                      title: 'Lite 转储',
-                      subtitle: '转储 FeliCa Lite',
-                      icon: Icons.download_for_offline,
-                      onTap: () => _execute(HfFelicaCmd.litedump())),
-                  ActionCard(
-                      title: '嗅探',
-                      subtitle: '捕获 FeliCa 通信',
-                      icon: Icons.hearing,
-                      onTap: () => _execute(HfFelicaCmd.sniff())),
-                ]),
-          )),
-      Expanded(
-          child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: ResultDisplay(
-            command: _lastCmd,
-            result: _result,
-            isLoading: _isLoading,
-            onClear: () => setState(() {
-                  _result = '';
-                  _lastCmd = '';
-                })),
-      )),
-    ]);
+    return SplitPageLayout(
+      side: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ActionCard(
+              title: '读取器',
+              subtitle: '读取 FeliCa 卡片',
+              icon: Icons.nfc,
+              onTap: () => _execute(HfFelicaCmd.reader())),
+          ActionCard(
+              title: '标签信息',
+              subtitle: '获取 FeliCa 详情',
+              icon: Icons.info_outline,
+              onTap: () => _execute(HfFelicaCmd.info())),
+          ActionCard(
+              title: '转储',
+              subtitle: '转储卡片数据',
+              icon: Icons.download,
+              onTap: () => _execute(HfFelicaCmd.dump())),
+          ActionCard(
+              title: 'Lite 转储',
+              subtitle: '转储 FeliCa Lite',
+              icon: Icons.download_for_offline,
+              onTap: () => _execute(HfFelicaCmd.litedump())),
+          ActionCard(
+              title: '嗅探',
+              subtitle: '捕获 FeliCa 通信',
+              icon: Icons.hearing,
+              onTap: () => _execute(HfFelicaCmd.sniff())),
+        ],
+      ),
+      main: ResultDisplay(
+          command: _lastCmd,
+          result: _result,
+          isLoading: _isLoading,
+          onClear: () => setState(() {
+                _result = '';
+                _lastCmd = '';
+              })),
+    );
   }
 
   Widget _buildReadWriteTab() {

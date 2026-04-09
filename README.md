@@ -5,11 +5,16 @@
   <img src="https://img.shields.io/badge/Dart-3.6-0175C2?logo=dart&logoColor=white" alt="Dart"/>
   <img src="https://img.shields.io/badge/平台-Android%20%7C%20Linux%20%7C%20Windows-brightgreen" alt="平台"/>
   <img src="https://img.shields.io/badge/协议-GPL--3.0-blue" alt="License"/>
+  <img src="https://img.shields.io/badge/状态-BETA-orange" alt="Status"/>
 </p>
 
 <p align="center">
   <b>Proxmark3 跨平台图形界面 </b>
 </p>
+
+> ⚠️ <b>BETA 声明</b>：本项目目前处于 BETA 测试阶段，可能存在未发现的 bug 和功能限制。
+> 
+> ⚠️ <b>未完整测试声明</b>：部分功能可能尚未在所有平台和硬件组合上进行充分测试。使用时请谨慎操作，建议在测试环境中验证后再用于生产场景。
 
 ---
 

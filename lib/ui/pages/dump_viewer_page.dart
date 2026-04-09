@@ -2011,47 +2011,64 @@ class _DumpViewerPageState extends State<DumpViewerPage>
                 const SizedBox(height: 8),
                 DropdownButtonFormField<_QuickWriteMode>(
                   initialValue: _quickWriteMode,
+                  style: const TextStyle(fontSize: 13),
                   decoration: const InputDecoration(
                     labelText: '目标卡类型/模式',
                     border: OutlineInputBorder(),
                     isDense: true,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   ),
                   items: const [
                     DropdownMenuItem(
-                        value: _QuickWriteMode.auto, child: Text('AUTO (默认)')),
+                        value: _QuickWriteMode.auto,
+                        child:
+                            Text('AUTO (默认)', style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
-                        value: _QuickWriteMode.uid, child: Text('UID 普通卡')),
+                        value: _QuickWriteMode.uid,
+                        child: Text('UID 普通卡', style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
                         value: _QuickWriteMode.cuid,
-                        child: Text('CUID / Gen2')),
+                        child: Text('CUID / Gen2',
+                            style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
                         value: _QuickWriteMode.fuid,
-                        child: Text('FUID (一次性 UID 可改)')),
+                        child: Text('FUID（一次性 UID 可改）',
+                            style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
-                        value: _QuickWriteMode.gen1a, child: Text('Gen1A 后门卡')),
+                        value: _QuickWriteMode.gen1a,
+                        child:
+                            Text('Gen1A 后门卡', style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
-                        value: _QuickWriteMode.gen3, child: Text('Gen3 魔术卡')),
+                        value: _QuickWriteMode.gen3,
+                        child:
+                            Text('Gen3 魔术卡', style: TextStyle(fontSize: 13))),
                     DropdownMenuItem(
-                        value: _QuickWriteMode.gen4, child: Text('Gen4 GTU')),
+                        value: _QuickWriteMode.gen4,
+                        child:
+                            Text('Gen4 GTU', style: TextStyle(fontSize: 13))),
                   ],
                   onChanged: (v) {
                     if (v != null) setState(() => _quickWriteMode = v);
                   },
                 ),
-                const SizedBox(height: 8),
-                if (_quickWriteMode == _QuickWriteMode.gen4)
+                if (_quickWriteMode == _QuickWriteMode.gen4) ...[
+                  const SizedBox(height: 8),
                   TextFormField(
                     initialValue: _gen4Pwd,
                     decoration: const InputDecoration(
-                      labelText: 'Gen4 密码 (可选)',
+                      labelText: 'Gen4 密码（可选）',
                       hintText: '8 hex，例如 00000000',
                       border: OutlineInputBorder(),
                       isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     ),
                     onChanged: (v) => _gen4Pwd = v.trim(),
                     style:
-                        const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        const TextStyle(fontFamily: 'monospace', fontSize: 13),
                   ),
+                ],
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -2059,12 +2076,13 @@ class _DumpViewerPageState extends State<DumpViewerPage>
                     onPressed: isConnected
                         ? () => _executeQuickWriteBack(appState)
                         : null,
-                    icon: const Icon(Icons.flash_on),
-                    label: const Text('一键智能回写'),
+                    icon: const Icon(Icons.flash_on, size: 18),
+                    label:
+                        const Text('⚡ 一键智能回写', style: TextStyle(fontSize: 13)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
                     ),
                   ),
                 ),

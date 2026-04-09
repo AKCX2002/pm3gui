@@ -192,8 +192,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       style: const TextStyle(fontSize: 14),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isConnected ? AppTheme.accentBlue : null,
+                      backgroundColor: isConnected ? AppTheme.accentBlue : null,
                     ),
                   ),
                 ),
@@ -220,8 +219,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       children: [
                         _infoRow('端口', appState.portName),
                         _infoRow('版本', appState.pm3Version),
-                        _infoRow('状态', '已连接',
-                            valueColor: AppTheme.accentBlue),
+                        _infoRow('状态', '已连接', valueColor: AppTheme.accentBlue),
                         if (appState.hwInfoParsed) ...[
                           const Divider(height: 16),
                           if (appState.hwModel.isNotEmpty)
@@ -545,9 +543,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
   // ── Card group tile ────────────────────────────────────────────────────
 
   Widget _buildCardGroupTile(CardGroup group, ThemeData theme) {
-    final bandColor = group.band == FreqBand.hf
-        ? AppTheme.accentBlue
-        : AppTheme.accentBlue;
+    final bandColor =
+        group.band == FreqBand.hf ? AppTheme.accentBlue : AppTheme.accentBlue;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
