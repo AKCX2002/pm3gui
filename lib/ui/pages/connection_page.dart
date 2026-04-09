@@ -67,8 +67,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final isConnected = appState.connectionState == Pm3State.connected;
-    final isConnecting = appState.connectionState == Pm3State.connecting;
+    final isConnected =
+        appState.connectionState.connectionState == Pm3State.connected;
+    final isConnecting =
+        appState.connectionState.connectionState == Pm3State.connecting;
     final theme = Theme.of(context);
 
     return Row(

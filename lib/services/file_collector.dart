@@ -12,6 +12,7 @@ library;
 
 import 'dart:io';
 import 'package:path/path.dart' as p;
+import 'package:pm3gui/services/file_cache.dart';
 
 // ─── Data Models ─────────────────────────────────────────────────────────
 
@@ -138,21 +139,51 @@ class FileCollector {
     bool recursive = false,
   }) async {
     final results = <CollectedFile>[];
+    final tasks = <Future<void>>[];
 
     for (final dirPath in directories) {
-      final dir = Directory(dirPath);
-      if (!await dir.exists()) continue;
+      tasks.add(_scanDirectory(dirPath, recursive, results));
+    }
 
-      await for (final entity
-          in dir.list(recursive: recursive, followLinks: false)) {
+    await Future.wait(tasks);
+
+    // 按修改时间降序排序：最新的文件在前
+    results.sort((a, b) => b.modified.compareTo(a.modified));
+    return results;
+  }
+
+  /// 扫描单个目录
+  static Future<void> _scanDirectory(String dirPath, bool recursive, List<CollectedFile> results) async {
+    // 检查缓存
+    final cachedFiles = FileCache.getCachedFiles(dirPath, recursive);
+    if (cachedFiles != null) {
+      results.addAll(cachedFiles);
+      return;
+    }
+
+    final dir = Directory(dirPath);
+    if (!await dir.exists()) return;
+
+    final directoryFiles = <CollectedFile>[];
+
+    try {
+      await for (final entity in dir.list(recursive: recursive, followLinks: false)) {
         if (entity is! File) continue;
+        
         final file = entity;
         final name = p.basename(file.path);
+        
+        // 快速过滤：只处理常见的文件扩展名
+        final ext = p.extension(name).toLowerCase();
+        if (!['.bin', '.json', '.eml', '.dump', '.dic', '.keys.txt'].contains(ext)) {
+          continue;
+        }
+        
         final parsed = _parseFileName(name);
         if (parsed == null) continue;
 
         final stat = await file.stat();
-        results.add(CollectedFile(
+        final collectedFile = CollectedFile(
           path: file.path,
           fileName: name,
           band: parsed.band,
@@ -163,13 +194,19 @@ class FileCollector {
           sequence: parsed.sequence,
           modified: stat.modified,
           sizeBytes: stat.size,
-        ));
+        );
+        
+        directoryFiles.add(collectedFile);
+        results.add(collectedFile);
       }
+    } catch (e) {
+      // 忽略目录访问错误
     }
 
-    // 按修改时间降序排序：最新的文件在前
-    results.sort((a, b) => b.modified.compareTo(a.modified));
-    return results;
+    // 缓存结果
+    if (directoryFiles.isNotEmpty) {
+      FileCache.cacheFiles(dirPath, recursive, directoryFiles);
+    }
   }
 
   /// 按UID对收集的文件进行分组

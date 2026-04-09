@@ -26,13 +26,18 @@ class Pm3Process {
   DateTime? _lastConnectAttempt;  // 最后一次连接尝试时间
 
   /// 来自 pm3 stdout/stderr 的行流
-  final _outputController = StreamController<String>.broadcast();
+  final _outputController = StreamController<String>.broadcast(sync: true);
 
   /// 状态变化的流
-  final _stateController = StreamController<Pm3State>.broadcast();
+  final _stateController = StreamController<Pm3State>.broadcast(sync: true);
 
   /// 用于响应匹配的累积输出缓冲区
   final _responseBuffer = StringBuffer();
+
+  /// 输出行计数器，用于限制输出频率
+  int _outputCount = 0;
+  /// 上次输出时间戳
+  DateTime _lastOutputTime = DateTime.now();
 
   Stream<String> get outputStream => _outputController.stream;
   Stream<Pm3State> get stateStream => _stateController.stream;
@@ -147,6 +152,9 @@ class Pm3Process {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
+        // 限制输出频率，避免 UI 卡顿
+        if (!_shouldOutput(line)) return;
+        
         _outputController.add(line);
         _responseBuffer.writeln(line);
 
@@ -170,6 +178,9 @@ class Pm3Process {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
+        // 限制输出频率，避免 UI 卡顿
+        if (!_shouldOutput(line)) return;
+        
         _outputController.add('[ERR] $line');
         _detectFatalError(line);
       });
@@ -348,5 +359,35 @@ class Pm3Process {
   void _setState(Pm3State newState) {
     _state = newState;
     _stateController.add(newState);
+  }
+  
+  /// 检查是否应该输出该行
+  /// 限制输出频率，避免 UI 卡顿
+  bool _shouldOutput(String line) {
+    _outputCount++;
+    final now = DateTime.now();
+    
+    // 每 100 毫秒最多输出 50 行
+    if (_outputCount > 50 && now.difference(_lastOutputTime) < const Duration(milliseconds: 100)) {
+      return false;
+    }
+    
+    // 重置计数器和时间戳
+    if (now.difference(_lastOutputTime) >= const Duration(milliseconds: 100)) {
+      _outputCount = 0;
+      _lastOutputTime = now;
+    }
+    
+    // 总是输出重要信息
+    final lowerLine = line.toLowerCase();
+    if (lowerLine.contains('error') ||
+        lowerLine.contains('fail') ||
+        lowerLine.contains('success') ||
+        lowerLine.contains('os:') ||
+        lowerLine.contains('pm3 -->')) {
+      return true;
+    }
+    
+    return true;
   }
 }

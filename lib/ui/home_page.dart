@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final isConnected = appState.connectionState == Pm3State.connected;
+    final isConnected = appState.connectionState.connectionState == Pm3State.connected;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

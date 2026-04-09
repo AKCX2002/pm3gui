@@ -35,6 +35,9 @@ class _TerminalPageState extends State<TerminalPage> {
   int _cycleIndex = -1;
   bool _ignoreNextInputChange = false;
 
+  // 分页加载相关
+  bool _isLoading = false;
+
   bool get _isCyclingAutocomplete => _cycleCandidates.isNotEmpty;
 
   List<Pm3CommandEntry> get _displaySuggestions {
@@ -73,12 +76,34 @@ class _TerminalPageState extends State<TerminalPage> {
     super.initState();
     _inputController.addListener(_onInputChanged);
     _loadCatalog();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_isLoading) return;
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    setState(() {
+      _isLoading = true;
+    });
+    // 模拟加载延迟
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   @override
   void dispose() {
     _inputController.removeListener(_onInputChanged);
     _inputController.dispose();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -252,8 +277,11 @@ class _TerminalPageState extends State<TerminalPage> {
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(8),
-                itemCount: appState.terminalOutput.length,
+                itemCount: _getItemCount(appState),
                 itemBuilder: (context, index) {
+                  if (index >= appState.terminalOutput.length) {
+                    return _buildLoadingIndicator();
+                  }
                   final line = appState.terminalOutput[index];
                   return Text(
                     stripAnsi(line),
@@ -562,5 +590,21 @@ class _TerminalPageState extends State<TerminalPage> {
     }
 
     _setInputText(history[appState.historyIndex], preserveCycle: false);
+  }
+
+  int _getItemCount(AppState appState) {
+    if (_isLoading) {
+      return appState.terminalOutput.length + 1;
+    }
+    return appState.terminalOutput.length;
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
   }
 }
