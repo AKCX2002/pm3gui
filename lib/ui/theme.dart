@@ -1,59 +1,44 @@
-/// PM3GUI app theme — 莫兰迪色系 (Morandi palette).
+/// PM3GUI app theme — 深蓝色仪表盘风格 (Dark Dashboard).
 ///
-/// Muted, low-saturation, warm-toned colors for a refined aesthetic.
+/// 深色仪表盘标准配色：深蓝背景、卡片色、高亮蓝与辅助灰文。
 library;
 
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // ── 莫兰迪色板 ──────────────────────────────────────────
-  // 主色调：雾蓝 / 灰豆绿 / 灰玫瑰 / 暖灰
-  static const _morandiBlue = Color(0xFF7E9AAB); // 莫兰迪蓝
-  static const _morandiGreen = Color(0xFF8FA9A0); // 莫兰迪绿
-  static const _morandiRose = Color(0xFFBFA2A2); // 莫兰迪玫瑰
-  static const _morandiTaupe = Color(0xFFA89F91); // 莫兰迪暖灰
-  static const _morandiLavender = Color(0xFF9B96B4); // 莫兰迪薰衣草
-  static const _morandiError = Color(0xFFC47D7D); // 柔和红
-  static const _morandiSuccess = Color(0xFF8EAD8E); // 柔和绿
-  static const _morandiWarning = Color(0xFFC9B07F); // 柔和黄
+  // ── 深蓝色仪表盘配色 ─────────────────────────────────────
+  // 深色仪表盘标准配色：深蓝背景、卡片色、高亮蓝与辅助灰文
+  static const _darkBg = Color(0xFF0F172A); // 深蓝背景
+  static const _darkSurface = Color(0xFF1E293B); // 卡片色
+  static const _accentBlue = Color(0xFF38BDF8); // 高亮蓝
+  static const _auxiliaryGrey = Color(0xFF94A3B8); // 辅助灰文
+  static const _darkDivider = Color(0xFF334155); // 分隔线
+  static const _darkInputFill = Color(0xFF1E293B); // 输入框背景
 
-  // ── 深色面板 ────────────────────────────────────────────
-  static const _darkBg = Color(0xFF232832);
-  static const _darkSurface = Color(0xFF2A303B);
-  static const _darkCard = Color(0xFF2E3441);
-  static const _darkDivider = Color(0xFF3A4050);
-  static const _darkInputFill = Color(0xFF323845);
-
-  // ── 浅色面板 ────────────────────────────────────────────
-  static const _lightBg = Color(0xFFF2EDE8);
-  static const _lightSurface = Color(0xFFFAF7F4);
-  static const _lightCard = Color(0xFFFFFFFF);
-  static const _lightDivider = Color(0xFFDAD3CC);
-  static const _lightInputFill = Color(0xFFF5F1ED);
-
-  static ThemeData darkTheme() {
+  // ── 单模式主题 ───────────────────────────────────────────
+  static ThemeData theme() {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
-        primary: _morandiBlue,
-        secondary: _morandiGreen,
-        tertiary: _morandiLavender,
-        error: _morandiError,
+        primary: _accentBlue,
+        secondary: _accentBlue,
+        tertiary: _accentBlue,
+        error: const Color(0xFFF87171),
         surface: _darkSurface,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: const Color(0xFFD4D0CC),
+        onSurface: _auxiliaryGrey,
         outline: _darkDivider,
       ),
       scaffoldBackgroundColor: _darkBg,
       appBarTheme: const AppBarTheme(
         backgroundColor: _darkSurface,
-        foregroundColor: Color(0xFFD4D0CC),
+        foregroundColor: _auxiliaryGrey,
         elevation: 0,
       ),
       cardTheme: CardThemeData(
-        color: _darkCard,
+        color: _darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -71,7 +56,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _morandiBlue, width: 1.5),
+          borderSide: const BorderSide(color: _accentBlue, width: 1.5),
         ),
         filled: true,
         fillColor: _darkInputFill,
@@ -80,7 +65,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _morandiBlue,
+          backgroundColor: _accentBlue,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -89,15 +74,15 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: _morandiBlue,
-          side: const BorderSide(color: _morandiBlue, width: 0.8),
+          foregroundColor: _accentBlue,
+          side: const BorderSide(color: _accentBlue, width: 0.8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: _darkInputFill,
-        selectedColor: _morandiBlue.withValues(alpha: 0.25),
+        selectedColor: _accentBlue.withValues(alpha: 0.25),
         labelStyle: const TextStyle(fontSize: 12),
         side: const BorderSide(color: _darkDivider),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -106,15 +91,15 @@ class AppTheme {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return _morandiBlue.withValues(alpha: 0.25);
+              return _accentBlue.withValues(alpha: 0.25);
             }
             return _darkInputFill;
           }),
           foregroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return _morandiBlue;
+              return _accentBlue;
             }
-            return const Color(0xFFD4D0CC);
+            return _auxiliaryGrey;
           }),
         ),
       ),
@@ -123,139 +108,42 @@ class AppTheme {
         dataRowColor: WidgetStateProperty.all(Colors.transparent),
         headingTextStyle: const TextStyle(
           fontWeight: FontWeight.bold,
-          color: Color(0xFFB0ADA8),
+          color: _auxiliaryGrey,
           fontFamily: 'monospace',
           fontSize: 12,
         ),
         dataTextStyle: const TextStyle(
           fontFamily: 'monospace',
           fontSize: 13,
-          color: Color(0xFFD4D0CC),
+          color: _auxiliaryGrey,
         ),
       ),
       dividerColor: _darkDivider,
       tabBarTheme: TabBarThemeData(
-        labelColor: _morandiBlue,
-        unselectedLabelColor: const Color(0xFF8A8680),
-        indicatorColor: _morandiBlue,
+        labelColor: _accentBlue,
+        unselectedLabelColor: const Color(0xFF64748B),
+        indicatorColor: _accentBlue,
         indicatorSize: TabBarIndicatorSize.label,
       ),
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return _morandiBlue;
+          if (states.contains(WidgetState.selected)) return _accentBlue;
           return Colors.transparent;
         }),
         checkColor: WidgetStateProperty.all(Colors.white),
         side: const BorderSide(color: _darkDivider),
       ),
-      expansionTileTheme: const ExpansionTileThemeData(
-        iconColor: _morandiBlue,
-        collapsedIconColor: Color(0xFF8A8680),
+      expansionTileTheme: ExpansionTileThemeData(
+        iconColor: _accentBlue,
+        collapsedIconColor: const Color(0xFF64748B),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         linearTrackColor: _darkInputFill,
-        color: _morandiBlue,
+        color: _accentBlue,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: _darkCard,
-        contentTextStyle: const TextStyle(color: Color(0xFFD4D0CC)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  static ThemeData lightTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.light(
-        primary: _morandiBlue,
-        secondary: _morandiGreen,
-        tertiary: _morandiLavender,
-        error: _morandiError,
-        surface: _lightSurface,
-        onPrimary: Colors.white,
-        onSurface: const Color(0xFF4A4540),
-        outline: _lightDivider,
-      ),
-      scaffoldBackgroundColor: _lightBg,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: _lightSurface,
-        foregroundColor: Color(0xFF4A4540),
-        elevation: 0,
-      ),
-      cardTheme: CardThemeData(
-        color: _lightCard,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: _lightDivider, width: 0.5),
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _lightDivider),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _lightDivider),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _morandiBlue, width: 1.5),
-        ),
-        filled: true,
-        fillColor: _lightInputFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _morandiBlue,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          elevation: 0,
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: _morandiBlue,
-          side: const BorderSide(color: _morandiBlue, width: 0.8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-      chipTheme: ChipThemeData(
-        backgroundColor: _lightInputFill,
-        selectedColor: _morandiBlue.withValues(alpha: 0.15),
-        labelStyle: const TextStyle(fontSize: 12),
-        side: const BorderSide(color: _lightDivider),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      dataTableTheme: const DataTableThemeData(
-        headingTextStyle: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
-          fontSize: 12,
-          color: Color(0xFF6A645E),
-        ),
-        dataTextStyle: TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 13,
-          color: Color(0xFF4A4540),
-        ),
-      ),
-      dividerColor: _lightDivider,
-      tabBarTheme: TabBarThemeData(
-        labelColor: _morandiBlue,
-        unselectedLabelColor: const Color(0xFF8A8480),
-        indicatorColor: _morandiBlue,
-        indicatorSize: TabBarIndicatorSize.label,
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: _lightCard,
-        contentTextStyle: const TextStyle(color: Color(0xFF4A4540)),
+        backgroundColor: _darkSurface,
+        contentTextStyle: const TextStyle(color: _auxiliaryGrey),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
       ),
@@ -263,12 +151,10 @@ class AppTheme {
   }
 
   // ── 语义色彩 helper ──────────────────────────────────────
-  static Color get morandiBlue => _morandiBlue;
-  static Color get morandiGreen => _morandiGreen;
-  static Color get morandiRose => _morandiRose;
-  static Color get morandiTaupe => _morandiTaupe;
-  static Color get morandiLavender => _morandiLavender;
-  static Color get morandiError => _morandiError;
-  static Color get morandiSuccess => _morandiSuccess;
-  static Color get morandiWarning => _morandiWarning;
+  static Color get darkBg => _darkBg;
+  static Color get darkSurface => _darkSurface;
+  static Color get accentBlue => _accentBlue;
+  static Color get auxiliaryGrey => _auxiliaryGrey;
+  static Color get darkDivider => _darkDivider;
+  static Color get darkInputFill => _darkInputFill;
 }

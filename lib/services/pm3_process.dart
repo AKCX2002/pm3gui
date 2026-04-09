@@ -1,33 +1,37 @@
-/// PM3 process manager — wraps the pm3 CLI binary via dart:io Process.
+/// PM3 进程管理器 — 通过 dart:io Process 包装 pm3 命令行二进制文件
 ///
-/// Design mirrors Proxmark3GUI/src/common/pm3process.cpp:
-///   - Persistent interactive session via stdin/stdout pipes
-///   - Single-command execution via -c flag
-///   - Connection detection by watching for "os:" prompt
+/// 设计参考 Proxmark3GUI/src/common/pm3process.cpp:
+///   - 通过 stdin/stdout 管道实现持久化交互会话
+///   - 通过 -c 标志执行单个命令
+///   - 通过监视 "os:" 提示符检测连接状态
 library;
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-/// Connection state of the PM3 client process.
-enum Pm3State { disconnected, connecting, connected }
+/// PM3 客户端进程的连接状态
+enum Pm3State { 
+  disconnected,  // 未连接
+  connecting,    // 正在连接
+  connected      // 已连接
+}
 
-/// Wraps a pm3 CLI process for communication.
+/// 包装 pm3 命令行进程以进行通信
 class Pm3Process {
-  Process? _process;
-  Pm3State _state = Pm3State.disconnected;
-  String _version = '';
-  String _lastError = '';
-  DateTime? _lastConnectAttempt;
+  Process? _process;          // PM3 进程实例
+  Pm3State _state = Pm3State.disconnected;  // 当前连接状态
+  String _version = '';       // PM3 版本信息
+  String _lastError = '';     // 最后一次错误信息
+  DateTime? _lastConnectAttempt;  // 最后一次连接尝试时间
 
-  /// Stream of lines from pm3 stdout/stderr.
+  /// 来自 pm3 stdout/stderr 的行流
   final _outputController = StreamController<String>.broadcast();
 
-  /// Stream of state changes.
+  /// 状态变化的流
   final _stateController = StreamController<Pm3State>.broadcast();
 
-  /// Accumulated output buffer for response matching.
+  /// 用于响应匹配的累积输出缓冲区
   final _responseBuffer = StringBuffer();
 
   Stream<String> get outputStream => _outputController.stream;
@@ -37,27 +41,27 @@ class Pm3Process {
   String get lastError => _lastError;
   bool get isConnected => _state == Pm3State.connected;
 
-  /// Minimum interval between connect attempts (prevent retry storm).
+  /// 连接尝试之间的最小间隔（防止重试风暴）
   static const _connectCooldown = Duration(seconds: 3);
 
-  /// Resolve pm3 executable path.
+  /// 解析 pm3 可执行文件路径
   ///
-  /// Tries in order:
-  ///  1. User-supplied path if it exists as absolute
-  ///  2. User-supplied path relative to common PM3 root dirs
-  ///  3. 'proxmark3' on system PATH
-  ///  4. Guessed locations based on the app's own directory
+  /// 按以下顺序尝试：
+  ///  1. 如果用户提供的路径作为绝对路径存在
+  ///  2. 用户提供的路径相对于常见 PM3 根目录
+  ///  3. 系统 PATH 上的 'proxmark3'
+  ///  4. 基于应用自身目录的猜测位置
   ///
-  /// Returns a record (resolvedPath, workingDirectory?) or null.
+  /// 返回记录 (resolvedPath, workingDirectory?) 或 null
   static (String, String?)? resolvePm3Path(String userPath) {
-    // 1. Try as-is (absolute or cwd-relative)
+    // 1. 直接尝试（绝对路径或相对当前目录）
     if (File(userPath).existsSync()) {
-      // Determine working directory for relative scripts like "./pm3"
+      // 为相对脚本如 "./pm3" 确定工作目录
       final file = File(userPath);
       return (file.absolute.path, file.absolute.parent.path);
     }
 
-    // 2. Well-known locations
+    // 2. 常见位置
     final candidates = [
       '/root/dev/proxmark3/pm3',
       '/root/dev/proxmark3/client/proxmark3',
@@ -70,7 +74,7 @@ class Pm3Process {
       }
     }
 
-    // 3. Check PATH via `which`
+    // 3. 通过 `which` 检查 PATH
     try {
       final result = Process.runSync('which', [userPath]);
       if (result.exitCode == 0) {
@@ -84,12 +88,12 @@ class Pm3Process {
     return null;
   }
 
-  /// Connect to PM3 device.
+  /// 连接到 PM3 设备
   ///
-  /// [pm3Path] - path to pm3 executable (e.g., "./pm3" or full path)
-  /// [port] - serial port (e.g., "/dev/ttyACM0", "COM3")
+  /// [pm3Path] - pm3 可执行文件路径（例如 "./pm3" 或完整路径）
+  /// [port] - 串口（例如 "/dev/ttyACM0", "COM3"）
   Future<bool> connect(String pm3Path, String port) async {
-    // Cooldown — prevent retry storms
+    // 冷却期 — 防止重试风暴
     if (_lastConnectAttempt != null) {
       final elapsed = DateTime.now().difference(_lastConnectAttempt!);
       if (elapsed < _connectCooldown) {
@@ -109,7 +113,7 @@ class Pm3Process {
     _setState(Pm3State.connecting);
 
     try {
-      // Resolve the actual executable path
+      // 解析实际可执行文件路径
       final resolved = resolvePm3Path(pm3Path);
       if (resolved == null) {
         _lastError = '找不到 PM3 程序: $pm3Path\n'
@@ -127,7 +131,7 @@ class Pm3Process {
         _outputController.add('[工作目录: $workDir]');
       }
 
-      // Launch pm3 with -p port -f (flush mode for real-time output)
+      // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
       _process = await Process.start(
         execPath,
         ['-p', port, '-f'],
@@ -138,7 +142,7 @@ class Pm3Process {
       final completer = Completer<bool>();
       var connected = false;
 
-      // Listen to stdout
+      // 监听 stdout
       _process!.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
@@ -146,13 +150,13 @@ class Pm3Process {
         _outputController.add(line);
         _responseBuffer.writeln(line);
 
-        // Detect fatal errors — stop immediately
+        // 检测致命错误 — 立即停止
         if (_detectFatalError(line)) {
           if (!completer.isCompleted) completer.complete(false);
           return;
         }
 
-        // Detect successful connection (pm3 prints OS info on connect)
+        // 检测成功连接（pm3 在连接时打印 OS 信息）
         if (!connected && _isConnectionPrompt(line)) {
           connected = true;
           _extractVersion(line);
@@ -161,7 +165,7 @@ class Pm3Process {
         }
       });
 
-      // Listen to stderr
+      // 监听 stderr
       _process!.stderr
           .transform(utf8.decoder)
           .transform(const LineSplitter())
@@ -170,7 +174,7 @@ class Pm3Process {
         _detectFatalError(line);
       });
 
-      // Handle process exit
+      // 处理进程退出
       _process!.exitCode.then((code) {
         _outputController.add('[PM3 进程退出, code=$code]');
         if (_state != Pm3State.disconnected) {
@@ -179,7 +183,7 @@ class Pm3Process {
         _process = null;
       });
 
-      // Wait for connection with timeout
+      // 等待连接，带超时
       return await completer.future.timeout(
         const Duration(seconds: 15),
         onTimeout: () {
@@ -206,8 +210,8 @@ class Pm3Process {
     }
   }
 
-  /// Execute a single command and return full output.
-  /// Uses pm3 -c "command" for non-interactive execution.
+  /// 执行单个命令并返回完整输出
+  /// 使用 pm3 -c "command" 进行非交互式执行
   Future<String> executeCommand(
     String pm3Path,
     String port,
@@ -232,10 +236,10 @@ class Pm3Process {
     }
   }
 
-  /// Send a command to the interactive session.
+  /// 向交互式会话发送命令
   Future<void> sendCommand(String command) async {
     if (_process == null || _state != Pm3State.connected) {
-      _outputController.add('[Not connected]');
+      _outputController.add('[未连接]');
       return;
     }
     _responseBuffer.clear();
@@ -244,25 +248,26 @@ class Pm3Process {
     await _process!.stdin.flush();
   }
 
-  /// Send command and wait for output to stabilize.
+  /// 发送命令并等待输出稳定
+  /// [timeout] - 超时时间，默认为10秒
   Future<String> sendCommandAndWait(String command,
       {Duration timeout = const Duration(seconds: 10)}) async {
     if (_process == null || _state != Pm3State.connected) {
-      return '[Not connected]';
+      return '[未连接]';
     }
 
     _responseBuffer.clear();
     _process!.stdin.writeln(command);
     await _process!.stdin.flush();
 
-    // Wait for output to stop arriving
+    // 等待输出停止
     var lastLength = 0;
     final deadline = DateTime.now().add(timeout);
     while (DateTime.now().isBefore(deadline)) {
       await Future.delayed(const Duration(milliseconds: 200));
       final currentLength = _responseBuffer.length;
       if (currentLength > 0 && currentLength == lastLength) {
-        break; // Output stabilized
+        break; // 输出已稳定
       }
       lastLength = currentLength;
     }
@@ -270,13 +275,13 @@ class Pm3Process {
     return _responseBuffer.toString();
   }
 
-  /// Disconnect from PM3.
+  /// 断开与 PM3 的连接
   Future<void> disconnect() async {
     if (_process != null) {
       try {
         _process!.stdin.writeln('quit');
         await _process!.stdin.flush();
-        // Give it a moment to exit gracefully
+        // 给它一点时间优雅退出
         await Future.delayed(const Duration(milliseconds: 500));
         _process!.kill();
       } catch (_) {}
@@ -285,13 +290,14 @@ class Pm3Process {
     _setState(Pm3State.disconnected);
   }
 
+  /// 释放资源
   void dispose() {
     disconnect();
     _outputController.close();
     _stateController.close();
   }
 
-  /// Detect fatal errors that mean we should stop trying.
+  /// 检测致命错误，这意味着我们应该停止尝试
   bool _detectFatalError(String line) {
     final lower = line.toLowerCase();
 
@@ -319,8 +325,8 @@ class Pm3Process {
     return false;
   }
 
-  // Detect connection success from output line
-  // Matches Proxmark3GUI pattern: QRegularExpression("(os:\\s+|OS\\.+\\s+)")
+  // 从输出行检测连接成功
+  // 匹配 Proxmark3GUI 模式: QRegularExpression("(os:\s+|OS\.+\s+)")
   bool _isConnectionPrompt(String line) {
     return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
         line.toLowerCase().contains('communicating with pm3 over usb-cdc') ||
@@ -329,14 +335,16 @@ class Pm3Process {
         line.contains('pm3 -->');
   }
 
+  /// 从行中提取版本信息
   void _extractVersion(String line) {
-    // Try to extract version from e.g. "os: ... v4.16717"
+    // 尝试从例如 "os: ... v4.16717" 中提取版本
     final match = RegExp(r'v[\d.]+').firstMatch(line);
     if (match != null) {
       _version = match.group(0) ?? '';
     }
   }
 
+  /// 设置状态并通知监听器
   void _setState(Pm3State newState) {
     _state = newState;
     _stateController.add(newState);

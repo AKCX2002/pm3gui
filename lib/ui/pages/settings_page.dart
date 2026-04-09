@@ -24,23 +24,7 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Appearance
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.palette),
-                  title: const Text('深色模式'),
-                  subtitle: const Text('切换深色/浅色主题'),
-                  trailing: Switch(
-                    value: appState.isDarkMode,
-                    onChanged: (_) => appState.toggleTheme(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
+
 
           // PM3 Configuration
           Card(

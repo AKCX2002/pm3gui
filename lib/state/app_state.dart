@@ -1,4 +1,12 @@
-/// Global app state using Provider/ChangeNotifier.
+/// 全局应用状态管理类
+///
+/// 使用 Provider/ChangeNotifier 模式管理应用的所有状态，包括：
+/// - 设备连接状态
+/// - 终端输出和命令历史
+/// - 卡片数据
+/// - 主题设置
+/// - 文件管理
+/// - 硬件信息
 library;
 
 import 'dart:async';
@@ -8,23 +16,23 @@ import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/services/pm3_process.dart';
 import 'package:pm3gui/services/file_collector.dart';
 
-/// App shell page index mapping (must match HomePage sidebar order).
+/// 应用页面索引映射（必须与HomePage侧边栏顺序匹配）
 enum AppPage {
-  connection,
-  terminal,
-  dumpViewer,
-  dumpCompare,
-  mifare,
-  lf,
-  settings,
+  connection, // 连接页面
+  terminal, // 终端页面
+  dumpViewer, // Dump查看器
+  dumpCompare, // Dump比较
+  mifare, // Mifare高频操作
+  lf, // 低频操作
+  settings, // 设置页面
 }
 
-/// Cross-page navigation intent with optional action and params.
+/// 跨页面导航意图，带有可选的操作和参数
 class NavigationIntent {
-  final AppPage page;
-  final String action;
-  final Map<String, String> params;
-  final int timestamp;
+  final AppPage page; // 目标页面
+  final String action; // 操作类型
+  final Map<String, String> params; // 操作参数
+  final int timestamp; // 时间戳
 
   const NavigationIntent({
     required this.page,
@@ -89,8 +97,7 @@ class AppState extends ChangeNotifier {
   final List<String> commandHistory = [];
   int historyIndex = -1;
 
-  // Theme
-  bool isDarkMode = true;
+
 
   // 逐块写入进度
   WriteProgress? writeProgress;
@@ -124,45 +131,64 @@ class AppState extends ChangeNotifier {
   bool get isConnected => pm3.state == Pm3State.connected;
   String get lastError => pm3.lastError;
 
+  /// 构造函数
+  ///
+  /// 初始化应用状态，自动检测PM3路径，并设置流监听器
   AppState() {
-    // Auto-detect PM3 path
+    // 自动检测PM3可执行文件路径
     pm3Path = _detectPm3Path();
-    // Forward pm3 output to terminal
+
+    // 监听PM3输出流，将输出添加到终端
     pm3.outputStream.listen((line) {
       terminalOutput.add(line);
-      // Keep terminal buffer manageable
+
+      // 保持终端缓冲区大小合理
       if (terminalOutput.length > 5000) {
         terminalOutput.removeRange(0, 1000);
       }
-      // Auto-scan for new files when PM3 saves something
+
+      // 当PM3保存文件时，自动扫描新文件
       if (line.toLowerCase().contains('saved') ||
           line.toLowerCase().contains('saved to')) {
-        // Delay slightly to let the file system flush
+        // 稍微延迟以确保文件系统已刷新
         Future.delayed(const Duration(seconds: 1), () => scanForFiles());
       }
+
+      // 通知监听器状态变化
       notifyListeners();
     });
 
+    // 监听PM3状态变化
     pm3.stateStream.listen((_) {
       notifyListeners();
     });
   }
 
+  /// 连接到PM3设备
+  ///
+  /// [return] - 连接是否成功
   Future<bool> connect() async {
+    // 检查端口是否为空
     if (portName.isEmpty) return false;
+
     // 重置硬件信息
     _resetHwInfo();
+
+    // 尝试连接到PM3设备
     final result = await pm3.connect(pm3Path, portName);
-    // Auto scan files on connect
+
+    // 连接成功后自动扫描文件并查询硬件信息
     if (result) {
       scanForFiles();
-      // 自动查询硬件信息
       _queryHwVersion();
     }
+
+    // 通知监听器状态变化
     notifyListeners();
     return result;
   }
 
+  /// 断开与PM3设备的连接
   Future<void> disconnect() async {
     await pm3.disconnect();
     _resetHwInfo();
@@ -250,10 +276,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleTheme() {
-    isDarkMode = !isDarkMode;
-    notifyListeners();
-  }
+
 
   void clearTerminal() {
     terminalOutput.clear();
@@ -334,13 +357,19 @@ class AppState extends ChangeNotifier {
   // ──────────────────────────────────────────────────────────
 
   /// 扫描 PM3 工作目录，收集 dump / key 文件
+  ///
+  /// 扫描默认目录和归类目标目录，收集PM3生成的文件并按卡片分组
   Future<void> scanForFiles() async {
+    // 防止重复扫描
     if (isScanning) return;
+
     isScanning = true;
     notifyListeners();
 
     try {
+      // 获取默认扫描目录
       final dirs = FileCollector.defaultScanDirs(pm3Path);
+      // 扫描默认目录中的文件
       final files = await FileCollector.scan(dirs);
 
       // 同时递归扫描归类目标目录（存放已整理文件），避免归类后文件"消失"
@@ -352,12 +381,15 @@ class AppState extends ChangeNotifier {
         );
       }
 
-      // 合并，去除重复路径
+      // 合并文件列表，去除重复路径
       final seen = <String>{};
       collectedFiles =
           [...files, ...organizedFiles].where((f) => seen.add(f.path)).toList();
+
+      // 按卡片分组文件
       cardGroups = FileCollector.groupByCard(collectedFiles);
     } catch (e) {
+      // 记录扫描错误
       terminalOutput.add('[文件扫描错误] $e');
     }
 

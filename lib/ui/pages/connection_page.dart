@@ -98,9 +98,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       prefixIcon: const Icon(Icons.terminal, size: 18),
                       suffixIcon: File(appState.pm3Path).existsSync()
                           ? Icon(Icons.check_circle,
-                              size: 18, color: AppTheme.morandiSuccess)
+                              size: 18, color: AppTheme.accentBlue)
                           : Icon(Icons.warning,
-                              size: 18, color: AppTheme.morandiWarning),
+                              size: 18, color: const Color(0xFFF87171)),
                     ),
                     onChanged: appState.setPm3Path,
                   ),
@@ -127,12 +127,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color:
-                                AppTheme.morandiWarning.withValues(alpha: 0.1),
+                                const Color(0xFFF87171).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(children: [
                             Icon(Icons.info_outline,
-                                size: 16, color: AppTheme.morandiWarning),
+                                size: 16, color: const Color(0xFFF87171)),
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text('未找到串口，请连接 PM3 设备',
@@ -193,7 +193,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isConnected ? AppTheme.morandiRose : null,
+                          isConnected ? AppTheme.accentBlue : null,
                     ),
                   ),
                 ),
@@ -221,7 +221,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         _infoRow('端口', appState.portName),
                         _infoRow('版本', appState.pm3Version),
                         _infoRow('状态', '已连接',
-                            valueColor: AppTheme.morandiSuccess),
+                            valueColor: AppTheme.accentBlue),
                         if (appState.hwInfoParsed) ...[
                           const Divider(height: 16),
                           if (appState.hwModel.isNotEmpty)
@@ -342,7 +342,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: Row(children: [
                   Icon(Icons.folder_special,
-                      size: 20, color: AppTheme.morandiBlue),
+                      size: 20, color: AppTheme.accentBlue),
                   const SizedBox(width: 8),
                   const Text('PM3 文件收集',
                       style:
@@ -422,18 +422,18 @@ class _ConnectionPageState extends State<ConnectionPage> {
         gradient: LinearGradient(
           colors: isConnected
               ? [
-                  AppTheme.morandiGreen.withValues(alpha: 0.15),
-                  AppTheme.morandiBlue.withValues(alpha: 0.08),
+                  AppTheme.accentBlue.withValues(alpha: 0.15),
+                  AppTheme.accentBlue.withValues(alpha: 0.08),
                 ]
               : [
-                  AppTheme.morandiTaupe.withValues(alpha: 0.1),
+                  AppTheme.auxiliaryGrey.withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
         ),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isConnected
-              ? AppTheme.morandiGreen.withValues(alpha: 0.3)
+              ? AppTheme.accentBlue.withValues(alpha: 0.3)
               : theme.dividerColor,
         ),
       ),
@@ -445,12 +445,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: isConnected
-                ? AppTheme.morandiGreen.withValues(alpha: 0.2)
-                : AppTheme.morandiTaupe.withValues(alpha: 0.15),
+                ? AppTheme.accentBlue.withValues(alpha: 0.2)
+                : AppTheme.auxiliaryGrey.withValues(alpha: 0.15),
           ),
           child: Icon(
             isConnected ? Icons.nfc : Icons.usb_off,
-            color: isConnected ? AppTheme.morandiGreen : Colors.grey,
+            color: isConnected ? AppTheme.accentBlue : Colors.grey,
             size: 24,
           ),
         ),
@@ -493,7 +493,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Icon(icon, size: 18, color: AppTheme.morandiBlue),
+              Icon(icon, size: 18, color: AppTheme.accentBlue),
               const SizedBox(width: 8),
               Text(title,
                   style: const TextStyle(
@@ -512,13 +512,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
   Widget _buildErrorCard(String error) {
     return Card(
-      color: AppTheme.morandiError.withValues(alpha: 0.12),
+      color: const Color(0xFFF87171).withValues(alpha: 0.12),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.error_outline, color: AppTheme.morandiError, size: 18),
+            Icon(Icons.error_outline, color: const Color(0xFFF87171), size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -527,7 +527,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   Text('连接失败',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.morandiError,
+                          color: const Color(0xFFF87171),
                           fontSize: 13)),
                   const SizedBox(height: 4),
                   Text(error,
@@ -546,8 +546,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
   Widget _buildCardGroupTile(CardGroup group, ThemeData theme) {
     final bandColor = group.band == FreqBand.hf
-        ? AppTheme.morandiBlue
-        : AppTheme.morandiGreen;
+        ? AppTheme.accentBlue
+        : AppTheme.accentBlue;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 6),
@@ -585,8 +585,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                         : Icons.insert_drive_file,
                 size: 16,
                 color: f.fileType == CardFileType.dump
-                    ? AppTheme.morandiBlue
-                    : AppTheme.morandiLavender,
+                    ? AppTheme.accentBlue
+                    : AppTheme.accentBlue,
               ),
               title: Text(f.fileName,
                   style:
@@ -735,10 +735,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
               value: usedPct,
               backgroundColor: Colors.grey.withValues(alpha: 0.2),
               color: usedPct > 0.9
-                  ? AppTheme.morandiError
+                  ? const Color(0xFFF87171)
                   : usedPct > 0.7
-                      ? AppTheme.morandiWarning
-                      : AppTheme.morandiGreen,
+                      ? const Color(0xFFF87171)
+                      : AppTheme.accentBlue,
               minHeight: 6,
             ),
           ),

@@ -209,31 +209,7 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       children: [
-                        // Theme toggle
-                        InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: appState.toggleTheme,
-                          child: Container(
-                            height: 40,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  appState.isDarkMode
-                                      ? Icons.light_mode
-                                      : Icons.dark_mode,
-                                  size: 20,
-                                  color: Colors.grey,
-                                ),
-                                if (_sidebarExpanded) ...[
-                                  const SizedBox(width: 12),
-                                  const Text('切换主题',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
+
                         // Collapse toggle
                         InkWell(
                           borderRadius: BorderRadius.circular(8),
