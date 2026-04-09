@@ -21,16 +21,16 @@ enum CardFileType { dump, key, unknown }
 enum FreqBand { hf, lf, unknown }
 
 class CollectedFile {
-  final String path;           // 文件路径
-  final String fileName;       // 文件名
-  final FreqBand band;         // 频段 (HF/LF)
-  final String cardType;       // 卡片类型，例如 "mf", "iclass", "mfdes", "em"
-  final String uid;            // 卡片UID
+  final String path; // 文件路径
+  final String fileName; // 文件名
+  final FreqBand band; // 频段 (HF/LF)
+  final String cardType; // 卡片类型，例如 "mf", "iclass", "mfdes", "em"
+  final String uid; // 卡片UID
   final CardFileType fileType; // 文件类型 (dump/key)
-  final String format;         // 文件格式，例如 "bin", "json", "eml"
-  final int? sequence;         // 编号后缀，如 -003
-  final DateTime modified;     // 修改时间
-  final int sizeBytes;         // 文件大小（字节）
+  final String format; // 文件格式，例如 "bin", "json", "eml"
+  final int? sequence; // 编号后缀，如 -003
+  final DateTime modified; // 修改时间
+  final int sizeBytes; // 文件大小（字节）
 
   CollectedFile({
     required this.path,
@@ -82,9 +82,9 @@ class CollectedFile {
 }
 
 class CardGroup {
-  final String uid;            // 卡片UID
-  final String cardType;       // 卡片类型
-  final FreqBand band;         // 频段 (HF/LF)
+  final String uid; // 卡片UID
+  final String cardType; // 卡片类型
+  final FreqBand band; // 频段 (HF/LF)
   final List<CollectedFile> files; // 该卡片的文件列表
 
   CardGroup({
@@ -97,10 +97,10 @@ class CardGroup {
   /// 获取dump文件数量
   int get dumpCount =>
       files.where((f) => f.fileType == CardFileType.dump).length;
-  
+
   /// 获取key文件数量
   int get keyCount => files.where((f) => f.fileType == CardFileType.key).length;
-  
+
   /// 卡片组标签
   String get label => '${band == FreqBand.hf ? 'HF' : 'LF'} '
       '${CollectedFile._cardTypeName(cardType)} '
@@ -153,7 +153,8 @@ class FileCollector {
   }
 
   /// 扫描单个目录
-  static Future<void> _scanDirectory(String dirPath, bool recursive, List<CollectedFile> results) async {
+  static Future<void> _scanDirectory(
+      String dirPath, bool recursive, List<CollectedFile> results) async {
     // 检查缓存
     final cachedFiles = FileCache.getCachedFiles(dirPath, recursive);
     if (cachedFiles != null) {
@@ -167,18 +168,20 @@ class FileCollector {
     final directoryFiles = <CollectedFile>[];
 
     try {
-      await for (final entity in dir.list(recursive: recursive, followLinks: false)) {
+      await for (final entity
+          in dir.list(recursive: recursive, followLinks: false)) {
         if (entity is! File) continue;
-        
+
         final file = entity;
         final name = p.basename(file.path);
-        
+
         // 快速过滤：只处理常见的文件扩展名
         final ext = p.extension(name).toLowerCase();
-        if (!['.bin', '.json', '.eml', '.dump', '.dic', '.keys.txt'].contains(ext)) {
+        if (!['.bin', '.json', '.eml', '.dump', '.dic', '.keys.txt']
+            .contains(ext)) {
           continue;
         }
-        
+
         final parsed = _parseFileName(name);
         if (parsed == null) continue;
 
@@ -195,7 +198,7 @@ class FileCollector {
           modified: stat.modified,
           sizeBytes: stat.size,
         );
-        
+
         directoryFiles.add(collectedFile);
         results.add(collectedFile);
       }
@@ -215,11 +218,11 @@ class FileCollector {
   /// [return] - 按文件数量降序排序的卡片组列表
   static List<CardGroup> groupByCard(List<CollectedFile> files) {
     final map = <String, CardGroup>{};
-    
+
     for (final f in files) {
       // 使用频段、卡片类型和UID作为唯一键
       final key = '${f.band.name}-${f.cardType}-${f.uid}';
-      
+
       // 如果键不存在，创建新的卡片组
       map.putIfAbsent(
           key,
@@ -228,11 +231,11 @@ class FileCollector {
                 cardType: f.cardType,
                 band: f.band,
               ));
-      
+
       // 将文件添加到对应的卡片组
       map[key]!.files.add(f);
     }
-    
+
     // 按文件数量降序排序：文件数最多的组在前
     final groups = map.values.toList();
     groups.sort((a, b) => b.files.length.compareTo(a.files.length));
@@ -291,12 +294,12 @@ class FileCollector {
 // ─── Internal Parser ────────────────────────────────────────────────────
 
 class _ParsedName {
-  final FreqBand band;         // 频段
-  final String cardType;       // 卡片类型
-  final String uid;            // UID
+  final FreqBand band; // 频段
+  final String cardType; // 卡片类型
+  final String uid; // UID
   final CardFileType fileType; // 文件类型
-  final String format;         // 文件格式
-  final int? sequence;         // 序列编号
+  final String format; // 文件格式
+  final int? sequence; // 序列编号
 
   _ParsedName({
     required this.band,

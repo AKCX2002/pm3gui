@@ -8,7 +8,9 @@ library;
 enum Pm3ClientType { unknown, official, iceman }
 
 Pm3ClientType detectClientType(String output) {
-  if (output.contains('[=]') || output.contains('[+]') || output.contains('[-]')) {
+  if (output.contains('[=]') ||
+      output.contains('[+]') ||
+      output.contains('[-]')) {
     return Pm3ClientType.iceman;
   }
   return Pm3ClientType.official;
@@ -22,7 +24,8 @@ String? extractUid(String output) {
     caseSensitive: false,
   ).firstMatch(output);
   if (match != null) {
-    return match.group(0)!
+    return match
+        .group(0)!
         .replaceFirst(RegExp(r'UID\s*[:：]\s*', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^0-9a-fA-F]'), '')
         .toUpperCase();
@@ -37,7 +40,8 @@ String? extractAtqa(String output) {
     caseSensitive: false,
   ).firstMatch(output);
   if (match != null) {
-    return match.group(0)!
+    return match
+        .group(0)!
         .replaceFirst(RegExp(r'ATQA\s*[:：]\s*', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^0-9a-fA-F]'), '')
         .toUpperCase();
@@ -52,7 +56,8 @@ String? extractSak(String output) {
     caseSensitive: false,
   ).firstMatch(output);
   if (match != null) {
-    return match.group(0)!
+    return match
+        .group(0)!
         .replaceFirst(RegExp(r'SAK\s*[:：]\s*', caseSensitive: false), '')
         .replaceAll(RegExp(r'[^0-9a-fA-F]'), '')
         .toUpperCase();
@@ -91,7 +96,8 @@ class ExtractedKey {
   });
 }
 
-List<ExtractedKey> extractKeys(String output, {int keyAIndex = 2, int keyBIndex = 4}) {
+List<ExtractedKey> extractKeys(String output,
+    {int keyAIndex = 2, int keyBIndex = 4}) {
   final pattern = RegExp(
       r'\s*(\d{3})\s*\|\s*(\d{3})\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*$',
       multiLine: true);

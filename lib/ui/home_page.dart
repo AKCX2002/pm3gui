@@ -130,8 +130,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final isConnected = appState.connectionState.connectionState == Pm3State.connected;
+    final appState = context.read<AppState>();
+    final currentPageIndex =
+        context.select<AppState, int>((s) => s.currentPageIndex);
+    final pm3Version = context.select<AppState, String>((s) => s.pm3Version);
+    final isConnected = context.select<AppState, bool>(
+        (s) => s.connectionState.connectionState == Pm3State.connected);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -165,8 +169,8 @@ class _HomePageState extends State<HomePage> {
                                     style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold)),
-                                if (appState.pm3Version.isNotEmpty)
-                                  Text(appState.pm3Version,
+                                if (pm3Version.isNotEmpty)
+                                  Text(pm3Version,
                                       style: TextStyle(
                                           fontSize: 10,
                                           color: Colors.grey[500]),
@@ -223,8 +227,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Expanded(
                     child: _sidebarExpanded
-                        ? _buildExpandedNav(appState, theme)
-                        : _buildCollapsedNav(appState, theme),
+                        ? _buildExpandedNav(appState, theme, currentPageIndex)
+                        : _buildCollapsedNav(appState, theme, currentPageIndex),
                   ),
                   const Divider(height: 1),
                   Padding(
@@ -264,7 +268,7 @@ class _HomePageState extends State<HomePage> {
               color: isDark ? const Color(0xFF2A2A3C) : Colors.grey[300]),
           Expanded(
             child: IndexedStack(
-              index: appState.currentPageIndex,
+              index: currentPageIndex,
               children: _pages,
             ),
           ),
@@ -273,24 +277,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildExpandedNav(AppState appState, ThemeData theme) {
+  Widget _buildExpandedNav(
+      AppState appState, ThemeData theme, int currentPageIndex) {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       children: [
-        ..._generalItems.map((n) => _navTile(n, appState, theme)),
-        _groupTile('📡 高频 HF', _hfItems, appState, theme),
-        _groupTile('📻 低频 LF', _lfItems, appState, theme),
-        _groupTile('🛠 工具', _toolItems, appState, theme),
+        ..._generalItems
+            .map((n) => _navTile(n, appState, theme, currentPageIndex)),
+        _groupTile('📡 高频 HF', _hfItems, appState, theme, currentPageIndex),
+        _groupTile('📻 低频 LF', _lfItems, appState, theme, currentPageIndex),
+        _groupTile('🛠 工具', _toolItems, appState, theme, currentPageIndex),
       ],
     );
   }
 
-  Widget _buildCollapsedNav(AppState appState, ThemeData theme) {
+  Widget _buildCollapsedNav(
+      AppState appState, ThemeData theme, int currentPageIndex) {
     final all = [..._generalItems, ..._hfItems, ..._lfItems, ..._toolItems];
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 4),
       children: all.map((n) {
-        final selected = n.page.index == appState.currentPageIndex;
+        final selected = n.page.index == currentPageIndex;
         return Tooltip(
           message: n.label,
           preferBelow: false,
@@ -321,10 +328,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _groupTile(
-      String title, List<_NavItem> items, AppState appState, ThemeData theme) {
-    final anySelected =
-        items.any((n) => n.page.index == appState.currentPageIndex);
+  Widget _groupTile(String title, List<_NavItem> items, AppState appState,
+      ThemeData theme, int currentPageIndex) {
+    final anySelected = items.any((n) => n.page.index == currentPageIndex);
     return Theme(
       data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
@@ -338,13 +344,16 @@ class _HomePageState extends State<HomePage> {
         initiallyExpanded: anySelected,
         tilePadding: const EdgeInsets.symmetric(horizontal: 8),
         childrenPadding: EdgeInsets.zero,
-        children: items.map((n) => _navTile(n, appState, theme)).toList(),
+        children: items
+            .map((n) => _navTile(n, appState, theme, currentPageIndex))
+            .toList(),
       ),
     );
   }
 
-  Widget _navTile(_NavItem item, AppState appState, ThemeData theme) {
-    final selected = item.page.index == appState.currentPageIndex;
+  Widget _navTile(
+      _NavItem item, AppState appState, ThemeData theme, int currentPageIndex) {
+    final selected = item.page.index == currentPageIndex;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       child: Material(

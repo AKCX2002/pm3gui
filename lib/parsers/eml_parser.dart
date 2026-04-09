@@ -69,8 +69,7 @@ String exportToEml(MifareCard card, {bool withSpaces = false}) {
     final hex = card.blocks[i].toUpperCase();
     if (withSpaces) {
       final spaced =
-          List.generate(16, (j) => hex.substring(j * 2, j * 2 + 2))
-              .join(' ');
+          List.generate(16, (j) => hex.substring(j * 2, j * 2 + 2)).join(' ');
       buf.writeln(spaced);
     } else {
       buf.writeln(hex);

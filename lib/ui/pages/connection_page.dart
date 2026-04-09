@@ -66,11 +66,40 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final isConnected =
-        appState.connectionState.connectionState == Pm3State.connected;
-    final isConnecting =
-        appState.connectionState.connectionState == Pm3State.connecting;
+    final appState = context.read<AppState>();
+    final isConnected = context.select<AppState, bool>(
+        (s) => s.connectionState.connectionState == Pm3State.connected);
+    final isConnecting = context.select<AppState, bool>(
+        (s) => s.connectionState.connectionState == Pm3State.connecting);
+    final pm3Path = context.select<AppState, String>((s) => s.pm3Path);
+    final availablePorts =
+        context.select<AppState, List<String>>((s) => s.availablePorts);
+    final portName = context.select<AppState, String>((s) => s.portName);
+    final pm3Version = context.select<AppState, String>((s) => s.pm3Version);
+    final lastError = context.select<AppState, String>((s) => s.lastError);
+    final hwInfoParsed = context.select<AppState, bool>((s) => s.hwInfoParsed);
+    final hwModel = context.select<AppState, String>((s) => s.hwModel);
+    final hwMcu = context.select<AppState, String>((s) => s.hwMcu);
+    final hwFlashSize = context.select<AppState, String>((s) => s.hwFlashSize);
+    final hwFirmware = context.select<AppState, String>((s) => s.hwFirmware);
+    final hwBootrom = context.select<AppState, String>((s) => s.hwBootrom);
+    final hwFpga = context.select<AppState, String>((s) => s.hwFpga);
+    final hwSmartcard = context.select<AppState, String>((s) => s.hwSmartcard);
+    final hwUniqueId = context.select<AppState, String>((s) => s.hwUniqueId);
+    final hwFlashTotal = context.select<AppState, int>((s) => s.hwFlashTotal);
+    final commandHistoryLength =
+        context.select<AppState, int>((s) => s.commandHistory.length);
+    final terminalOutputLength =
+        context.select<AppState, int>((s) => s.terminalOutput.length);
+    final collectedFilesCount =
+        context.select<AppState, int>((s) => s.collectedFiles.length);
+    final cardGroupsCount =
+        context.select<AppState, int>((s) => s.cardGroups.length);
+    final isFileScanning = context.select<AppState, bool>((s) => s.isScanning);
+    final hasCollectedFiles =
+        context.select<AppState, bool>((s) => s.collectedFiles.isNotEmpty);
+    final cardGroups =
+        context.select<AppState, List<CardGroup>>((s) => s.cardGroups);
     final theme = Theme.of(context);
 
     return Row(
@@ -92,13 +121,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   icon: Icons.folder_open,
                   title: 'PM3 程序路径',
                   child: TextFormField(
-                    initialValue: appState.pm3Path,
+                    initialValue: pm3Path,
                     style:
                         const TextStyle(fontFamily: 'monospace', fontSize: 13),
                     decoration: InputDecoration(
                       hintText: './pm3 或 /usr/bin/proxmark3',
                       prefixIcon: const Icon(Icons.terminal, size: 18),
-                      suffixIcon: File(appState.pm3Path).existsSync()
+                      suffixIcon: File(pm3Path).existsSync()
                           ? Icon(Icons.check_circle,
                               size: 18, color: AppTheme.accentBlue)
                           : Icon(Icons.warning,
@@ -124,7 +153,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     tooltip: '刷新端口',
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: appState.availablePorts.isEmpty
+                  child: availablePorts.isEmpty
                       ? Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -143,11 +172,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           ]),
                         )
                       : DropdownButtonFormField<String>(
-                          initialValue: appState.availablePorts
-                                  .contains(appState.portName)
-                              ? appState.portName
+                          initialValue: availablePorts.contains(portName)
+                              ? portName
                               : null,
-                          items: appState.availablePorts
+                          items: availablePorts
                               .map((p) =>
                                   DropdownMenuItem(value: p, child: Text(p)))
                               .toList(),
@@ -201,8 +229,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                 const SizedBox(height: 12),
 
                 // ── 错误信息 ──
-                if (!isConnected && appState.lastError.isNotEmpty)
-                  _buildErrorCard(appState.lastError),
+                if (!isConnected && lastError.isNotEmpty)
+                  _buildErrorCard(lastError),
 
                 // ── 设备信息（已连接时） ──
                 if (isConnected) ...[
@@ -219,29 +247,24 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _infoRow('端口', appState.portName),
-                        _infoRow('版本', appState.pm3Version),
+                        _infoRow('端口', portName),
+                        _infoRow('版本', pm3Version),
                         _infoRow('状态', '已连接', valueColor: AppTheme.accentBlue),
-                        if (appState.hwInfoParsed) ...[
+                        if (hwInfoParsed) ...[
                           const Divider(height: 16),
-                          if (appState.hwModel.isNotEmpty)
-                            _infoRow('设备型号', appState.hwModel),
-                          if (appState.hwMcu.isNotEmpty)
-                            _infoRow('MCU', appState.hwMcu),
-                          if (appState.hwFlashSize.isNotEmpty)
-                            _infoRow('Flash', appState.hwFlashSize),
-                          if (appState.hwFirmware.isNotEmpty)
-                            _infoRow('固件', appState.hwFirmware),
-                          if (appState.hwBootrom.isNotEmpty)
-                            _infoRow('Bootrom', appState.hwBootrom),
-                          if (appState.hwFpga.isNotEmpty)
-                            _infoRow('FPGA', appState.hwFpga),
-                          if (appState.hwSmartcard.isNotEmpty)
-                            _infoRow('智能卡模块', appState.hwSmartcard),
-                          if (appState.hwUniqueId.isNotEmpty)
-                            _infoRow('设备 ID', appState.hwUniqueId),
-                          if (appState.hwFlashTotal > 0)
-                            _buildFlashUsage(appState),
+                          if (hwModel.isNotEmpty) _infoRow('设备型号', hwModel),
+                          if (hwMcu.isNotEmpty) _infoRow('MCU', hwMcu),
+                          if (hwFlashSize.isNotEmpty)
+                            _infoRow('Flash', hwFlashSize),
+                          if (hwFirmware.isNotEmpty) _infoRow('固件', hwFirmware),
+                          if (hwBootrom.isNotEmpty)
+                            _infoRow('Bootrom', hwBootrom),
+                          if (hwFpga.isNotEmpty) _infoRow('FPGA', hwFpga),
+                          if (hwSmartcard.isNotEmpty)
+                            _infoRow('智能卡模块', hwSmartcard),
+                          if (hwUniqueId.isNotEmpty)
+                            _infoRow('设备 ID', hwUniqueId),
+                          if (hwFlashTotal > 0) _buildFlashUsage(appState),
                         ] else ...[
                           const Divider(height: 16),
                           Row(children: [
@@ -257,8 +280,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           ]),
                         ],
                         const Divider(height: 16),
-                        _infoRow('命令历史', '${appState.commandHistory.length} 条'),
-                        _infoRow('终端缓冲', '${appState.terminalOutput.length} 行'),
+                        _infoRow('命令历史', '$commandHistoryLength 条'),
+                        _infoRow('终端缓冲', '$terminalOutputLength 行'),
                         const SizedBox(height: 8),
                         Row(children: [
                           Expanded(
@@ -318,11 +341,8 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       _infoRow('平台', Platform.operatingSystem),
                       _infoRow('架构', _getArch()),
                       _infoRow('Dart', Platform.version.split(' ').first),
-                      _infoRow(
-                          'PM3 路径',
-                          File(appState.pm3Path).existsSync()
-                              ? '✅ 有效'
-                              : '❌ 无效'),
+                      _infoRow('PM3 路径',
+                          File(pm3Path).existsSync() ? '✅ 有效' : '❌ 无效'),
                     ],
                   ),
                 ),
@@ -349,27 +369,26 @@ class _ConnectionPageState extends State<ConnectionPage> {
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                   const SizedBox(width: 8),
                   Text(
-                    '${appState.collectedFiles.length} 个文件, '
-                    '${appState.cardGroups.length} 张卡',
+                    '$collectedFilesCount 个文件, '
+                    '$cardGroupsCount 张卡',
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                   const Spacer(),
-                  if (appState.isScanning)
+                  if (isFileScanning)
                     const SizedBox(
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2)),
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
-                    onPressed: appState.isScanning
-                        ? null
-                        : () => appState.scanForFiles(),
+                    onPressed:
+                        isFileScanning ? null : () => appState.scanForFiles(),
                     icon: const Icon(Icons.refresh, size: 16),
                     label: const Text('扫描', style: TextStyle(fontSize: 12)),
                   ),
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
-                    onPressed: appState.collectedFiles.isEmpty
+                    onPressed: !hasCollectedFiles
                         ? null
                         : () => _showOrganizeDialog(appState),
                     icon: const Icon(Icons.create_new_folder, size: 16),
@@ -381,7 +400,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
 
               // 文件列表（按卡片分组）
               Expanded(
-                child: appState.cardGroups.isEmpty
+                child: cardGroups.isEmpty
                     ? Center(
                         child:
                             Column(mainAxisSize: MainAxisSize.min, children: [
@@ -400,9 +419,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(8),
-                        itemCount: appState.cardGroups.length,
+                        itemCount: cardGroups.length,
                         itemBuilder: (context, i) =>
-                            _buildCardGroupTile(appState.cardGroups[i], theme),
+                            _buildCardGroupTile(cardGroups[i], theme),
                       ),
               ),
             ],

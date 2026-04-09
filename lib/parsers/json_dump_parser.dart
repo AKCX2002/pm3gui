@@ -82,12 +82,10 @@ MifareCard parseJsonDumpString(String text) {
       if (idx != null && idx < cardType.sectorCount && entry.value is Map) {
         final keyMap = entry.value as Map<String, dynamic>;
         if (keyMap['KeyA'] is String) {
-          card.sectorKeys[idx].keyA =
-              (keyMap['KeyA'] as String).toUpperCase();
+          card.sectorKeys[idx].keyA = (keyMap['KeyA'] as String).toUpperCase();
         }
         if (keyMap['KeyB'] is String) {
-          card.sectorKeys[idx].keyB =
-              (keyMap['KeyB'] as String).toUpperCase();
+          card.sectorKeys[idx].keyB = (keyMap['KeyB'] as String).toUpperCase();
         }
       }
     }

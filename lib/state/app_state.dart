@@ -117,9 +117,13 @@ class AppState extends ChangeNotifier {
   set portName(String value) => connectionState.setPort(value);
 
   List<String> get availablePorts => connectionState.availablePorts;
-  set availablePorts(List<String> value) => connectionState.setAvailablePorts(value);
+  set availablePorts(List<String> value) =>
+      connectionState.setAvailablePorts(value);
 
   List<String> get terminalOutput => terminalState.terminalOutput;
+  List<String> get terminalOutputStripped =>
+      terminalState.terminalOutputStripped;
+  int get outputRevision => terminalState.outputRevision;
   List<String> get commandHistory => terminalState.commandHistory;
   int get historyIndex => terminalState.historyIndex;
   set historyIndex(int value) => terminalState.setHistoryIndex(value);
@@ -211,7 +215,8 @@ class AppState extends ChangeNotifier {
       await Future.delayed(delayBetween);
 
       final lastLines = terminalState.terminalOutput.length > 3
-          ? terminalState.terminalOutput.sublist(terminalState.terminalOutput.length - 3)
+          ? terminalState.terminalOutput
+              .sublist(terminalState.terminalOutput.length - 3)
           : terminalState.terminalOutput;
       final fail = lastLines
           .any((l) => l.contains('( fail )') || l.contains('Auth error'));
@@ -236,7 +241,8 @@ class AppState extends ChangeNotifier {
     }
 
     if (!progress.cancelled) {
-      progress.currentStatus = '完成: ${progress.succeeded} 成功, ${progress.failed} 失败';
+      progress.currentStatus =
+          '完成: ${progress.succeeded} 成功, ${progress.failed} 失败';
     }
     notifyListeners();
     return progress;
@@ -319,7 +325,8 @@ class AppState extends ChangeNotifier {
   }
 
   void setPreferredMfDumpFile(String? path) {
-    preferredMfDumpFile = (path != null && path.trim().isNotEmpty) ? path : null;
+    preferredMfDumpFile =
+        (path != null && path.trim().isNotEmpty) ? path : null;
     notifyListeners();
   }
 

@@ -24,8 +24,6 @@ class SettingsPage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-
-
           // PM3 Configuration
           Card(
             child: Padding(

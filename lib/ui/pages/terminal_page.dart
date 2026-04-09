@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:pm3gui/state/app_state.dart';
-import 'package:pm3gui/parsers/output_parser.dart';
 import 'package:pm3gui/services/pm3_command_catalog.dart';
 
 class _AutocompleteIntent extends Intent {
@@ -27,16 +26,18 @@ class _TerminalPageState extends State<TerminalPage> {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  final _outputSelectionFocusNode = FocusNode();
+  final _keyboardFocusNode = FocusNode();
 
   List<Pm3CommandEntry> _catalog = const [];
+  final Map<String, List<Pm3CommandEntry>> _suggestionIndex = {};
   List<Pm3CommandEntry> _suggestions = const [];
 
   List<Pm3CommandEntry> _cycleCandidates = const [];
   int _cycleIndex = -1;
   bool _ignoreNextInputChange = false;
 
-  // 分页加载相关
-  bool _isLoading = false;
+  int _lastTerminalLineCount = 0;
 
   bool get _isCyclingAutocomplete => _cycleCandidates.isNotEmpty;
 
@@ -76,36 +77,16 @@ class _TerminalPageState extends State<TerminalPage> {
     super.initState();
     _inputController.addListener(_onInputChanged);
     _loadCatalog();
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    if (_isLoading) return;
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      _loadMore();
-    }
-  }
-
-  void _loadMore() {
-    setState(() {
-      _isLoading = true;
-    });
-    // 模拟加载延迟
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _isLoading = false;
-      });
-    });
   }
 
   @override
   void dispose() {
     _inputController.removeListener(_onInputChanged);
     _inputController.dispose();
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _focusNode.dispose();
+    _outputSelectionFocusNode.dispose();
+    _keyboardFocusNode.dispose();
     super.dispose();
   }
 
@@ -129,8 +110,45 @@ class _TerminalPageState extends State<TerminalPage> {
     if (!mounted) return;
     setState(() {
       _catalog = loaded;
+      _rebuildSuggestionIndex();
       _updateSuggestions();
     });
+  }
+
+  void _rebuildSuggestionIndex() {
+    _suggestionIndex.clear();
+    for (final e in _catalog) {
+      final parts = e.command.toLowerCase().trim().split(RegExp(r'\s+'));
+      if (parts.isEmpty || parts.first.isEmpty) continue;
+
+      void addKey(String key) {
+        final list =
+            _suggestionIndex.putIfAbsent(key, () => <Pm3CommandEntry>[]);
+        list.add(e);
+      }
+
+      addKey(parts.first);
+      if (parts.length >= 2) {
+        addKey('${parts[0]} ${parts[1]}');
+      }
+    }
+  }
+
+  List<Pm3CommandEntry> _candidateEntriesForQuery(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return _catalog;
+
+    final parts = q.split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return _catalog;
+
+    if (parts.length >= 2) {
+      final twoToken = '${parts[0]} ${parts[1]}';
+      final twoTokenCandidates = _suggestionIndex[twoToken];
+      if (twoTokenCandidates != null) return twoTokenCandidates;
+    }
+
+    final oneTokenCandidates = _suggestionIndex[parts.first];
+    return oneTokenCandidates ?? _catalog;
   }
 
   void _updateSuggestions() {
@@ -142,9 +160,10 @@ class _TerminalPageState extends State<TerminalPage> {
       return;
     }
 
+    final candidates = _candidateEntriesForQuery(query);
     final prefixMatches =
-        _catalog.where((e) => e.commandPrefixMatches(query)).toList();
-    final fuzzyMatches = _catalog.where((e) => e.matches(query)).toList();
+        candidates.where((e) => e.commandPrefixMatches(query)).toList();
+    final fuzzyMatches = candidates.where((e) => e.matches(query)).toList();
 
     final merged = <Pm3CommandEntry>[];
     final seen = <String>{};
@@ -230,20 +249,34 @@ class _TerminalPageState extends State<TerminalPage> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }
+  }
+
+  void _scheduleAutoScrollIfOutputChanged(int lineCount) {
+    if (lineCount == _lastTerminalLineCount) return;
+    _lastTerminalLineCount = lineCount;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+
+      final position = _scrollController.position;
+      final nearBottom = (position.maxScrollExtent - position.pixels) < 120;
+      if (nearBottom || lineCount <= 1) {
+        _scrollToBottom();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
+    final outputRevision =
+        context.select<AppState, int>((s) => s.outputRevision);
+    final isConnected = context.select<AppState, bool>((s) => s.isConnected);
+    final appState = context.read<AppState>();
+    final output = appState.terminalOutputStripped;
 
-    // Auto-scroll when new output arrives
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    _scheduleAutoScrollIfOutputChanged(outputRevision);
 
     return Column(
       children: [
@@ -273,18 +306,15 @@ class _TerminalPageState extends State<TerminalPage> {
             color: const Color(0xFF0D0D1A),
             child: SelectableRegion(
               selectionControls: materialTextSelectionControls,
-              focusNode: FocusNode(),
+              focusNode: _outputSelectionFocusNode,
               child: ListView.builder(
                 controller: _scrollController,
                 padding: const EdgeInsets.all(8),
-                itemCount: _getItemCount(appState),
+                itemCount: output.length,
                 itemBuilder: (context, index) {
-                  if (index >= appState.terminalOutput.length) {
-                    return _buildLoadingIndicator();
-                  }
-                  final line = appState.terminalOutput[index];
+                  final line = output[index];
                   return Text(
-                    stripAnsi(line),
+                    line,
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 13,
@@ -353,8 +383,7 @@ class _TerminalPageState extends State<TerminalPage> {
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 14,
-                  color:
-                      appState.isConnected ? Colors.greenAccent : Colors.grey,
+                  color: isConnected ? Colors.greenAccent : Colors.grey,
                 ),
               ),
               Expanded(
@@ -384,7 +413,7 @@ class _TerminalPageState extends State<TerminalPage> {
                       ),
                     },
                     child: KeyboardListener(
-                      focusNode: FocusNode(),
+                      focusNode: _keyboardFocusNode,
                       onKeyEvent: (event) {
                         if (event is KeyDownEvent) {
                           if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
@@ -590,21 +619,5 @@ class _TerminalPageState extends State<TerminalPage> {
     }
 
     _setInputText(history[appState.historyIndex], preserveCycle: false);
-  }
-
-  int _getItemCount(AppState appState) {
-    if (_isLoading) {
-      return appState.terminalOutput.length + 1;
-    }
-    return appState.terminalOutput.length;
-  }
-
-  Widget _buildLoadingIndicator() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      child: Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
-    );
   }
 }

@@ -70,8 +70,7 @@ List<int>? decodeAccessBits(Uint8List bytes) {
   }
 
   // Combine into C1C2C3 values (0-7) per block
-  return List.generate(
-      4, (i) => (c3[i] << 2) | (c2[i] << 1) | c1[i]);
+  return List.generate(4, (i) => (c3[i] << 2) | (c2[i] << 1) | c1[i]);
 }
 
 /// Decode access bits from hex string (6 or 8 hex chars, with or without spaces).
