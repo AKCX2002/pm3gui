@@ -1,12 +1,4 @@
-# PM3 GUI — Release workflow (improved)
-# Improvements:
-# - Minimal permissions principle (contents: write only for publish job)
-# - Concurrency to avoid duplicate releases
-# - Robust artifact download with continue-on-error to allow partial artifacts
-# - Release tag uses short SHA for traceability and includes timestamp in asset names
-# - Use action pins (tags); for strict immutability replace with specific commit SHA
-
-name: PM3 GUI Release (improved)
+name: PM3 GUI Release
 
 on:
   push:
@@ -16,80 +8,127 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: pm3gui-release-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-artifacts:
-    name: Build artifacts for release (runs per tag)
+  release-linux:
+    name: Release Linux
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libglib2.0-dev
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
-      - name: Get deps & build
+      - run: flutter pub get
+      - run: flutter build linux --release
+
+      - name: Package
         run: |
-          flutter pub get
-          flutter build linux --release || true
-          flutter build apk --release --split-per-abi || true
-          flutter build windows --release || true
+          TS=$(date -u +%Y%m%dT%H%M%SZ)
+          cd build/linux/x64/release/bundle
+          tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64-${TS}.tar.gz" .
 
-      - name: Package artifacts
-        run: |
-          mkdir -p artifacts
-          if [ -d build/linux/x64/release/bundle ]; then
-            tar czf artifacts/pm3gui-linux-x64-${{ github.sha[:8] }}-$(date -u +%Y%m%dT%H%M%SZ).tar.gz -C build/linux/x64/release/bundle .
-          fi
-          if [ -d build/app/outputs/flutter-apk ]; then
-            cp build/app/outputs/flutter-apk/*.apk artifacts/ || true
-          fi
-          if [ -d build/windows/x64/runner/Release ]; then
-            powershell -Command "Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath artifacts/pm3gui-windows-x64-${{ github.sha[:8] }}-$(Get-Date -Format yyyyMMddTHHmmssZ).zip"
-          fi
-
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: pm3gui-release-artifacts-${{ github.sha[:8] }}
-          path: artifacts/**
+          name: release-linux
+          path: pm3gui-linux-x64-*.tar.gz
 
-  publish:
-    needs: build-artifacts
+  release-android:
+    name: Release Android
     runs-on: ubuntu-latest
     permissions:
-      contents: write # required to create releases and upload assets
+      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Download artifacts
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build apk --release --split-per-abi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-android
+          path: build/app/outputs/flutter-apk/*.apk
+
+  release-windows:
+    name: Release Windows
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build windows --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-windows
+          path: pm3gui-windows-x64.zip
+
+  publish:
+    name: Publish Release
+    needs: [release-linux, release-android, release-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 最小权限：只有发布作业需要写权限
+    steps:
+      - name: Download all artifacts
         uses: actions/download-artifact@v7
         with:
+          merge-multiple: true
           path: artifacts
 
       - name: List artifacts
-        run: ls -la artifacts || true
+        run: ls -la artifacts/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2.6.1
         with:
-          tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
-          files: artifacts/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-# Notes:
-# - Security: only the `publish` job requires write permission. This follows least privilege.
-# - Stability: pinning to action tags is acceptable; consider replacing tags with specific commit SHAs for stronger immutability.
-# - Robustness: artifact packaging tolerates missing directories and continues where possible, making releases resilient when some platform builds are skipped.
+          generate_release_notes: true
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.apk
+            artifacts/*.zip

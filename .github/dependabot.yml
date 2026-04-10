@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # 自动更新 GitHub Actions 依赖，避免 action 长期过旧
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # 自动更新 Dart/Flutter 依赖，避免 pub 依赖老化
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:30"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "dart"

@@ -1,0 +1,197 @@
+name: Sync and build Proxmark3 for PM3 GUI
+
+on:
+  workflow_dispatch:
+    inputs:
+      pm3_repo:
+        description: 'Git URL of Proxmark3 upstream repo'
+        required: false
+        default: 'https://github.com/RfidResearchGroup/proxmark3.git'
+      pm3_branch:
+        description: 'Branch to checkout from PM3 repo'
+        required: false
+        default: 'master'
+      ndk_version:
+        description: 'Android NDK version (e.g. r25b)'
+        required: false
+        default: 'r25b'
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-pm3-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PM3_REPO: ${{ github.event.inputs.pm3_repo || 'https://github.com/RfidResearchGroup/proxmark3.git' }}
+  PM3_BRANCH: ${{ github.event.inputs.pm3_branch || 'master' }}
+  NDK_VERSION: ${{ github.event.inputs.ndk_version || 'r25b' }}
+
+jobs:
+  build-native:
+    name: Build native client on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout pm3gui
+        uses: actions/checkout@v5
+
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "short_sha=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +%Y%m%dT%H%M%SZ)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Clone Proxmark3
+        run: |
+          git clone --depth=1 --branch "${PM3_BRANCH}" "${PM3_REPO}" proxmark3
+        shell: bash
+
+      - name: Build on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libusb-1.0-0-dev libreadline-dev libncurses5-dev libssl-dev git
+          cd proxmark3
+          make clean || true
+          make client -j"$(nproc)"
+        shell: bash
+
+      - name: Build on macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install pkg-config libusb readline openssl git
+          cd proxmark3
+          make clean || true
+          make client -j"$(sysctl -n hw.ncpu)"
+        shell: bash
+
+      - name: Setup MSYS2 UCRT
+        if: matrix.os == 'windows-latest'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-libusb
+            mingw-w64-ucrt-x86_64-readline
+
+      - name: Build on Windows UCRT
+        if: matrix.os == 'windows-latest'
+        run: |
+          export PATH="/ucrt64/bin:/usr/bin:$PATH"
+          cd proxmark3
+          make clean || true
+          make client -j2
+        shell: msys2 {0}
+
+      - name: Upload artifact (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        uses: actions/upload-artifact@v6
+        with:
+          name: proxmark3-client-${{ matrix.os }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
+          path: |
+            proxmark3/client/proxmark3
+            proxmark3/pm3
+
+      - name: Upload artifact (Windows UCRT)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v6
+        with:
+          name: proxmark3-client-windows-ucrt-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
+          path: |
+            proxmark3/client/proxmark3.exe
+            proxmark3/pm3.exe
+
+  build-android:
+    name: Build Android client (${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        abi: [armeabi-v7a, arm64-v8a, x86_64]
+
+    steps:
+      - name: Checkout pm3gui
+        uses: actions/checkout@v5
+
+      - name: Set build metadata
+        id: meta
+        run: |
+          echo "short_sha=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +%Y%m%dT%H%M%SZ)" >> $GITHUB_OUTPUT
+
+      - name: Clone Proxmark3
+        run: git clone --depth=1 --branch "${PM3_BRANCH}" "${PM3_REPO}" proxmark3
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libusb-1.0-0-dev libreadline-dev libncurses5-dev libssl-dev wget unzip cmake
+
+      - name: Install Android NDK
+        run: |
+          cd "$HOME"
+          wget -q "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" -O ndk.zip
+          unzip -q ndk.zip
+          rm -f ndk.zip
+
+      - name: Build Android client
+        run: |
+          set -e
+          cd proxmark3
+          mkdir -p build-android
+          cd build-android
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE="$HOME/android-ndk-${NDK_VERSION}/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI="${{ matrix.abi }}" \
+            -DANDROID_NATIVE_API_LEVEL=21
+          make client -j"$(nproc)"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: proxmark3-client-android-${{ matrix.abi }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
+          path: |
+            proxmark3/client/proxmark3
+            proxmark3/pm3
+
+  release:
+    name: Publish pm3-client release
+    runs-on: ubuntu-latest
+    needs: [build-native, build-android]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - name: Set release metadata
+        id: meta
+        run: echo "short_sha=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v7
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: List artifacts
+        run: ls -la artifacts || true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2.6.1
+        with:
+          tag_name: pm3-client-${{ steps.meta.outputs.short_sha }}
+          name: pm3-client-${{ steps.meta.outputs.short_sha }}
+          files: |
+            artifacts/**

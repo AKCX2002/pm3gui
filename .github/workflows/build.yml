@@ -1,12 +1,4 @@
-# PM3 GUI — Flutter 构建 CI
-# Improvements applied by DevOps reviewer:
-# - permissions: minimal job-level permissions (least privilege)
-# - caching: cache Flutter/Dart pub cache and Gradle to improve performance
-# - concurrency: prevent overlapping runs on same ref
-# - matrix builds for platforms kept; artifacts named with commit+timestamp
-# NOTE: For maximum stability lock actions to commit SHAs (replace @vX with @<sha>)
-
-name: PM3 GUI Build (improved)
+name: PM3 GUI Build
 
 on:
   push:
@@ -14,13 +6,15 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  # 定时校验“最新依赖”兼容性，防止长期不变导致 CI 老化
+  schedule:
+    - cron: '0 3 * * 1'
 
-# Global minimal permissions. Jobs that need write will override per-job.
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: pm3gui-build-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -28,54 +22,7 @@ env:
 
 jobs:
   build-linux:
-    name: Build Linux (x64)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5 # pin to an explicit tag; consider replacing with full commit SHA for immutability
-
-      - name: Cache pub packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Flutter doctor
-        run: flutter doctor -v
-
-      - name: Get dependencies
-        run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos
-
-      - name: Build Linux
-        run: flutter build linux --release
-
-      - name: Package artifacts
-        run: |
-          cd build/linux/x64/release/bundle
-          TAR=pm3gui-linux-x64-${{ github.sha[:8] }}-$(date -u +%Y%m%dT%H%M%SZ).tar.gz
-          tar czf "$GITHUB_WORKSPACE/$TAR" .
-
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: pm3gui-linux-x64-${{ github.sha[:8] }}
-          path: pm3gui-linux-x64-*.tar.gz
-
-  build-android:
-    name: Build Android APK (split per ABI)
+    name: Linux build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -88,6 +35,64 @@ jobs:
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libglib2.0-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Optional dependency refresh (scheduled)
+        if: github.event_name == 'schedule'
+        run: flutter pub upgrade --major-versions
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Package artifacts
+        run: |
+          TS=$(date -u +%Y%m%dT%H%M%SZ)
+          cd build/linux/x64/release/bundle
+          tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64-${TS}.tar.gz" .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: pm3gui-linux-x64-${{ github.run_number }}
+          path: pm3gui-linux-x64-*.tar.gz
+
+  build-android:
+    name: Android build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
       - name: Setup JDK
         uses: actions/setup-java@v5
@@ -101,6 +106,10 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Optional dependency refresh (scheduled)
+        if: github.event_name == 'schedule'
+        run: flutter pub upgrade --major-versions
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -110,11 +119,11 @@ jobs:
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: pm3gui-android-apk-${{ github.sha[:8] }}
+          name: pm3gui-android-apk-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/*.apk
 
   build-windows:
-    name: Build Windows (x64)
+    name: Windows build
     runs-on: windows-latest
     permissions:
       contents: read
@@ -128,6 +137,10 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Optional dependency refresh (scheduled)
+        if: github.event_name == 'schedule'
+        run: flutter pub upgrade --major-versions
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -137,16 +150,10 @@ jobs:
       - name: Package artifacts
         shell: pwsh
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64-${{ github.sha[:8] }}.zip
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64-${{ github.run_number }}.zip
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v6
         with:
-          name: pm3gui-windows-x64-${{ github.sha[:8] }}
+          name: pm3gui-windows-x64-${{ github.run_number }}
           path: pm3gui-windows-x64-*.zip
-
-# Notes:
-# - Performance: caching pub packages speeds repeated CI runs. For native C/C++ builds you can add ccache integration.
-# - Stability: consider replacing action tags with pinned SHAs (e.g. actions/checkout@<sha>) to avoid upstream breaking changes.
-# - Security: global permissions are minimal; jobs needing write (releases) will request write permissions explicitly in the release workflow.
-# - Norms: matrix builds are used for platform coverage (Android uses split-per-abi). Release automation handled in separate workflow.
