@@ -113,35 +113,46 @@ jobs:
           cd proxmark3
           make client SKIPQT=1 -j"$(sysctl -n hw.ncpu)"
 
-      # ── Windows / MSYS2 MINGW64 ────────────────────────────────────────────
-      # Using MINGW64 (same as ProxSpace used by the official CI) for better
-      # POSIX header compatibility (arpa/inet.h, etc.)
-      - name: Setup MSYS2 MINGW64 (Windows)
+      # ── Windows / Official ProxSpace toolchain ────────────────────────────
+      # Follow official proxmark3 windows workflow and toolchain.
+      - name: ProxSpace download (Windows)
         if: matrix.os == 'windows-latest'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            git
-            make
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-pkg-config
-            mingw-w64-x86_64-libusb
-            mingw-w64-x86_64-readline
-            mingw-w64-x86_64-bzip2
-            mingw-w64-x86_64-lz4
-            mingw-w64-x86_64-openssl
-            mingw-w64-x86_64-lua
+        shell: pwsh
+        run: Invoke-WebRequest "https://github.com/Gator96100/ProxSpace/archive/master.zip" -OutFile "C:\proxspace.zip"
 
-      - name: Build client (Windows)
+      - name: ProxSpace extract (Windows)
         if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
+        shell: pwsh
+        run: Expand-Archive -LiteralPath "C:\proxspace.zip" -DestinationPath "C:\"
+
+      - name: ProxSpace cleanup and rename (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
-          export PATH="/mingw64/bin:/usr/bin:$PATH"
-          cd proxmark3
-          make client SKIPQT=1 -j2
+          Remove-Item "C:\proxspace.zip"
+          Get-ChildItem -Path "C:\ProxSpace-*" | Rename-Item -NewName (Split-Path C:\ProxSpace -Leaf)
+
+      - name: ProxSpace initial startup (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        working-directory: C:\ProxSpace
+        run: |
+          $maxAttempts = 3
+          $delay = 20
+          for ($i = 1; $i -le $maxAttempts; $i++) {
+              Write-Host "Attempt $i..."
+              ./runme64.bat -c "exit"
+              if ($LASTEXITCODE -eq 0) { exit 0 }
+              if ($i -lt $maxAttempts) { Start-Sleep -Seconds $delay }
+          }
+          exit 1
+
+      - name: Build client (Windows via ProxSpace)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $ws = $env:GITHUB_WORKSPACE -replace '\\','/'
+          & "C:\ProxSpace\runme64.bat" -c "cd $ws/proxmark3 && make client SKIPQT=1 -j2"
 
       # ── Upload ─────────────────────────────────────────────────────────────
       - name: Upload client artifact (Linux / macOS)
@@ -157,7 +168,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v6
         with:
-          name: pm3-client-windows-mingw64-${{ steps.meta.outputs.short_sha }}
+          name: pm3-client-windows-proxspace-${{ steps.meta.outputs.short_sha }}
           path: |
             proxmark3/client/proxmark3.exe
             proxmark3/pm3.exe
@@ -248,8 +259,8 @@ jobs:
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. Release  – collect all artifacts and publish a GitHub release
 #
-#    Runs after all three build jobs.  Proceeds even when firmware / android
-#    jobs were intentionally skipped (result == 'skipped'), but aborts if any
+#    Runs after client + firmware build jobs. Proceeds when firmware was
+#    intentionally skipped (result == 'skipped'), but aborts if any required
 #    job failed or was cancelled.
 # ─────────────────────────────────────────────────────────────────────────────
   release:
@@ -296,7 +307,7 @@ jobs:
             |------|----------|
             | `pm3-client-ubuntu-latest-*` | Linux x86_64 |
             | `pm3-client-macos-latest-*`  | macOS (Intel/Apple Silicon) |
-            | `pm3-client-windows-mingw64-*` | Windows 64-bit (MINGW64) |
+            | `pm3-client-windows-proxspace-*` | Windows 64-bit (official ProxSpace toolchain) |
 
             ### Firmware images (flash to device)
             | File | Hardware target |
