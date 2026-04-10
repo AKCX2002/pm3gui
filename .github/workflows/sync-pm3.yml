@@ -139,24 +139,6 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-lua
 
-      - name: Apply arpa/inet.h compatibility shim (Windows/MinGW64)
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: |
-          # MSYS2 MINGW64 places arpa/inet.h only in the sysroot sub-path
-          # (/mingw64/x86_64-w64-mingw32/include/arpa/) but NOT under the
-          # shorter /mingw64/include/arpa/ that GCC searches first.
-          # cmdlf.c includes <arpa/inet.h> unconditionally, so we provide a
-          # thin shim that redirects to winsock2.h when the file is absent.
-          if [ ! -f /mingw64/include/arpa/inet.h ]; then
-            mkdir -p /mingw64/include/arpa
-            printf '#pragma once\n#ifndef WIN32_LEAN_AND_MEAN\n#define WIN32_LEAN_AND_MEAN\n#endif\n#include <winsock2.h>\n' \
-              > /mingw64/include/arpa/inet.h
-            echo 'Created /mingw64/include/arpa/inet.h compatibility shim'
-          else
-            echo 'arpa/inet.h already present, skipping shim'
-          fi
-
       - name: Build client (Windows)
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
@@ -297,24 +279,6 @@ jobs:
         shell: bash
         run: git clone --depth=1 --branch "${PM3_BRANCH}" "${PM3_REPO}" proxmark3
 
-      - name: Patch proxmark3 for Android NDK compatibility
-        shell: bash
-        run: |
-          # 1. Remove -Werror from the embedded Lua build.
-          #    NDK clang 14 emits warnings in loslib.c that become fatal
-          #    errors with -Werror.  Keeping -Wall so other issues are still visible.
-          sed -i \
-            's/target_compile_options(pm3rrg_rdv4_lua PRIVATE -Wall -Werror -O3)/target_compile_options(pm3rrg_rdv4_lua PRIVATE -Wall -O3)/' \
-            proxmark3/client/deps/lua.cmake
-          # 2. Remove the getlocaledecpoint() function-macro define.
-          #    CMake \ clang cannot reliably pass a macro with parentheses via -D
-          #    across all host shells; removing it is safe because Lua falls back
-          #    to the standard localeconv() call when the symbol is absent.
-          sed -i '/add_definitions.*getlocaledecpoint/d' \
-            proxmark3/client/deps/lua.cmake
-          echo '=== Patched client/deps/lua.cmake ==='
-          grep -n 'compile_options\|getlocaledecpoint' proxmark3/client/deps/lua.cmake || true
-
       - name: Install build dependencies
         run: |
           sudo apt-get update -qq
@@ -341,10 +305,7 @@ jobs:
           cmake ../client \
             -DCMAKE_TOOLCHAIN_FILE="$HOME/android-ndk-${NDK_VERSION}/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI="${{ matrix.abi }}" \
-            -DANDROID_NATIVE_API_LEVEL=21 \
-            -DSKIPQT=1 \
-            -DSKIPBT=1 \
-            -DSKIPPYTHON=1
+            -DANDROID_NATIVE_API_LEVEL=21
           # Target name from add_executable(proxmark3 ...) in client/CMakeLists.txt
           cmake --build . --target proxmark3 -j"$(nproc)"
 
