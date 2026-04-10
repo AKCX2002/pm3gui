@@ -72,7 +72,7 @@ jobs:
           tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64-${TS}.tar.gz" .
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3gui-linux-x64-${{ github.run_number }}
           path: pm3gui-linux-x64-*.tar.gz
@@ -117,7 +117,7 @@ jobs:
         run: flutter build apk --release --split-per-abi
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3gui-android-apk-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/*.apk
@@ -153,7 +153,7 @@ jobs:
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64-${{ github.run_number }}.zip
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3gui-windows-x64-${{ github.run_number }}
           path: pm3gui-windows-x64-*.zip

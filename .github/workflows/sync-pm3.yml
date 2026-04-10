@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload artifact (Linux/macOS)
         if: matrix.os != 'windows-latest'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: proxmark3-client-${{ matrix.os }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
           path: |
@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload artifact (Windows UCRT)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: proxmark3-client-windows-ucrt-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
           path: |
@@ -169,7 +169,7 @@ jobs:
         shell: bash
 
       - name: Upload Android artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: proxmark3-client-android-${{ matrix.abi }}-${{ steps.meta.outputs.short_sha }}-${{ steps.meta.outputs.timestamp }}
           path: |
