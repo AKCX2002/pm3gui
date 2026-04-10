@@ -71,6 +71,12 @@ class Pm3Process {
     final candidates = [
       '/root/dev/proxmark3/pm3',
       '/root/dev/proxmark3/client/proxmark3',
+      // Local vendored proxmark3 inside pm3gui (third_party)
+      '${Directory.current.path}/third_party/proxmark3/pm3',
+      '${Directory.current.path}/third_party/proxmark3/client/proxmark3',
+      // Also support relative paths from package root (useful in development)
+      './third_party/proxmark3/pm3',
+      './third_party/proxmark3/client/proxmark3',
       '/usr/local/bin/proxmark3',
       '/usr/bin/proxmark3',
     ];
