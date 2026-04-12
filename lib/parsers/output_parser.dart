@@ -217,7 +217,6 @@ String stripAnsi(String text) {
   return text.replaceAll(RegExp(r'\x1B\[[0-9;]*[a-zA-Z]'), '');
 }
 
-
 /// Extract tag type from `hf 14a search` output.
 String? extractTagType(String output) {
   // Look for "TYPE:" or card type descriptions
