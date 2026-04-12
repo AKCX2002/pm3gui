@@ -123,6 +123,7 @@ class AppState extends ChangeNotifier {
   List<String> get terminalOutput => terminalState.terminalOutput;
   List<String> get terminalOutputStripped =>
       terminalState.terminalOutputStripped;
+  List<String> get terminalOutputRaw => terminalState.terminalOutputRaw;
   int get outputRevision => terminalState.outputRevision;
   List<String> get commandHistory => terminalState.commandHistory;
   int get historyIndex => terminalState.historyIndex;
@@ -181,7 +182,6 @@ class AppState extends ChangeNotifier {
     // Forward terminal state changes to AppState listeners.
     notifyListeners();
   }
-
 
   Future<bool> connect() async {
     hardwareState.resetHwInfo();

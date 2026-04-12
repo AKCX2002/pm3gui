@@ -7,13 +7,16 @@ import 'package:pm3gui/parsers/output_parser.dart';
 class TerminalState extends ChangeNotifier {
   final List<String> terminalOutput = [];
   final List<String> terminalOutputStripped = [];
+  final List<String> terminalOutputRaw = [];
   final List<String> commandHistory = [];
   int historyIndex = -1;
   int outputRevision = 0;
 
   void addOutput(String line) {
     terminalOutput.add(line);
-    // Keep original behavior: only strip ANSI color codes for display.
+    // Preserve raw line (with ANSI codes) for copy/export purposes
+    terminalOutputRaw.add(line);
+    // Keep original behavior for UI: strip ANSI color codes for display.
     terminalOutputStripped.add(stripAnsi(line));
 
     // 保持终端缓冲区大小合理
