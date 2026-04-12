@@ -13,9 +13,8 @@ class TerminalState extends ChangeNotifier {
 
   void addOutput(String line) {
     terminalOutput.add(line);
-    // Strip ANSI then perform PM3-specific cleaning for display
-    final cleaned = cleanPm3Line(stripAnsi(line));
-    terminalOutputStripped.add(cleaned);
+    // Keep original behavior: only strip ANSI color codes for display.
+    terminalOutputStripped.add(stripAnsi(line));
 
     // 保持终端缓冲区大小合理
     if (terminalOutput.length > 5000) {

@@ -217,23 +217,6 @@ String stripAnsi(String text) {
   return text.replaceAll(RegExp(r'\x1B\[[0-9;]*[a-zA-Z]'), '');
 }
 
-/// Clean pm3 prompt prefixes and transient progress tokens from a line
-/// so it is suitable for UI display.
-String cleanPm3Line(String line) {
-  var s = line;
-  // Remove leading bracketed tags like [usb|script] or repeated groups
-  s = s.replaceFirst(RegExp(r'^\s*(?:\[[^\]]*\]\s*)*'), '');
-
-  // Remove everything up to and including the first "pm3 -->" or "pm3 >" prompt
-  s = s.replaceFirst(RegExp(r'(?i)^.*?\bpm3\b\s*[-–—]*>+\s*'), '');
-
-  // Remove simple spinner/progress tokens like [=], [|], [/], [\]
-  s = s.replaceAll(RegExp(r'\[\s*(?:=|/|\\|\|)\s*\]'), '');
-
-  // Collapse multiple whitespace to single space and trim
-  s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
-  return s;
-}
 
 /// Extract tag type from `hf 14a search` output.
 String? extractTagType(String output) {
