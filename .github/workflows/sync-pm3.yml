@@ -69,7 +69,7 @@ jobs:
 
     steps:
       - name: Checkout pm3gui
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set build metadata
         id: meta
@@ -218,7 +218,7 @@ jobs:
 
     steps:
       - name: Checkout pm3gui
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set build metadata
         id: meta
