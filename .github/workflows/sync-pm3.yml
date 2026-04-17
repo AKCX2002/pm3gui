@@ -69,7 +69,7 @@ jobs:
 
     steps:
       - name: Checkout pm3gui
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set build metadata
         id: meta
@@ -157,7 +157,7 @@ jobs:
       # ── Upload ─────────────────────────────────────────────────────────────
       - name: Upload client artifact (Linux / macOS)
         if: matrix.os != 'windows-latest'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3-client-${{ matrix.os }}-${{ steps.meta.outputs.short_sha }}
           path: |
@@ -166,7 +166,7 @@ jobs:
 
       - name: Upload client artifact (Windows)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3-client-windows-proxspace-${{ steps.meta.outputs.short_sha }}
           path: |
@@ -218,7 +218,7 @@ jobs:
 
     steps:
       - name: Checkout pm3gui
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set build metadata
         id: meta
@@ -247,7 +247,7 @@ jobs:
           make fullimage SKIPQT=1 ${{ matrix.variant.make_args }} -j"$(nproc)"
 
       - name: Upload firmware artifact (${{ matrix.variant.name }})
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: pm3-firmware-${{ matrix.variant.name }}-${{ steps.meta.outputs.short_sha }}
           path: |
@@ -285,7 +285,7 @@ jobs:
         run: echo "short_sha=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: artifacts
