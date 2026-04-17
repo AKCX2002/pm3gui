@@ -181,7 +181,11 @@ jobs:
         shell: pwsh
         run: |
           $ws = $env:GITHUB_WORKSPACE -replace '\\','/'
-          & "C:\ProxSpace\runme64.bat" -c "cd $ws/proxmark3 && make client SKIPQT=1 -j2"
+          $pm3Dir = "$ws/proxmark3" -replace '\\','/'
+          
+          # Change to ProxSpace directory first, then execute the build command
+          Set-Location "C:\ProxSpace"
+          & ".\runme64.bat" -c "cd '$pm3Dir' && make client SKIPQT=1 -j2"
 
       # ── Upload ─────────────────────────────────────────────────────────────
       - name: Upload client artifact (Linux / macOS)
