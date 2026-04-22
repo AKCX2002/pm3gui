@@ -113,6 +113,7 @@ class CardGroup {
 ///   hf-mf-A991A280-dump-001.bin
 ///   hf-mf-A991A280-key.bin
 ///   lf-em-12345678-dump.bin
+/// 说明：pattern 将 UID 约束为十六进制，以避免误将普通日志/临时文件识别为 dump。
 final _pm3FilePattern = RegExp(
   r'^(hf|lf)-([a-z0-9]+)-([0-9A-Fa-f]+)-(dump|key)(?:-(\d{3}))?\.(\w+)$',
   caseSensitive: false,
@@ -129,6 +130,16 @@ final _legacyDumpPattern = RegExp(
 // ─── Core Scanner ───────────────────────────────────────────────────────
 
 class FileCollector {
+  // 使用常量集合避免在扫描循环内重复分配 List。
+  static const Set<String> _supportedExtensions = {
+    '.bin',
+    '.json',
+    '.eml',
+    '.dump',
+    '.dic',
+    '.keys.txt',
+  };
+
   /// 扫描目录列表以查找PM3生成的文件
   ///
   /// [directories] - 要扫描的目录列表
@@ -177,8 +188,7 @@ class FileCollector {
 
         // 快速过滤：只处理常见的文件扩展名
         final ext = p.extension(name).toLowerCase();
-        if (!['.bin', '.json', '.eml', '.dump', '.dic', '.keys.txt']
-            .contains(ext)) {
+        if (!_supportedExtensions.contains(ext)) {
           continue;
         }
 
@@ -224,16 +234,17 @@ class FileCollector {
       final key = '${f.band.name}-${f.cardType}-${f.uid}';
 
       // 如果键不存在，创建新的卡片组
-      map.putIfAbsent(
-          key,
-          () => CardGroup(
-                uid: f.uid,
-                cardType: f.cardType,
-                band: f.band,
-              ));
+      final group = map.putIfAbsent(
+        key,
+        () => CardGroup(
+          uid: f.uid,
+          cardType: f.cardType,
+          band: f.band,
+        ),
+      );
 
       // 将文件添加到对应的卡片组
-      map[key]!.files.add(f);
+      group.files.add(f);
     }
 
     // 按文件数量降序排序：文件数最多的组在前
@@ -282,8 +293,12 @@ class FileCollector {
     final pm3Dir = File(pm3Path).parent.path;
     dirs.add(pm3Dir);
     // 2. 主目录（PM3有时会在这里输出）
-    final home = Platform.environment['HOME'] ?? '/root';
-    dirs.add(home);
+    // Windows runner 一般使用 USERPROFILE；Linux/macOS 使用 HOME。
+    final home =
+        Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+    if (home != null && home.isNotEmpty) {
+      dirs.add(home);
+    }
     // 3. 当前工作目录
     dirs.add(Directory.current.path);
 

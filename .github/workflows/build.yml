@@ -3,8 +3,14 @@ name: PM3 GUI Build
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   workflow_dispatch:
   # 定时校验“最新依赖”兼容性，防止长期不变导致 CI 老化
   schedule:
@@ -24,6 +30,7 @@ jobs:
   build-linux:
     name: Linux build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -80,6 +87,7 @@ jobs:
   build-android:
     name: Android build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
@@ -93,6 +101,16 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-
+
+      - name: Cache Gradle
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Setup JDK
         uses: actions/setup-java@v5
@@ -125,6 +143,7 @@ jobs:
   build-windows:
     name: Windows build
     runs-on: windows-latest
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
