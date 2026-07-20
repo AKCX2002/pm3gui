@@ -13,14 +13,14 @@ dependencies:
   # State management
   provider: ^6.1.2
   # File picking for dump files
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.7
   # Desktop-native open/save dialogs (Linux/Windows/macOS)
   file_selector: ^1.1.0
   # File path utilities
   path_provider: ^2.1.4
   path: ^1.9.0
   # Share files
-  share_plus: ^12.0.2
+  share_plus: ^13.2.1
   # Charts for signal visualization
   fl_chart: ^1.2.0
   # Google fonts
