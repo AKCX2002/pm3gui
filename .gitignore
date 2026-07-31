@@ -19,6 +19,7 @@ dist/
 dist-ssr/
 coverage/
 portable/*.exe
+portable/manifest.json
 *.pdb
 
 # Local-only Cargo overrides and worktrees

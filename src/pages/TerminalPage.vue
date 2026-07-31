@@ -1,127 +1,132 @@
 <template>
   <div class="terminal-page">
     <div class="terminal-toolbar">
-      <el-button size="small" @click="clearTerminal">
-        <el-icon><Delete /></el-icon> 清屏
-      </el-button>
-      <el-tag v-if="connectionStore.state === 'Connected'" type="success" size="small">
-        已连接
+      <el-button size="small" @click="clearTerminal"><el-icon><Delete /></el-icon> 清屏</el-button>
+      <el-tag :type="connection.connected ? 'success' : 'info'" size="small">
+        {{ connection.connected ? "已连接" : "未连接" }}
       </el-tag>
-      <el-tag v-else type="info" size="small">未连接</el-tag>
+      <span v-if="terminal.droppedCount" class="drop-note">
+        已丢弃 {{ terminal.droppedCount }} 条较早输出
+      </span>
     </div>
     <div ref="termRef" class="terminal-container"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
-import { listen } from "@tauri-apps/api/event";
-import "xterm/css/xterm.css";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { ElMessage } from "element-plus";
+import { Terminal } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
+import "@xterm/xterm/css/xterm.css";
 import { useTerminalStore } from "../stores/terminal";
 import { useConnectionStore } from "../stores/connection";
+import { useSettingsStore } from "../stores/settings";
+import { errorText } from "../api/pm3Client";
 
 const termRef = ref<HTMLDivElement>();
-const terminalStore = useTerminalStore();
-const connectionStore = useConnectionStore();
-
+const terminal = useTerminalStore();
+const connection = useConnectionStore();
+const settings = useSettingsStore();
 const term = new Terminal({
   cursorBlink: true,
-  fontSize: 14,
-  fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
-  theme: {
-    background: "#1e1e1e",
-    foreground: "#d4d4d4",
-    cursor: "#d4d4d4",
-    selectionBackground: "#264f78",
-  },
-  allowTransparency: true,
+  convertEol: true,
+  fontSize: settings.terminalFontSize,
+  fontFamily: "'Cascadia Mono', Consolas, monospace",
+  theme: { background: "#101318", foreground: "#dbe4ee", cursor: "#62d4a3" },
 });
-
-const fitAddon = new FitAddon();
-term.loadAddon(fitAddon);
-
+const fit = new FitAddon();
+term.loadAddon(fit);
 let currentLine = "";
-let unlisten: (() => void) | null = null;
+let historyIndex = 0;
+let renderedSequence = 0;
+let resizeObserver: ResizeObserver | null = null;
+
+function replaceInput(value: string) {
+  while (currentLine.length) {
+    term.write("\b \b");
+    currentLine = currentLine.slice(0, -1);
+  }
+  currentLine = value;
+  term.write(value);
+}
 
 onMounted(async () => {
-  if (termRef.value) {
-    term.open(termRef.value);
-    fitAddon.fit();
-    term.focus();
-
-    // Handle resize
-    const resizeObserver = new ResizeObserver(() => fitAddon.fit());
-    resizeObserver.observe(termRef.value);
+  await terminal.initialize();
+  term.open(termRef.value!);
+  resizeObserver = new ResizeObserver(() => fit.fit());
+  resizeObserver.observe(termRef.value!);
+  await nextTick();
+  fit.fit();
+  for (const entry of terminal.entries) {
+    term.write(entry.text);
+    renderedSequence = Math.max(renderedSequence, entry.sequence);
   }
-
-  // Prompt
-  term.write("\x1b[36mpm3>\x1b[0m ");
-
-  // Handle keyboard input
-  term.onKey(({ key, domEvent }) => {
-    const code = domEvent.keyCode;
-
-    if (code === 13) {
-      // Enter
-      term.writeln("");
-      if (currentLine.trim()) {
-        terminalStore.sendCommand(currentLine.trim());
-      }
+  historyIndex = terminal.history.length;
+  term.onKey(async ({ key, domEvent }) => {
+    if (domEvent.key === "Enter") {
+      term.write("\r\n");
+      const submitted = currentLine;
       currentLine = "";
-      term.write("\x1b[36mpm3>\x1b[0m ");
-    } else if (code === 8) {
-      // Backspace
-      if (currentLine.length > 0) {
-        currentLine = currentLine.slice(0, -1);
-        term.write("\b \b");
+      historyIndex = terminal.history.length + 1;
+      try {
+        await terminal.sendCommand(submitted);
+      } catch (reason) {
+        ElMessage.error(errorText(reason));
       }
-    } else if (key.length === 1 && !domEvent.ctrlKey) {
+    } else if (domEvent.key === "Backspace" && currentLine.length) {
+      currentLine = currentLine.slice(0, -1);
+      term.write("\b \b");
+    } else if (domEvent.key === "ArrowUp") {
+      if (terminal.history.length) {
+        historyIndex = Math.max(0, historyIndex - 1);
+        replaceInput(terminal.history[historyIndex] ?? "");
+      }
+    } else if (domEvent.key === "ArrowDown") {
+      historyIndex = Math.min(terminal.history.length, historyIndex + 1);
+      replaceInput(terminal.history[historyIndex] ?? "");
+    } else if (key.length === 1 && !domEvent.ctrlKey && !domEvent.altKey) {
       currentLine += key;
       term.write(key);
     }
   });
-
-  // Listen for PM3 output
-  unlisten = await listen<string>("pm3-output", (event) => {
-    // Remove ANSI escape codes if needed, or keep them for color
-    term.writeln(event.payload);
-  });
 });
 
+watch(
+  () => terminal.entries.length,
+  () => {
+    for (const entry of terminal.entries) {
+      if (entry.sequence > renderedSequence) {
+        term.write(entry.text);
+        renderedSequence = entry.sequence;
+      }
+    }
+  },
+);
+
+watch(
+  () => settings.terminalFontSize,
+  (fontSize) => {
+    term.options.fontSize = fontSize;
+    fit.fit();
+  },
+);
+
 onUnmounted(() => {
-  unlisten?.();
+  resizeObserver?.disconnect();
   term.dispose();
 });
 
 function clearTerminal() {
+  terminal.clear();
   term.clear();
-  term.write("\x1b[36mpm3>\x1b[0m ");
 }
 </script>
 
 <style scoped>
-.terminal-page {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 40px);
-}
-.terminal-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--el-border-color-light);
-  margin-bottom: 8px;
-}
-.terminal-container {
-  flex: 1;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.terminal-container :deep(.xterm) {
-  padding: 12px;
-  border-radius: 8px;
-}
+.terminal-page { display: flex; flex-direction: column; height: calc(100vh - 40px); }
+.terminal-toolbar { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; }
+.terminal-container { flex: 1; min-height: 0; border-radius: 10px; overflow: hidden; background: #101318; }
+.terminal-container :deep(.xterm) { padding: 12px; }
+.drop-note { margin-left: auto; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

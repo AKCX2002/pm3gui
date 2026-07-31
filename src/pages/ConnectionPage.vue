@@ -48,13 +48,13 @@
 
         <el-form-item>
           <el-button
-            v-if="store.state !== 'Connected'"
+            v-if="!store.connected"
             type="primary"
-            :loading="store.state === 'Connecting'"
+            :loading="store.connecting"
             :disabled="!store.pm3Dir || !store.port"
             @click="store.connect()"
           >
-            {{ store.state === "Connecting" ? "连接中..." : "连接" }}
+            {{ store.connecting ? "连接中..." : "连接" }}
           </el-button>
           <el-button
             v-else
@@ -79,16 +79,16 @@
     <el-card shadow="hover" style="margin-top: 16px">
       <template #header>连接说明</template>
       <ul class="help-list">
-        <li>PM3 目录应包含 <code>proxmark3.exe</code>（Windows）或 <code>pm3</code> 脚本（Linux/macOS）</li>
-        <li>Windows 用户：确保 PM3 已通过 USB 连接，串口通常为 <code>COM3</code></li>
-        <li>Linux 用户：可能需要 <code>sudo chmod 666 /dev/ttyACM0</code> 或加入 <code>dialout</code> 组</li>
+        <li>选择官方 Windows PM3 Client 解压目录；目录应包含 <code>pm3</code> 与 <code>libs/shell/bash.exe</code>。</li>
+        <li>应用只读取该目录，不复制、修补或覆盖 Client 文件。</li>
+        <li>同一时间只维护一个 PM3 会话；重新连接会先清理旧进程树。</li>
       </ul>
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useConnectionStore } from "../stores/connection";
 
@@ -97,16 +97,23 @@ const scanning = ref(false);
 
 const statusType = computed(() => {
   switch (store.state) {
-    case "Connected": return "success";
-    case "Connecting": return "warning";
+    case "connected": return "success";
+    case "failed": return "danger";
+    case "validating":
+    case "starting":
+    case "handshaking": return "warning";
     default: return "info";
   }
 });
 
 const statusText = computed(() => {
   switch (store.state) {
-    case "Connected": return "已连接";
-    case "Connecting": return "连接中...";
+    case "connected": return "已连接";
+    case "validating": return "正在验证目录";
+    case "starting": return "正在启动 Client";
+    case "handshaking": return "正在等待设备握手";
+    case "stopping": return "正在断开";
+    case "failed": return "连接失败";
     default: return "未连接";
   }
 });
@@ -129,6 +136,8 @@ async function pickDir() {
     store.pm3Dir = selected;
   }
 }
+
+onMounted(scanPorts);
 </script>
 
 <style scoped>

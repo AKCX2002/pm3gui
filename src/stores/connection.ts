@@ -1,42 +1,92 @@
+import { computed, ref } from "vue";
 import { defineStore } from "pinia";
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
+import type { UnlistenFn } from "@tauri-apps/api/event";
+import { errorText, pm3Client } from "../api/pm3Client";
+import type { PortInfo, SessionSnapshot } from "../types/pm3";
 
-export type Pm3State = "Disconnected" | "Connecting" | "Connected";
+const disconnected: SessionSnapshot = {
+  sessionId: null,
+  state: "disconnected",
+  clientVersion: null,
+  firmwareVersion: null,
+  lastError: null,
+};
 
 export const useConnectionStore = defineStore("connection", () => {
-  const state = ref<Pm3State>("Disconnected");
-  const pm3Dir = ref("");
+  const snapshot = ref<SessionSnapshot>(disconnected);
+  const pm3Dir = ref(localStorage.getItem("pm3gui-client-dir") ?? "");
   const port = ref("");
-  const ports = ref<{ name: string; description: string }[]>([]);
+  const ports = ref<PortInfo[]>([]);
   const error = ref("");
+  const initialized = ref(false);
+  let unlisten: UnlistenFn | null = null;
+
+  const state = computed(() => snapshot.value.state);
+  const connected = computed(() => state.value === "connected");
+  const connecting = computed(() =>
+    ["validating", "starting", "handshaking"].includes(state.value),
+  );
+
+  async function initialize() {
+    if (initialized.value) return;
+    initialized.value = true;
+    snapshot.value = await pm3Client.snapshot();
+    unlisten = await pm3Client.onState((next) => {
+      snapshot.value = next;
+      if (next.lastError) error.value = errorText(next.lastError);
+    });
+  }
 
   async function scanPorts() {
-    ports.value = await invoke("get_ports");
+    error.value = "";
+    try {
+      ports.value = await pm3Client.ports();
+      if (!ports.value.some((item) => item.name === port.value)) {
+        port.value = ports.value[0]?.name ?? "";
+      }
+    } catch (reason) {
+      error.value = errorText(reason);
+    }
   }
 
   async function connect() {
     error.value = "";
-    state.value = "Connecting";
     try {
-      const result: { success: boolean; error: string | null } = await invoke("connect", {
-        pm3Dir: pm3Dir.value,
-        port: port.value,
-      });
-      if (!result.success) {
-        error.value = result.error || "连接失败";
-        state.value = "Disconnected";
-      }
-    } catch (e: any) {
-      error.value = String(e);
-      state.value = "Disconnected";
+      localStorage.setItem("pm3gui-client-dir", pm3Dir.value);
+      snapshot.value = await pm3Client.connect(pm3Dir.value, port.value);
+    } catch (reason) {
+      error.value = errorText(reason);
     }
   }
 
   async function disconnect() {
-    await invoke("disconnect");
-    state.value = "Disconnected";
+    error.value = "";
+    try {
+      snapshot.value = await pm3Client.disconnect();
+    } catch (reason) {
+      error.value = errorText(reason);
+    }
   }
 
-  return { state, pm3Dir, port, ports, error, scanPorts, connect, disconnect };
+  function dispose() {
+    unlisten?.();
+    unlisten = null;
+    initialized.value = false;
+  }
+
+  return {
+    snapshot,
+    state,
+    connected,
+    connecting,
+    pm3Dir,
+    port,
+    ports,
+    error,
+    initialize,
+    scanPorts,
+    connect,
+    disconnect,
+    dispose,
+  };
 });

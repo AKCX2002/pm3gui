@@ -28,26 +28,6 @@ const routes = [
     component: () => import("../pages/DumpPage.vue"),
   },
   {
-    path: "/data",
-    name: "data",
-    component: () => import("../pages/DataPage.vue"),
-  },
-  {
-    path: "/trace",
-    name: "trace",
-    component: () => import("../pages/TracePage.vue"),
-  },
-  {
-    path: "/nfc",
-    name: "nfc",
-    component: () => import("../pages/NfcPage.vue"),
-  },
-  {
-    path: "/script",
-    name: "script",
-    component: () => import("../pages/ScriptPage.vue"),
-  },
-  {
     path: "/settings",
     name: "settings",
     component: () => import("../pages/SettingsPage.vue"),

@@ -1,18 +1,15 @@
-use serde::Serialize;
+use crate::pm3::error::Pm3Error;
+use crate::pm3::types::PortInfo;
 
-#[derive(Debug, Clone, Serialize)]
-pub struct PortInfo {
-    pub name: String,
-    pub description: String,
-}
-
-pub fn list_ports() -> Vec<PortInfo> {
-    serialport::available_ports()
-        .unwrap_or_default()
+pub fn list_ports() -> Result<Vec<PortInfo>, Pm3Error> {
+    Ok(serialport::available_ports()
+        .map_err(|error| Pm3Error::Io {
+            detail: format!("枚举串口失败：{error}"),
+        })?
         .into_iter()
         .map(|p| PortInfo {
             name: p.port_name,
             description: format!("{:?}", p.port_type),
         })
-        .collect()
+        .collect())
 }

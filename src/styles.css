@@ -19,16 +19,10 @@ body,
   --text-secondary: #909399;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #1d1e1f;
-    --bg-secondary: #25262b;
-    --text-primary: #e5eaf3;
-    --text-secondary: #a3a6ad;
-  }
-
-  html.dark {
-    color-scheme: dark;
-  }
+html.dark {
+  color-scheme: dark;
+  --bg-primary: #1d1e1f;
+  --bg-secondary: #25262b;
+  --text-primary: #e5eaf3;
+  --text-secondary: #a3a6ad;
 }
