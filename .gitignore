@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Rust build artifacts
+src-tauri/target/
+src-tauri/gen/
+
+# Node dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+coverage/
+portable/*.exe
+*.pdb
+
+# Local-only Cargo overrides and worktrees
+.cargo/
+.worktrees/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment
+.env
+.env.local
+.env.*.local
