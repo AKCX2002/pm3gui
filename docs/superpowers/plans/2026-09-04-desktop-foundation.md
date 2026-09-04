@@ -262,3 +262,44 @@ flutter build windows --debug --no-pub
 docs(架构): 更新桌面基础层实施状态
 ```
 
+### 任务 5：RRG Windows BAT 客户端兼容与实机复核
+
+**文件：**
+- 修改：`lib/backend/desktop_cli/pm3_process.dart`
+- 修改：`lib/backend/desktop_cli/desktop_cli_backend.dart`
+- 修改：`lib/state/connection_state.dart`
+- 修改：`lib/ui/pages/connection_page.dart`
+- 修改：`lib/ui/pages/settings_page.dart`
+- 新增：`test/backend/desktop_cli_backend_test.dart`
+- 修改：`test/backend/pm3_process_test.dart`
+- 修改：`test/state/connection_state_test.dart`
+- 修改：`README.md`
+- 修改：`docs/refactoring_plan.md`
+
+- [x] **步骤 1：为 BAT 启动入口编写失败测试**
+
+在 Windows 上选择 `pm3.bat` 时，进程层必须经 `cmd.exe /d /c call` 启动该脚本，并让 stdin/stdout 保持可交互；不得把“正在建立 USB 通信”的中间信息误判为已连接提示。
+
+- [x] **步骤 2：运行红灯测试**
+
+运行：`flutter test --no-pub test/backend/pm3_process_test.dart`
+
+预期：FAIL；现有实现会直接把 `.bat` 交给 `Process.start`，且过早接受 `Communicating with PM3 over USB-CDC`。
+
+实际红灯还覆盖了 RRG BAT 在 stdout 管道下不刷新等待输入的提示符：没有主动输入时连接超时；单独 `[usb]` transport 标签也不得成为成功证据。
+
+- [x] **步骤 3：实现最小 BAT 适配**
+
+仅 Windows 的 `.bat`/`.cmd` 入口通过系统命令解释器启动；原生 `proxmark3.exe` 与 Linux `proxmark3` 路径保持原行为。Windows BAT 首次报告 USB-CDC 通信后发送一次只读 `hw version` 握手以推动管道输出，并支持识别跨 chunk、无末尾换行的真实 `pm3 -->`；通信中间行或单独 transport 标签不视为连接成功。设置页和默认路径说明优先引导 Windows 用户选择发行包根目录的 `pm3.bat`。
+
+- [x] **步骤 4：实机与回归验证**
+
+Windows x64 使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（`PM3 GENERIC / AT91SAM7S512 / 512K`）完成根目录 `pm3.bat` 链路连接、真实提示符识别、只读 `hw version` 和断开。该证据不覆盖 Linux、其他设备、完整固件交互或真实卡片操作。完整 Flutter 测试、改动范围静态检查和 Windows debug 构建通过。
+
+- [x] **步骤 5：Commit**
+
+```text
+2cc4242 feat(后端): 兼容官方 Windows PM3 脚本
+36452ec fix(后端): 识别无换行 PM3 提示符
+471dfa6 fix(后端): 唤醒 Windows BAT 交互提示
+```

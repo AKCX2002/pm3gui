@@ -456,32 +456,6 @@ class Pm3Process {
     }
   }
 
-  /// 执行单个命令并返回完整输出
-  /// 使用 pm3 -c "command" 进行非交互式执行
-  Future<String> executeCommand(
-    String pm3Path,
-    String port,
-    String command,
-  ) async {
-    try {
-      final resolved = resolvePm3Path(pm3Path);
-      if (resolved == null) {
-        return '[错误] 找不到 PM3 程序: $pm3Path';
-      }
-      final (execPath, workDir) = resolved;
-      final result = await Process.run(
-        execPath,
-        ['-p', port, '-c', command],
-        workingDirectory: workDir,
-        stdoutEncoding: utf8,
-        stderrEncoding: utf8,
-      );
-      return '${result.stdout}${result.stderr}';
-    } catch (e) {
-      return '[Error: $e]';
-    }
-  }
-
   /// 向交互式会话发送命令
   Future<void> sendCommand(String command) async {
     if (_process == null || _state != Pm3ProcessState.connected) {

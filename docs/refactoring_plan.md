@@ -7,8 +7,8 @@
 - Windows x64 是 1.0 的主平台。
 - Linux x64 是 1.0 的正式支持平台。
 - Android、iOS、Web 和 macOS 不属于 1.0 的支持范围。
-- PM3 GUI 不打包固件或客户端二进制文件。设备通信由用户安装的官方 Proxmark3 client（`pm3` 或 `proxmark3`）负责。
-- 当前 Windows 工作站上的验证不等于 Linux 构建验证，也不等于真实 PM3 硬件验证；Linux 构建由 CI 配置覆盖，硬件验收需要相应环境。
+- PM3 GUI 不打包固件或客户端二进制文件。Windows 使用官方发行包根目录的 `pm3.bat`，Linux 使用用户安装的 `proxmark3`。
+- 当前有限实机证据来自 Windows x64：使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（客户端识别为 `PM3 GENERIC / AT91SAM7S512 / 512K`），已完成 BAT 链路连接、真实提示符识别、只读 `hw version` 和断开。该结果不能外推到 Linux、其他设备、完整固件交互或真实卡片操作。
 
 ## 当前架构
 
@@ -77,4 +77,6 @@ GUI 专用页面只覆盖高频、稳定且能从结构化交互中获益的工�
 
 ## 验证边界
 
-在 Windows x64 工作站上执行 Dart 格式检查、Flutter 静态分析、完整 Flutter 测试和 Windows debug 构建，是桌面基础层的代码级验证。仓库的 CI 工作流还声明了 Linux x64 构建路径，但本机运行结果不能替代 Linux runner 的实际构建。没有连接真实 PM3 设备时，不报告硬件连接、固件交互或真实卡片操作已验证。
+在 Windows x64 工作站上执行 Dart 格式检查、Flutter 静态分析、完整 Flutter 测试和 Windows debug 构建，是桌面基础层的代码级验证。仓库的 CI 工作流还声明了 Linux x64 构建路径，但本机运行结果不能替代 Linux runner 的实际构建。
+
+硬件验证目前仅覆盖用户提供、对应 RRG commit `da509461` 的 Windows 发行包与一台 PM3EASY512K（`PM3 GENERIC / AT91SAM7S512 / 512K`）：根目录 `pm3.bat` 链路能够连接、输出真实提示符、执行只读 `hw version` 并断开。Linux、其他设备、完整固件交互和真实卡片操作仍未验证。

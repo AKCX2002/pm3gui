@@ -19,7 +19,7 @@ PM3 GUI 是面向 Proxmark3 的桌面图形客户端，提供常用 RFID/NFC 操
 - Android、iOS、Web 和 macOS 不属于 1.0 范围。
 - 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client。Windows 优先使用官方发行包根目录的 `pm3.bat`，Linux 使用 `proxmark3`。
 
-CI 工作流包含 Windows 和 Linux x64 桌面路径。当前开发验证在 Windows 上进行，因此不能据此宣称 Linux 构建或真实 PM3 硬件已经验证。
+CI 工作流包含 Windows 和 Linux x64 桌面路径。当前有限实机证据来自 Windows x64：使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（客户端识别为 `PM3 GENERIC / AT91SAM7S512 / 512K`），已通过根目录 `pm3.bat` 完成客户端连接、真实提示符识别、只读 `hw version` 和断开。该结果不能外推为 Linux、其他设备、完整固件交互或真实卡片操作已经验证。
 
 ## 核心能力
 
