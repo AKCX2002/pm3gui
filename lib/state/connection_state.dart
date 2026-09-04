@@ -1,6 +1,8 @@
 /// 设备连接状态管理
 library;
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/backend/desktop_cli/desktop_cli_backend.dart';
 import 'package:pm3gui/core/pm3/pm3_client_settings.dart';
@@ -38,7 +40,10 @@ class ConnectionState extends ChangeNotifier {
   String get lastError => controller.lastError;
 
   Future<bool> connect() async {
-    if (portName.isEmpty) return false;
+    final lowerPath = pm3Path.toLowerCase();
+    final batchAutoDetectsPort = Platform.isWindows &&
+        (lowerPath.endsWith('.bat') || lowerPath.endsWith('.cmd'));
+    if (portName.isEmpty && !batchAutoDetectsPort) return false;
 
     return controller.connect(Pm3ConnectionConfig(
       executable: pm3Path,

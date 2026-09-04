@@ -145,7 +145,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
                     style:
                         const TextStyle(fontFamily: 'monospace', fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: './pm3 或 /usr/bin/proxmark3',
+                      hintText: Platform.isWindows
+                          ? r'官方发行包根目录\pm3.bat'
+                          : '/usr/bin/proxmark3',
+                      helperText:
+                          Platform.isWindows ? 'Windows 推荐使用官方 pm3.bat' : null,
                       prefixIcon: const Icon(Icons.terminal, size: 18),
                       suffixIcon: File(pm3Path).existsSync()
                           ? Row(
@@ -216,8 +220,13 @@ class _ConnectionPageState extends State<ConnectionPage> {
                               : (v) {
                                   if (v != null) appState.setPort(v);
                                 },
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.usb, size: 18),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.usb, size: 18),
+                            helperText: Platform.isWindows &&
+                                    (pm3Path.toLowerCase().endsWith('.bat') ||
+                                        pm3Path.toLowerCase().endsWith('.cmd'))
+                                ? '官方 BAT 会自动检测设备；此端口值仅保留于设置中'
+                                : null,
                           ),
                         ),
                 ),

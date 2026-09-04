@@ -2,8 +2,9 @@
 ///
 /// 设计参考 Proxmark3GUI/src/common/pm3process.cpp:
 ///   - 通过 stdin/stdout 管道实现持久化交互会话
-///   - 通过 -c 标志执行单个命令
-///   - 通过监视 "os:" 提示符检测连接状态
+///   - 原生客户端通过 -p/-f 进入交互会话
+///   - 官方 Windows pm3.bat 通过 cmd.exe 保留 stdin/stdout 交互
+///   - 通过真实 pm3/USB/BT/OS 提示符检测连接状态
 library;
 
 import 'dart:async';
@@ -220,7 +221,8 @@ class Pm3Process {
       final resolved = resolvePm3Path(pm3Path);
       if (resolved == null) {
         _lastError = '找不到 PM3 程序: $pm3Path\n'
-            '请在连接页面设置 proxmark3.exe 或 proxmark3 的正确路径';
+            'Windows 请优先选择官方发行包根目录的 pm3.bat；'
+            'Linux 请选择 proxmark3';
         _emitOutput('[错误] $_lastError');
         _setState(Pm3ProcessState.disconnected);
         return false;
@@ -233,10 +235,19 @@ class Pm3Process {
         _emitOutput('[工作目录: $workDir]');
       }
 
-      // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
+      // 官方 Windows 发行包以根目录 pm3.bat 作为入口。脚本会自行完成
+      // 环境初始化并由内部 pm3 客户端自动探测设备，因此不能假设它会
+      // 转发 GUI 侧的端口或启动参数。
+      final isWindowsBatch = Platform.isWindows &&
+          (execPath.toLowerCase().endsWith('.bat') ||
+              execPath.toLowerCase().endsWith('.cmd'));
+      final launchExecutable = isWindowsBatch ? 'cmd.exe' : execPath;
+      final launchArguments = isWindowsBatch
+          ? ['/d', '/c', 'call', execPath]
+          : [...arguments, '-p', port, '-f'];
       final starting = _processStarter(
-        execPath,
-        [...arguments, '-p', port, '-f'],
+        launchExecutable,
+        launchArguments,
         workingDirectory: workDir,
       );
       _startingFuture = starting;
@@ -729,7 +740,6 @@ class Pm3Process {
   // 匹配 Proxmark3GUI 模式: QRegularExpression("(os:\s+|OS\.+\s+)")
   bool _isConnectionPrompt(String line) {
     return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
-        line.toLowerCase().contains('communicating with pm3 over usb-cdc') ||
         line.contains('[usb]') ||
         line.contains('[bt]') ||
         line.contains('pm3 -->');

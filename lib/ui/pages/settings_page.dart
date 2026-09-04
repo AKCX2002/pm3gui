@@ -64,7 +64,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     controller: _pm3PathController,
                     decoration: InputDecoration(
                       labelText: 'PM3 程序路径',
-                      hintText: './pm3 或 /usr/bin/proxmark3',
+                      hintText: Platform.isWindows
+                          ? r'官方发行包根目录\pm3.bat'
+                          : '/usr/bin/proxmark3',
+                      helperText: Platform.isWindows
+                          ? 'Windows 推荐选择发行包根目录的 pm3.bat'
+                          : null,
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.folder_open),
                         tooltip: '选择 PM3 程序',
@@ -80,9 +85,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _argumentsController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'PM3 启动参数',
                       hintText: '--flush',
+                      helperText: Platform.isWindows
+                          ? '选择 pm3.bat 时由脚本自行初始化并自动检测设备，'
+                              '此处参数不会传给脚本'
+                          : null,
                     ),
                     onChanged: (value) => appState.setPm3Arguments(
                       value

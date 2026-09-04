@@ -20,6 +20,134 @@ void main() {
     await fixtureDirectory.delete(recursive: true);
   });
 
+  test('Windows batch client starts through cmd call without PM3 arguments',
+      () async {
+    if (!Platform.isWindows) return;
+
+    final batchPath =
+        '${fixtureDirectory.path}${Platform.pathSeparator}pm3.bat';
+    await File(batchPath).writeAsString('@echo off\r\n');
+    final child = _FakeProcess();
+    String? startedExecutable;
+    List<String>? startedArguments;
+    String? startedWorkingDirectory;
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (executable, arguments, {workingDirectory}) async {
+        startedExecutable = executable;
+        startedArguments = arguments;
+        startedWorkingDirectory = workingDirectory;
+        return child;
+      },
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(
+      batchPath,
+      'COM7',
+      arguments: const ['--flush', '--custom'],
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(startedExecutable, 'cmd.exe');
+    expect(
+        startedArguments, ['/d', '/c', 'call', File(batchPath).absolute.path]);
+    expect(startedWorkingDirectory, File(batchPath).absolute.parent.path);
+
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
+  test('Windows batch client keeps stdio and bounds trailing pause shutdown',
+      () async {
+    if (!Platform.isWindows) return;
+
+    final bundleDirectory = Directory(
+      '${fixtureDirectory.path}${Platform.pathSeparator}official client bundle',
+    );
+    await bundleDirectory.create();
+    final batchFile = File(
+      '${bundleDirectory.path}${Platform.pathSeparator}pm3.bat',
+    );
+    await batchFile.writeAsString(r'''@echo off
+echo Communicating with PM3 over USB-CDC
+echo pm3 --^>
+set /p pm3_command=
+if /i not "%pm3_command%"=="quit" exit /b 9
+pause >nul
+''');
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 100),
+      killExitTimeout: const Duration(seconds: 1),
+    );
+    addTearDown(process.dispose);
+
+    expect(
+      await process.connect(batchFile.path, '',
+          arguments: const ['--ignored']).timeout(const Duration(seconds: 2)),
+      isTrue,
+    );
+
+    await process.disconnect().timeout(const Duration(seconds: 2));
+
+    expect(process.state, Pm3ProcessState.disconnected);
+  });
+
+  test('native client keeps configured arguments port and flush flag',
+      () async {
+    final child = _FakeProcess();
+    String? startedExecutable;
+    List<String>? startedArguments;
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (executable, arguments, {workingDirectory}) async {
+        startedExecutable = executable;
+        startedArguments = arguments;
+        return child;
+      },
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(
+      _dartExecutable,
+      'COM7',
+      arguments: const ['--custom'],
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(startedExecutable, _dartExecutable);
+    expect(startedArguments, ['--custom', '-p', 'COM7', '-f']);
+
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
+  test('USB-CDC progress line does not connect before a real prompt', () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    var completed = false;
+    final connecting = process.connect(_dartExecutable, 'COM7')
+      ..whenComplete(() => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    child.stdoutController.add(
+      utf8.encode('Communicating with PM3 over USB-CDC\n'),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(process.state, Pm3ProcessState.connecting);
+    expect(completed, isFalse);
+
+    child.stdoutController.add(utf8.encode('[usb] pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
   test('disconnect waits for a graceful child exit', () async {
     final process = Pm3Process(
       connectCooldown: Duration.zero,

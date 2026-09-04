@@ -2,11 +2,26 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pm3gui/backend/mock/mock_pm3_backend.dart';
 import 'package:pm3gui/core/pm3/pm3_client_settings.dart';
+import 'package:pm3gui/core/pm3/pm3_controller.dart';
 import 'package:pm3gui/services/pm3_settings_store.dart';
 import 'package:pm3gui/state/connection_state.dart';
 
 void main() {
+  test('Windows batch client can connect without a selected port', () async {
+    if (!Platform.isWindows) return;
+
+    final state = ConnectionState(
+      controller: Pm3Controller(MockPm3Backend()),
+    )
+      ..pm3Path = r'C:\proxmark3\pm3.bat'
+      ..portName = '';
+    addTearDown(state.dispose);
+
+    expect(await state.connect(), isTrue);
+  });
+
   test('initialize restores persisted desktop client settings', () async {
     final directory = await Directory.systemTemp.createTemp('pm3-settings-');
     addTearDown(() => directory.delete(recursive: true));

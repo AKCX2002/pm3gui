@@ -32,25 +32,38 @@ final class DesktopCliBackend implements Pm3Backend {
   /// checks into application state or features.
   static String detectExecutable() {
     final candidates = Platform.isWindows
-        ? const [r'C:\proxmark3\client\proxmark3.exe', 'proxmark3.exe']
+        ? const [
+            'pm3.bat',
+            'pm3.cmd',
+            r'C:\proxmark3\pm3.bat',
+            r'C:\proxmark3\client\proxmark3.exe',
+            'proxmark3.exe',
+          ]
         : const ['/usr/local/bin/proxmark3', '/usr/bin/proxmark3'];
     for (final candidate in candidates) {
-      if (FileSystemEntity.isFileSync(candidate)) return candidate;
+      if (FileSystemEntity.isFileSync(candidate)) {
+        return File(candidate).absolute.path;
+      }
     }
     try {
-      final lookup = Process.runSync(
-        Platform.isWindows ? 'where' : 'which',
-        [Platform.isWindows ? 'proxmark3.exe' : 'proxmark3'],
-      );
-      if (lookup.exitCode == 0) {
-        final path =
-            (lookup.stdout as String).trim().split(RegExp(r'[\r\n]+')).first;
-        if (path.isNotEmpty) return path;
+      final lookupNames = Platform.isWindows
+          ? const ['pm3.bat', 'pm3.cmd', 'proxmark3.exe']
+          : const ['proxmark3'];
+      for (final name in lookupNames) {
+        final lookup = Process.runSync(
+          Platform.isWindows ? 'where' : 'which',
+          [name],
+        );
+        if (lookup.exitCode == 0) {
+          final path =
+              (lookup.stdout as String).trim().split(RegExp(r'[\r\n]+')).first;
+          if (path.isNotEmpty) return path;
+        }
       }
     } on ProcessException {
       // The settings page lets the user select an explicit client path.
     }
-    return Platform.isWindows ? 'proxmark3.exe' : 'proxmark3';
+    return Platform.isWindows ? 'pm3.bat' : 'proxmark3';
   }
 
   @override

@@ -17,7 +17,7 @@ PM3 GUI 是面向 Proxmark3 的桌面图形客户端，提供常用 RFID/NFC 操
 - Windows x64 是 1.0 主平台。
 - Linux x64 是 1.0 正式支持平台。
 - Android、iOS、Web 和 macOS 不属于 1.0 范围。
-- 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client（`pm3` 或 `proxmark3`）。
+- 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client。Windows 优先使用官方发行包根目录的 `pm3.bat`，Linux 使用 `proxmark3`。
 
 CI 工作流包含 Windows 和 Linux x64 桌面路径。当前开发验证在 Windows 上进行，因此不能据此宣称 Linux 构建或真实 PM3 硬件已经验证。
 
@@ -46,7 +46,9 @@ Flutter UI / Feature
 
 ## 配置与隐私
 
-连接页负责选择并持久化串口/设备端口；设置页管理客户端可执行文件路径、启动参数和可选工作目录。相关设置会自动保存到：
+连接页负责选择并持久化串口/设备端口；设置页管理客户端入口路径、启动参数和可选工作目录。Windows 请优先选择官方发行包**根目录**的 `pm3.bat`，不要绕过发行包初始化流程直接选择内部客户端。PM3 GUI 会通过 `cmd.exe /d /c call` 启动该脚本并保留标准输入输出交互；脚本自行完成环境初始化、启动内部客户端并自动检测设备，因此 GUI 保存的端口和额外启动参数不会传给 `.bat`/`.cmd`。原生 `proxmark3.exe` 和 Linux `proxmark3` 仍按所选端口启动。
+
+PM3EASY512K 等已由官方 [RfidResearchGroup/proxmark3](https://github.com/RfidResearchGroup/proxmark3) 客户端支持的设备沿用同一入口，不需要 GUI 维护独立型号驱动或白名单。相关设置会自动保存到：
 
 ```text
 <应用支持目录>/pm3_settings.json
@@ -71,7 +73,7 @@ Flutter UI / Feature
 
 - Flutter 3.27+
 - Dart 3.6+
-- 官方 Proxmark3 client：`pm3` 或 `proxmark3`
+- 官方 Proxmark3 client：Windows 发行包根目录 `pm3.bat`，或 Linux `proxmark3`
 
 ### 运行
 
