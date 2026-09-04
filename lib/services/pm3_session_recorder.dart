@@ -5,13 +5,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pm3gui/core/pm3/pm3_session.dart';
 
 typedef SessionRootDirectoryProvider = Future<Directory> Function();
+typedef SessionClock = DateTime Function();
 
 /// Writes one local-only log directory for each successful PM3 connection.
 final class Pm3SessionRecorder {
-  Pm3SessionRecorder({SessionRootDirectoryProvider? rootDirectoryProvider})
-      : _rootDirectoryProvider = rootDirectoryProvider ?? _defaultRootDirectory;
+  Pm3SessionRecorder({
+    SessionRootDirectoryProvider? rootDirectoryProvider,
+    SessionClock? now,
+  })  : _rootDirectoryProvider = rootDirectoryProvider ?? _defaultRootDirectory,
+        _now = now ?? DateTime.now;
 
   final SessionRootDirectoryProvider _rootDirectoryProvider;
+  final SessionClock _now;
   Future<void> _writeQueue = Future.value();
   Pm3Session? _session;
 
@@ -29,18 +34,11 @@ final class Pm3SessionRecorder {
       await _closeActiveSession();
       final root = await _rootDirectoryProvider();
       await root.create(recursive: true);
-      final sessionDirectory = await _createSessionDirectory(root);
-      final session = Pm3Session(
-        directoryPath: sessionDirectory.path,
+      _session = await _createSession(
+        root,
         devicePort: devicePort,
         executable: executable,
-        startedAt: DateTime.now(),
       );
-      await _metadataFile(session).writeAsString(
-        jsonEncode(session.toJson()),
-        flush: true,
-      );
-      _session = session;
     });
   }
 
@@ -50,7 +48,7 @@ final class Pm3SessionRecorder {
       if (session == null) return;
       await _commandsFile(session).writeAsString(
         '${jsonEncode(<String, String>{
-              'timestamp': DateTime.now().toUtc().toIso8601String(),
+              'timestamp': _now().toUtc().toIso8601String(),
               'command': command,
             })}\n',
         mode: FileMode.append,
@@ -81,7 +79,7 @@ final class Pm3SessionRecorder {
   Future<void> _closeActiveSession() async {
     final session = _activeSession;
     if (session == null) return;
-    final closedSession = session.close(DateTime.now());
+    final closedSession = session.close(_now());
     await _metadataFile(closedSession).writeAsString(
       jsonEncode(closedSession.toJson()),
       flush: true,
@@ -89,17 +87,51 @@ final class Pm3SessionRecorder {
     _session = closedSession;
   }
 
-  Future<Directory> _createSessionDirectory(Directory root) async {
-    var time = DateTime.now();
+  Future<Pm3Session> _createSession(
+    Directory root, {
+    required String devicePort,
+    required String executable,
+  }) async {
+    var time = _now();
     while (true) {
       final directory = Directory(
         '${root.path}${Platform.pathSeparator}${_directoryName(time)}',
       );
-      if (!await directory.exists()) {
-        await directory.create();
-        return directory;
+      if (await directory.exists()) {
+        time = time.add(const Duration(milliseconds: 1));
+        continue;
       }
-      time = time.add(const Duration(milliseconds: 1));
+      try {
+        await directory.create();
+      } on FileSystemException {
+        if (await directory.exists()) {
+          time = time.add(const Duration(milliseconds: 1));
+          continue;
+        }
+        rethrow;
+      }
+
+      final session = Pm3Session(
+        directoryPath: directory.path,
+        devicePort: devicePort,
+        executable: executable,
+        startedAt: _now(),
+      );
+      try {
+        final metadataFile = _metadataFile(session);
+        await metadataFile.create(exclusive: true);
+        await metadataFile.writeAsString(
+          jsonEncode(session.toJson()),
+          flush: true,
+        );
+        return session;
+      } on FileSystemException {
+        if (await _metadataFile(session).exists()) {
+          time = time.add(const Duration(milliseconds: 1));
+          continue;
+        }
+        rethrow;
+      }
     }
   }
 

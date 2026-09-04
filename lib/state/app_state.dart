@@ -99,7 +99,13 @@ class AppState extends ChangeNotifier {
   late final StreamSubscription<String> _outputSubscription;
   late final StreamSubscription _commandSubscription;
   late final StreamSubscription<Pm3ConnectionState> _stateSubscription;
+  StreamSubscription<String>? _hwVersionOutputSubscription;
+  Timer? _hwVersionTimer;
   Future<void> _sessionClose = Future.value();
+  Future<void>? _shutdownFuture;
+  bool _disconnectInProgress = false;
+  bool _resourcesReleased = false;
+  bool _notifierDisposed = false;
   String? _sessionLogError;
 
   int currentPageIndex = 0;
@@ -201,20 +207,22 @@ class AppState extends ChangeNotifier {
         scanForFiles();
         _queryHwVersion();
       } else if (state == Pm3ConnectionState.disconnected) {
-        _sessionClose = _recordSession(_sessionRecorder.close());
+        if (!_disconnectInProgress) {
+          _sessionClose = _recordSession(_sessionRecorder.close());
+        }
         hardwareState.resetHwInfo();
       }
-      notifyListeners();
+      _notifyListenersIfActive();
     });
   }
 
   void _onTerminalChanged() {
     // Forward terminal state changes to AppState listeners.
-    notifyListeners();
+    _notifyListenersIfActive();
   }
 
   void _onConnectionChanged() {
-    notifyListeners();
+    _notifyListenersIfActive();
   }
 
   Future<void> initialize() => connectionState.initialize();
@@ -227,8 +235,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
-    await connectionState.disconnect();
-    await _sessionClose;
+    await _disconnectAndCloseSession();
     hardwareState.resetHwInfo();
     notifyListeners();
   }
@@ -401,19 +408,68 @@ class AppState extends ChangeNotifier {
 
   void _queryHwVersion() {
     final buffer = StringBuffer();
-    StreamSubscription<String>? sub;
-
-    sub = connectionState.controller.outputLines.listen((line) {
+    unawaited(_hwVersionOutputSubscription?.cancel() ?? Future.value());
+    _hwVersionTimer?.cancel();
+    final subscription = connectionState.controller.outputLines.listen((line) {
       buffer.writeln(line);
     });
+    _hwVersionOutputSubscription = subscription;
 
     connectionState.controller.send('hw version');
 
-    Future.delayed(const Duration(seconds: 3), () {
-      sub?.cancel();
+    _hwVersionTimer = Timer(const Duration(seconds: 3), () {
+      unawaited(subscription.cancel());
+      if (identical(_hwVersionOutputSubscription, subscription)) {
+        _hwVersionOutputSubscription = null;
+      }
       hardwareState.parseHwVersion(buffer.toString());
-      notifyListeners();
+      _notifyListenersIfActive();
     });
+  }
+
+  /// Completes only after the PM3 backend, Session queue and subscriptions
+  /// have been released in that order.
+  Future<void> shutdown() => _shutdownFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
+    try {
+      await _disconnectAndCloseSession();
+    } finally {
+      await _releaseResources();
+    }
+  }
+
+  Future<void> _disconnectAndCloseSession() async {
+    _disconnectInProgress = true;
+    try {
+      await connectionState.disconnect();
+    } finally {
+      _disconnectInProgress = false;
+      _sessionClose = _recordSession(_sessionRecorder.close());
+      await _sessionClose;
+    }
+  }
+
+  Future<void> _releaseResources() async {
+    if (_resourcesReleased) return;
+    _resourcesReleased = true;
+    _hwVersionTimer?.cancel();
+    _hwVersionTimer = null;
+    final hwVersionOutputSubscription = _hwVersionOutputSubscription;
+    _hwVersionOutputSubscription = null;
+    try {
+      terminalState.removeListener(_onTerminalChanged);
+    } catch (_) {}
+    connectionState.removeListener(_onConnectionChanged);
+    await Future.wait([
+      _outputSubscription.cancel(),
+      _commandSubscription.cancel(),
+      _stateSubscription.cancel(),
+      if (hwVersionOutputSubscription != null)
+        hwVersionOutputSubscription.cancel(),
+    ]);
+    connectionState.dispose();
+    _disposeNotifier();
   }
 
   Future<void> _recordSession(Future<void> operation) {
@@ -421,9 +477,19 @@ class AppState extends ChangeNotifier {
       (_) {},
       onError: (Object error, StackTrace _) {
         _sessionLogError = error.toString();
-        notifyListeners();
+        _notifyListenersIfActive();
       },
     );
+  }
+
+  void _notifyListenersIfActive() {
+    if (!_notifierDisposed) notifyListeners();
+  }
+
+  void _disposeNotifier() {
+    if (_notifierDisposed) return;
+    _notifierDisposed = true;
+    super.dispose();
   }
 
   Future<void> refreshHwInfo() async {
@@ -433,15 +499,9 @@ class AppState extends ChangeNotifier {
 
   @override
   void dispose() {
-    try {
-      terminalState.removeListener(_onTerminalChanged);
-    } catch (_) {}
-    connectionState.removeListener(_onConnectionChanged);
-    unawaited(_outputSubscription.cancel());
-    unawaited(_commandSubscription.cancel());
-    unawaited(_stateSubscription.cancel());
-    unawaited(_recordSession(_sessionRecorder.close()));
-    connectionState.dispose();
+    if (_notifierDisposed) return;
+    _notifierDisposed = true;
     super.dispose();
+    unawaited(shutdown());
   }
 }

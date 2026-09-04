@@ -67,4 +67,36 @@ void main() {
       contains('hf 14a info'),
     );
   });
+
+  test('concurrent starts with the same timestamp use separate directories',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('pm3-session-');
+    addTearDown(() => directory.delete(recursive: true));
+    final timestamp = DateTime(2026, 9, 4, 19, 30, 0, 123);
+    final first = Pm3SessionRecorder(
+      rootDirectoryProvider: () async => directory,
+      now: () => timestamp,
+    );
+    final second = Pm3SessionRecorder(
+      rootDirectoryProvider: () async => directory,
+      now: () => timestamp,
+    );
+
+    await Future.wait([
+      first.start(devicePort: 'COM7', executable: 'proxmark3.exe'),
+      second.start(devicePort: 'COM8', executable: 'proxmark3.exe'),
+    ]);
+
+    expect(first.sessionPath, isNot(second.sessionPath));
+    expect(
+      await File('${first.sessionPath}${Platform.pathSeparator}session.json')
+          .exists(),
+      isTrue,
+    );
+    expect(
+      await File('${second.sessionPath}${Platform.pathSeparator}session.json')
+          .exists(),
+      isTrue,
+    );
+  });
 }

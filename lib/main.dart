@@ -10,6 +10,8 @@
 /// - 设置管理
 library;
 
+import 'dart:ui' show AppExitResponse;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pm3gui/state/app_state.dart';
@@ -20,9 +22,16 @@ import 'package:pm3gui/ui/home_page.dart';
 ///
 /// 初始化应用并提供全局状态管理
 void main() {
+  final appState = AppState();
+  AppLifecycleListener(
+    onExitRequested: () async {
+      await appState.shutdown();
+      return AppExitResponse.exit;
+    },
+  );
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AppState(),
+      create: (_) => appState,
       child: const PM3GuiApp(),
     ),
   );
