@@ -2,10 +2,11 @@
 library;
 
 import 'dart:io';
+import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/state/app_state.dart';
-import 'package:pm3gui/services/pm3_process.dart';
 import 'package:pm3gui/services/file_collector.dart';
 import 'package:pm3gui/ui/theme.dart';
 
@@ -67,10 +68,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
   @override
   Widget build(BuildContext context) {
     final appState = context.read<AppState>();
-    final isConnected = context.select<AppState, bool>(
-        (s) => s.connectionState.connectionState == Pm3State.connected);
-    final isConnecting = context.select<AppState, bool>(
-        (s) => s.connectionState.connectionState == Pm3State.connecting);
+    final isConnected = context.select<AppState, bool>((s) =>
+        s.connectionState.connectionState == Pm3ConnectionState.connected);
+    final isConnecting = context.select<AppState, bool>((s) =>
+        s.connectionState.connectionState == Pm3ConnectionState.connecting);
     final pm3Path = context.select<AppState, String>((s) => s.pm3Path);
     final availablePorts =
         context.select<AppState, List<String>>((s) => s.availablePorts);
@@ -778,10 +779,6 @@ class _ConnectionPageState extends State<ConnectionPage> {
   }
 
   static String _getArch() {
-    try {
-      final r = Process.runSync('uname', ['-m']);
-      if (r.exitCode == 0) return (r.stdout as String).trim();
-    } catch (_) {}
-    return 'unknown';
+    return Abi.current().toString().split('_').last;
   }
 }

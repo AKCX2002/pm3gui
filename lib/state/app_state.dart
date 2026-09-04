@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/services/file_collector.dart';
-import 'package:pm3gui/services/pm3_process.dart';
+import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/state/connection_state.dart';
 import 'package:pm3gui/state/terminal_state.dart';
 import 'package:pm3gui/state/file_state.dart';
@@ -146,7 +146,7 @@ class AppState extends ChangeNotifier {
   int get hwFlashTotal => hardwareState.hwFlashTotal;
   bool get hwInfoParsed => hardwareState.hwInfoParsed;
 
-  Pm3Process get pm3 => connectionState.pm3;
+  Stream<String> get pm3Output => connectionState.controller.outputLines;
 
   AppState() {
     connectionState = ConnectionState();
@@ -158,7 +158,7 @@ class AppState extends ChangeNotifier {
     // (via context.select on outputRevision / terminalOutput) will rebuild
     // in real-time when TerminalState notifies.
     terminalState.addListener(_onTerminalChanged);
-    connectionState.pm3.outputStream.listen((line) {
+    connectionState.controller.outputLines.listen((line) {
       terminalState.addOutput(line);
 
       if (line.toLowerCase().contains('saved') ||
@@ -167,11 +167,11 @@ class AppState extends ChangeNotifier {
       }
     });
 
-    connectionState.pm3.stateStream.listen((state) {
-      if (state == Pm3State.connected) {
+    connectionState.controller.stateChanges.listen((state) {
+      if (state == Pm3ConnectionState.connected) {
         scanForFiles();
         _queryHwVersion();
-      } else if (state == Pm3State.disconnected) {
+      } else if (state == Pm3ConnectionState.disconnected) {
         hardwareState.resetHwInfo();
       }
       notifyListeners();
@@ -360,11 +360,11 @@ class AppState extends ChangeNotifier {
     final buffer = StringBuffer();
     StreamSubscription<String>? sub;
 
-    sub = connectionState.pm3.outputStream.listen((line) {
+    sub = connectionState.controller.outputLines.listen((line) {
       buffer.writeln(line);
     });
 
-    connectionState.pm3.sendCommand('hw version');
+    connectionState.controller.send('hw version');
 
     Future.delayed(const Duration(seconds: 3), () {
       sub?.cancel();

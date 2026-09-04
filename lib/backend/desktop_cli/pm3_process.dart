@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'dart:io';
 
 /// PM3 客户端进程的连接状态
-enum Pm3State {
+enum Pm3ProcessState {
   disconnected, // 未连接
   connecting, // 正在连接
   connected // 已连接
@@ -20,7 +20,7 @@ enum Pm3State {
 /// 包装 pm3 命令行进程以进行通信
 class Pm3Process {
   Process? _process; // PM3 进程实例
-  Pm3State _state = Pm3State.disconnected; // 当前连接状态
+  Pm3ProcessState _state = Pm3ProcessState.disconnected; // 当前连接状态
   String _version = ''; // PM3 版本信息
   String _lastError = ''; // 最后一次错误信息
   DateTime? _lastConnectAttempt; // 最后一次连接尝试时间
@@ -29,18 +29,18 @@ class Pm3Process {
   final _outputController = StreamController<String>.broadcast(sync: true);
 
   /// 状态变化的流
-  final _stateController = StreamController<Pm3State>.broadcast(sync: true);
+  final _stateController =
+      StreamController<Pm3ProcessState>.broadcast(sync: true);
 
   /// 用于响应匹配的累积输出缓冲区
   final _responseBuffer = StringBuffer();
 
-
   Stream<String> get outputStream => _outputController.stream;
-  Stream<Pm3State> get stateStream => _stateController.stream;
-  Pm3State get state => _state;
+  Stream<Pm3ProcessState> get stateStream => _stateController.stream;
+  Pm3ProcessState get state => _state;
   String get version => _version;
   String get lastError => _lastError;
-  bool get isConnected => _state == Pm3State.connected;
+  bool get isConnected => _state == Pm3ProcessState.connected;
 
   /// 连接尝试之间的最小间隔（防止重试风暴）
   static const _connectCooldown = Duration(seconds: 3);
@@ -48,10 +48,8 @@ class Pm3Process {
   /// 解析 pm3 可执行文件路径
   ///
   /// 按以下顺序尝试：
-  ///  1. 如果用户提供的路径作为绝对路径存在
-  ///  2. 用户提供的路径相对于常见 PM3 根目录
-  ///  3. 系统 PATH 上的 'proxmark3'
-  ///  4. 基于应用自身目录的猜测位置
+  ///  1. 用户提供的绝对或相对路径
+  ///  2. Windows/Linux 系统 PATH
   ///
   /// 返回记录 (resolvedPath, workingDirectory?) 或 null
   static (String, String?)? resolvePm3Path(String userPath) {
@@ -62,30 +60,15 @@ class Pm3Process {
       return (file.absolute.path, file.absolute.parent.path);
     }
 
-    // 2. 常见位置
-    final candidates = [
-      '/root/dev/proxmark3/pm3',
-      '/root/dev/proxmark3/client/proxmark3',
-      // Local vendored proxmark3 inside pm3gui (third_party)
-      '${Directory.current.path}/third_party/proxmark3/pm3',
-      '${Directory.current.path}/third_party/proxmark3/client/proxmark3',
-      // Also support relative paths from package root (useful in development)
-      './third_party/proxmark3/pm3',
-      './third_party/proxmark3/client/proxmark3',
-      '/usr/local/bin/proxmark3',
-      '/usr/bin/proxmark3',
-    ];
-    for (final c in candidates) {
-      if (File(c).existsSync()) {
-        return (c, File(c).parent.path);
-      }
-    }
-
-    // 3. 通过 `which` 检查 PATH
+    // 2. 通过平台命令检查 PATH
     try {
-      final result = Process.runSync('which', [userPath]);
+      final result = Process.runSync(
+        Platform.isWindows ? 'where' : 'which',
+        [userPath],
+      );
       if (result.exitCode == 0) {
-        final p = (result.stdout as String).trim();
+        final p =
+            (result.stdout as String).trim().split(RegExp(r'[\r\n]+')).first;
         if (p.isNotEmpty && File(p).existsSync()) {
           return (p, null);
         }
@@ -99,7 +82,12 @@ class Pm3Process {
   ///
   /// [pm3Path] - pm3 可执行文件路径（例如 "./pm3" 或完整路径）
   /// [port] - 串口（例如 "/dev/ttyACM0", "COM3"）
-  Future<bool> connect(String pm3Path, String port) async {
+  Future<bool> connect(
+    String pm3Path,
+    String port, {
+    List<String> arguments = const [],
+    String? workingDirectory,
+  }) async {
     // 冷却期 — 防止重试风暴
     if (_lastConnectAttempt != null) {
       final elapsed = DateTime.now().difference(_lastConnectAttempt!);
@@ -113,26 +101,25 @@ class Pm3Process {
     _lastConnectAttempt = DateTime.now();
     _lastError = '';
 
-    if (_state != Pm3State.disconnected) {
+    if (_state != Pm3ProcessState.disconnected) {
       await disconnect();
     }
 
-    _setState(Pm3State.connecting);
+    _setState(Pm3ProcessState.connecting);
 
     try {
       // 解析实际可执行文件路径
       final resolved = resolvePm3Path(pm3Path);
       if (resolved == null) {
         _lastError = '找不到 PM3 程序: $pm3Path\n'
-            '请在连接页面设置正确的 PM3 程序路径，例如:\n'
-            '  /root/dev/proxmark3/pm3\n'
-            '  /usr/local/bin/proxmark3';
+            '请在连接页面设置 proxmark3.exe 或 proxmark3 的正确路径';
         _outputController.add('[错误] $_lastError');
-        _setState(Pm3State.disconnected);
+        _setState(Pm3ProcessState.disconnected);
         return false;
       }
 
-      final (execPath, workDir) = resolved;
+      final (execPath, resolvedWorkDir) = resolved;
+      final workDir = workingDirectory ?? resolvedWorkDir;
       _outputController.add('[使用 PM3: $execPath]');
       if (workDir != null) {
         _outputController.add('[工作目录: $workDir]');
@@ -141,7 +128,7 @@ class Pm3Process {
       // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
       _process = await Process.start(
         execPath,
-        ['-p', port, '-f'],
+        [...arguments, '-p', port, '-f'],
         workingDirectory: workDir,
         mode: ProcessStartMode.normal,
       );
@@ -167,7 +154,7 @@ class Pm3Process {
         if (!connected && _isConnectionPrompt(line)) {
           connected = true;
           _extractVersion(line);
-          _setState(Pm3State.connected);
+          _setState(Pm3ProcessState.connected);
           if (!completer.isCompleted) completer.complete(true);
         }
 
@@ -187,8 +174,8 @@ class Pm3Process {
       // 处理进程退出
       _process!.exitCode.then((code) {
         _outputController.add('[PM3 进程退出, code=$code]');
-        if (_state != Pm3State.disconnected) {
-          _setState(Pm3State.disconnected);
+        if (_state != Pm3ProcessState.disconnected) {
+          _setState(Pm3ProcessState.disconnected);
         }
         _process = null;
       });
@@ -210,12 +197,12 @@ class Pm3Process {
           '路径: $pm3Path\n'
           '请检查路径是否正确，程序是否已编译';
       _outputController.add('[错误] $_lastError');
-      _setState(Pm3State.disconnected);
+      _setState(Pm3ProcessState.disconnected);
       return false;
     } catch (e) {
       _lastError = '连接失败: $e';
       _outputController.add('[错误] $_lastError');
-      _setState(Pm3State.disconnected);
+      _setState(Pm3ProcessState.disconnected);
       return false;
     }
   }
@@ -248,7 +235,7 @@ class Pm3Process {
 
   /// 向交互式会话发送命令
   Future<void> sendCommand(String command) async {
-    if (_process == null || _state != Pm3State.connected) {
+    if (_process == null || _state != Pm3ProcessState.connected) {
       _outputController.add('[未连接]');
       return;
     }
@@ -266,11 +253,12 @@ class Pm3Process {
   Future<String> sendCommandAndWait(String command,
       {Duration timeout = const Duration(seconds: 10),
       RegExp? terminator}) async {
-    if (_process == null || _state != Pm3State.connected) {
+    if (_process == null || _state != Pm3ProcessState.connected) {
       return '[未连接]';
     }
 
     _responseBuffer.clear();
+    _outputController.add('[pm3] $command');
     _process!.stdin.writeln(command);
     await _process!.stdin.flush();
 
@@ -312,7 +300,7 @@ class Pm3Process {
       } catch (_) {}
       _process = null;
     }
-    _setState(Pm3State.disconnected);
+    _setState(Pm3ProcessState.disconnected);
   }
 
   /// 释放资源
@@ -370,9 +358,8 @@ class Pm3Process {
   }
 
   /// 设置状态并通知监听器
-  void _setState(Pm3State newState) {
+  void _setState(Pm3ProcessState newState) {
     _state = newState;
     _stateController.add(newState);
   }
-
 }

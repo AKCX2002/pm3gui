@@ -1,35 +1,39 @@
 /// 设备连接状态管理
 library;
 
-import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:pm3gui/services/pm3_process.dart';
+import 'package:pm3gui/backend/desktop_cli/desktop_cli_backend.dart';
+import 'package:pm3gui/core/pm3/pm3_connection.dart';
+import 'package:pm3gui/core/pm3/pm3_controller.dart';
 
 class ConnectionState extends ChangeNotifier {
-  final Pm3Process pm3 = Pm3Process();
+  ConnectionState({Pm3Controller? controller})
+      : controller = controller ?? Pm3Controller(DesktopCliBackend()) {
+    pm3Path = DesktopCliBackend.detectExecutable();
+  }
+
+  final Pm3Controller controller;
 
   String pm3Path = '';
   String portName = '';
   List<String> availablePorts = [];
 
-  Pm3State get connectionState => pm3.state;
-  String get pm3Version => pm3.version;
-  bool get isConnected => pm3.state == Pm3State.connected;
-  String get lastError => pm3.lastError;
-
-  ConnectionState() {
-    pm3Path = _detectPm3Path();
-  }
+  Pm3ConnectionState get connectionState => controller.state;
+  String get pm3Version => controller.version;
+  bool get isConnected => controller.isConnected;
+  String get lastError => controller.lastError;
 
   Future<bool> connect() async {
     if (portName.isEmpty) return false;
 
-    final result = await pm3.connect(pm3Path, portName);
-    return result;
+    return controller.connect(Pm3ConnectionConfig(
+      executable: pm3Path,
+      port: portName,
+    ));
   }
 
   Future<void> disconnect() async {
-    await pm3.disconnect();
+    await controller.disconnect();
     notifyListeners();
   }
 
@@ -50,31 +54,12 @@ class ConnectionState extends ChangeNotifier {
 
   Future<void> sendCommand(String cmd) async {
     if (cmd.trim().isEmpty) return;
-    await pm3.sendCommand(cmd);
+    await controller.send(cmd);
   }
 
   @override
   void dispose() {
-    pm3.dispose();
+    controller.dispose();
     super.dispose();
-  }
-
-  static String _detectPm3Path() {
-    final candidates = [
-      '/root/dev/proxmark3/pm3',
-      '/usr/local/bin/proxmark3',
-      '/usr/bin/proxmark3',
-    ];
-    for (final c in candidates) {
-      if (FileSystemEntity.isFileSync(c)) return c;
-    }
-    try {
-      final r = Process.runSync('which', ['proxmark3']);
-      if (r.exitCode == 0) {
-        final p = (r.stdout as String).trim();
-        if (p.isNotEmpty) return p;
-      }
-    } catch (_) {}
-    return './pm3';
   }
 }
