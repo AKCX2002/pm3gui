@@ -9,15 +9,19 @@ import 'package:pm3gui/core/pm3/pm3_controller.dart';
 import 'package:pm3gui/services/pm3_settings_store.dart';
 
 class ConnectionState extends ChangeNotifier {
-  ConnectionState({Pm3Controller? controller, Pm3SettingsStore? settingsStore})
-      : controller = controller ?? Pm3Controller(DesktopCliBackend()),
+  ConnectionState({
+    Pm3Controller? controller,
+    Pm3SettingsRepository? settingsStore,
+  })  : controller = controller ?? Pm3Controller(DesktopCliBackend()),
         _settingsStore = settingsStore ?? Pm3SettingsStore() {
     pm3Path = DesktopCliBackend.detectExecutable();
   }
 
   final Pm3Controller controller;
-  final Pm3SettingsStore _settingsStore;
+  final Pm3SettingsRepository _settingsStore;
   Future<void>? _initialization;
+  Future<void> _settingsQueue = Future.value();
+  bool _hasUserSettingsInput = false;
 
   String pm3Path = '';
   String portName = '';
@@ -41,11 +45,12 @@ class ConnectionState extends ChangeNotifier {
     ));
   }
 
-  Future<void> initialize() => _initialization ??= _restoreSettings();
+  Future<void> initialize() =>
+      _initialization ??= _enqueueSettingsOperation(_restoreSettings);
 
   Future<void> _restoreSettings() async {
     final settings = await _settingsStore.load();
-    if (settings == null) return;
+    if (settings == null || _hasUserSettingsInput) return;
 
     pm3Path = settings.executable;
     portName = settings.port;
@@ -61,18 +66,21 @@ class ConnectionState extends ChangeNotifier {
 
   Future<void> setPort(String port) {
     portName = port;
+    _hasUserSettingsInput = true;
     notifyListeners();
     return _saveSettings();
   }
 
   Future<void> setPm3Path(String path) {
     pm3Path = path;
+    _hasUserSettingsInput = true;
     notifyListeners();
     return _saveSettings();
   }
 
   Future<void> setPm3Arguments(List<String> arguments) {
     pm3Arguments = List<String>.unmodifiable(arguments);
+    _hasUserSettingsInput = true;
     notifyListeners();
     return _saveSettings();
   }
@@ -80,6 +88,7 @@ class ConnectionState extends ChangeNotifier {
   Future<void> setPm3WorkingDirectory(String? workingDirectory) {
     pm3WorkingDirectory =
         workingDirectory?.trim().isEmpty ?? true ? null : workingDirectory;
+    _hasUserSettingsInput = true;
     notifyListeners();
     return _saveSettings();
   }
@@ -89,12 +98,24 @@ class ConnectionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _saveSettings() => _settingsStore.save(Pm3ClientSettings(
-        executable: pm3Path,
-        port: portName,
-        arguments: pm3Arguments,
-        workingDirectory: pm3WorkingDirectory,
-      ));
+  Future<void> _saveSettings() {
+    final settings = Pm3ClientSettings(
+      executable: pm3Path,
+      port: portName,
+      arguments: pm3Arguments,
+      workingDirectory: pm3WorkingDirectory,
+    );
+    return _enqueueSettingsOperation(() => _settingsStore.save(settings));
+  }
+
+  Future<void> _enqueueSettingsOperation(Future<void> Function() operation) {
+    final next = _settingsQueue.then((_) => operation());
+    _settingsQueue = next.then<void>(
+      (_) {},
+      onError: (_, __) {},
+    );
+    return next;
+  }
 
   Future<void> sendCommand(String cmd) async {
     if (cmd.trim().isEmpty) return;
