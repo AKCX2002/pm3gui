@@ -1,16 +1,17 @@
 # PM3 GUI
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27+-02569B?logo=flutter&logoColor=white" alt="Flutter"/>
-  <img src="https://img.shields.io/badge/Dart-3.6+-0175C2?logo=dart&logoColor=white" alt="Dart"/>
+  <a href="https://github.com/AKCX2002/Promark3-GUI/actions/workflows/build.yml"><img src="https://github.com/AKCX2002/Promark3-GUI/actions/workflows/build.yml/badge.svg" alt="Build"/></a>
+  <a href="https://github.com/AKCX2002/Promark3-GUI/releases"><img src="https://img.shields.io/github/v/release/AKCX2002/Promark3-GUI?display_name=tag" alt="Release"/></a>
   <img src="https://img.shields.io/badge/Platforms-Windows%20x64%20%7C%20Linux%20x64-2ea44f" alt="Platforms"/>
-  <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"/>
-  <img src="https://img.shields.io/badge/Status-Alpha-red" alt="Status"/>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"/></a>
 </div>
 
-PM3 GUI 是面向 Proxmark3 的桌面图形客户端，提供常用 RFID/NFC 操作、转储文件管理和命令终端。
+PM3 GUI 是面向 Proxmark3 的 GPL-3.0 开源桌面图形客户端，提供常用 RFID/NFC 操作、转储文件管理和命令终端。
 
 > ⚠️ **Alpha 说明**：当前版本仍在迭代，页面和行为可能调整。
+
+请仅对自有或已明确授权的设备、卡片和系统执行操作，并遵守所在地适用法律。
 
 ## 平台与范围
 
@@ -20,6 +21,13 @@ PM3 GUI 是面向 Proxmark3 的桌面图形客户端，提供常用 RFID/NFC 操
 - 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client。Windows 优先使用官方发行包根目录的 `pm3.bat`，Linux 使用 `proxmark3`。
 
 CI 工作流包含 Windows 和 Linux x64 桌面路径。当前有限实机证据来自 Windows x64：使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（客户端识别为 `PM3 GENERIC / AT91SAM7S512 / 512K`），已通过根目录 `pm3.bat` 完成客户端连接、真实提示符识别、只读 `hw version` 和断开。该结果不能外推为 Linux、其他设备、完整固件交互或真实卡片操作已经验证。
+
+## 下载与发布
+
+- 已发布版本及 Windows/Linux x64 压缩包见 [GitHub Releases](https://github.com/AKCX2002/Promark3-GUI/releases)。
+- `main` 分支提交和 Pull Request 会执行静态分析、测试及双平台 release 构建。
+- 推送形如 `v0.0.4` 的标签后，同一工作流会打包两个平台并创建带自动发行说明的 GitHub Release。
+- Release 仅包含 PM3 GUI；Proxmark3 client 和固件请从 [RfidResearchGroup/proxmark3](https://github.com/RfidResearchGroup/proxmark3) 获取。
 
 ## 核心能力
 
@@ -78,8 +86,8 @@ PM3EASY512K 等已由官方 [RfidResearchGroup/proxmark3](https://github.com/Rfi
 ### 运行
 
 ```bash
-git clone https://github.com/AKCX2002/pm3gui.git
-cd pm3gui
+git clone https://github.com/AKCX2002/Promark3-GUI.git
+cd Promark3-GUI
 flutter pub get
 flutter run -d windows
 ```
@@ -112,7 +120,7 @@ lib/services/        # 设置、Session、文件和命令服务
 lib/state/           # Provider 状态管理
 lib/ui/              # 桌面页面和组件
 docs/                # 命令映射、规格和架构路线
-.github/workflows/   # Windows/Linux CI 与发布路径
+.github/workflows/   # Windows/Linux 构建与标签发布
 ```
 
 ## 开发与验证
@@ -121,12 +129,16 @@ docs/                # 命令映射、规格和架构路线
 
 ```bash
 dart format --output=none --set-exit-if-changed lib test
-flutter analyze --no-pub
+flutter analyze --no-pub --no-fatal-infos
 flutter test --no-pub
 flutter build windows --debug --no-pub
 ```
 
 上述命令覆盖 Windows 上的格式、静态分析、Dart/Flutter 测试和 Windows debug 构建；不覆盖 Linux runner 构建，也不替代真实 PM3 硬件验收。CI 的 Linux x64 构建路径以 `.github/workflows/build.yml` 为准。
+
+## 参与贡献与安全
+
+欢迎提交 Issue 和 Pull Request。开始前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)；安全漏洞请按 [SECURITY.md](./SECURITY.md) 私下报告，不要在公开 Issue 中披露敏感细节。
 
 ## 后续路线
 
@@ -135,3 +147,5 @@ flutter build windows --debug --no-pub
 ## 许可证
 
 本项目使用 **GPL-3.0** 许可证，详见 [LICENSE](./LICENSE)。
+
+Proxmark3 名称及其客户端、固件归对应上游项目及贡献者所有；本仓库不分发或重新授权这些上游组件。

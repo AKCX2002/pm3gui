@@ -1,8 +1,9 @@
-name: PM3 GUI Build
+name: Build and Release
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,32 +12,32 @@ permissions:
   contents: read
 
 concurrency:
-  group: pm3gui-build-${{ github.ref }}
+  group: pm3gui-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-linux:
-    name: Linux build
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            os: ubuntu-latest
+          - platform: windows-x64
+            os: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Cache pub packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-
       - name: Install Linux dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y \
@@ -54,55 +55,60 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
+        if: runner.os == 'Linux'
         run: flutter analyze --no-fatal-infos
 
       - name: Test
+        if: runner.os == 'Linux'
         run: flutter test --no-pub
 
       - name: Build Linux
-        run: flutter build linux --release
-
-      - name: Package artifacts
-        run: |
-          TS=$(date -u +%Y%m%dT%H%M%SZ)
-          cd build/linux/x64/release/bundle
-          tar czf "$GITHUB_WORKSPACE/pm3gui-linux-x64-${TS}.tar.gz" .
-
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: pm3gui-linux-x64-${{ github.run_number }}
-          path: pm3gui-linux-x64-*.tar.gz
-
-  build-windows:
-    name: Windows build
-    runs-on: windows-latest
-    timeout-minutes: 45
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Get dependencies
-        run: flutter pub get
+        if: runner.os == 'Linux'
+        run: flutter build linux --release --no-pub
 
       - name: Build Windows
-        run: flutter build windows --release
+        if: runner.os == 'Windows'
+        run: flutter build windows --release --no-pub
 
-      - name: Package artifacts
+      - name: Package Linux release
+        if: github.ref_type == 'tag' && runner.os == 'Linux'
+        run: >-
+          tar -C build/linux/x64/release/bundle -czf
+          "pm3gui-${GITHUB_REF_NAME}-linux-x64.tar.gz" .
+
+      - name: Package Windows release
+        if: github.ref_type == 'tag' && runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath pm3gui-windows-x64-${{ github.run_number }}.zip
+          $archive = "pm3gui-$env:GITHUB_REF_NAME-windows-x64.zip"
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath $archive
 
-      - name: Upload Windows artifact
+      - name: Upload release artifact
+        if: github.ref_type == 'tag'
         uses: actions/upload-artifact@v7
         with:
-          name: pm3gui-windows-x64-${{ github.run_number }}
-          path: pm3gui-windows-x64-*.zip
+          name: pm3gui-${{ github.ref_name }}-${{ matrix.platform }}
+          path: pm3gui-${{ github.ref_name }}-${{ matrix.platform }}.*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          generate_release_notes: true
+          files: artifacts/*
