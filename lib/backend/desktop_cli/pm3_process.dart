@@ -265,6 +265,7 @@ class Pm3Process {
       final completer = Completer<bool>();
       _connectionCompleter = completer;
       var connected = false;
+      var batchHandshakeSent = false;
       var stdoutPending = '';
 
       void handleStdoutRecord(String line) {
@@ -289,6 +290,30 @@ class Pm3Process {
           _extractVersion(line);
           _setState(Pm3ProcessState.connected);
           if (!completer.isCompleted) completer.complete(true);
+        }
+
+        if (isWindowsBatch &&
+            !connected &&
+            !batchHandshakeSent &&
+            line
+                .toLowerCase()
+                .contains('communicating with pm3 over usb-cdc')) {
+          batchHandshakeSent = true;
+          unawaited(() async {
+            try {
+              await process.writeLine('hw version');
+            } catch (error) {
+              if (!identical(_process, process) || _disposed) return;
+              _lastError = 'PM3 BAT 只读握手写入失败: $error';
+              _emitOutput('[错误] $_lastError');
+              _failConnecting(completer, _lastError);
+              await _closeCurrentProcess(
+                process,
+                connectionGeneration,
+                forceKill: true,
+              );
+            }
+          }());
         }
 
         // 所有记录直接发送给 UI，不做限流，避免长命令输出被截断。

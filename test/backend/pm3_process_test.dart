@@ -143,9 +143,40 @@ pause >nul
 
     expect(process.state, Pm3ProcessState.connecting);
     expect(completed, isFalse);
+    expect(child.writtenLines, isEmpty);
 
     child.stdoutController.add(utf8.encode('[usb] pm3 -->\n'));
     expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
+  test('Windows batch handshake write failure ends connection with diagnosis',
+      () async {
+    if (!Platform.isWindows) return;
+
+    final batchPath =
+        '${fixtureDirectory.path}${Platform.pathSeparator}pm3.bat';
+    await File(batchPath).writeAsString('@echo off\r\n');
+    final child = _FakeProcess(writeError: StateError('stdin closed'));
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(batchPath, '');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(
+      utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
+    );
+
+    expect(
+      await connecting.timeout(const Duration(seconds: 2)),
+      isFalse,
+    );
+    expect(child.writtenLines, ['hw version']);
+    expect(process.lastError, contains('只读握手写入失败'));
+    await Future<void>.delayed(Duration.zero);
+    expect(process.state, Pm3ProcessState.disconnected);
   });
 
   test('prompt split across chunks connects without a trailing newline',
@@ -175,6 +206,46 @@ pause >nul
 
     expect(await connecting, isTrue);
     expect(process.state, Pm3ProcessState.connected);
+  });
+
+  test('Windows batch sends one read-only handshake before waiting for prompt',
+      () async {
+    if (!Platform.isWindows) return;
+
+    final batchPath =
+        '${fixtureDirectory.path}${Platform.pathSeparator}pm3.bat';
+    await File(batchPath).writeAsString('@echo off\r\n');
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    var completed = false;
+    final connecting = process.connect(batchPath, '')
+      ..whenComplete(() => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    child.stdoutController.add(
+      utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(child.writtenLines, ['hw version']);
+    expect(process.state, Pm3ProcessState.connecting);
+    expect(completed, isFalse);
+
+    child.stdoutController.add(
+      utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(child.writtenLines, ['hw version']);
+
+    child.stdoutController.add(
+      utf8.encode('[usb|script] pm3 --> hw version'),
+    );
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
   });
 
   test('transport tag alone does not connect before the pm3 prompt', () async {
@@ -427,6 +498,7 @@ final class _FakeProcess implements Pm3ProcessHandle {
     this.killResult = true,
     List<bool>? killResults,
     this.throwOnFirstKill = false,
+    this.writeError,
     bool cancelFails = false,
   })  : _killResults = killResults == null ? null : List<bool>.of(killResults),
         stdoutController = StreamController<List<int>>(
@@ -442,10 +514,12 @@ final class _FakeProcess implements Pm3ProcessHandle {
 
   final bool killResult;
   final bool throwOnFirstKill;
+  final Object? writeError;
   final List<bool>? _killResults;
   final StreamController<List<int>> stdoutController;
   final StreamController<List<int>> stderrController;
   final Completer<int> _exitCode = Completer<int>();
+  final List<String> writtenLines = [];
   int killCount = 0;
 
   @override
@@ -473,7 +547,10 @@ final class _FakeProcess implements Pm3ProcessHandle {
   }
 
   @override
-  Future<void> writeLine(String line) async {}
+  Future<void> writeLine(String line) async {
+    writtenLines.add(line);
+    if (writeError case final error?) throw error;
+  }
 }
 
 const _fixtureSource = r'''
