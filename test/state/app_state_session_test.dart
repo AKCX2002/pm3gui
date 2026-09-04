@@ -126,27 +126,31 @@ void main() {
     expect(backend.disposeCount, 1);
   });
 
-  test('batch connection does not send a second hw version command', () async {
-    final connectionState = ConnectionState(
-      controller: Pm3Controller(MockPm3Backend()),
-      settingsStore: _NoopSettingsStore(),
-    )
-      ..pm3Path = r'C:\proxmark3\pm3.bat'
-      ..portName = '';
-    final commands = <String>[];
-    final commandSubscription =
-        connectionState.controller.commands.listen((command) {
-      commands.add(command.executable);
-    });
-    final state = AppState(connectionState: connectionState);
+  test(
+    'batch connection does not send a second hw version command',
+    () async {
+      final connectionState = ConnectionState(
+        controller: Pm3Controller(MockPm3Backend()),
+        settingsStore: _NoopSettingsStore(),
+      )
+        ..pm3Path = r'C:\proxmark3\pm3.bat'
+        ..portName = '';
+      final commands = <String>[];
+      final commandSubscription =
+          connectionState.controller.commands.listen((command) {
+        commands.add(command.executable);
+      });
+      final state = AppState(connectionState: connectionState);
 
-    expect(await state.connect(), isTrue);
-    await Future<void>.delayed(Duration.zero);
+      expect(await state.connect(), isTrue);
+      await Future<void>.delayed(Duration.zero);
 
-    expect(commands, isEmpty);
-    await state.shutdown();
-    await commandSubscription.cancel();
-  });
+      expect(commands, isEmpty);
+      await state.shutdown();
+      await commandSubscription.cancel();
+    },
+    skip: !Platform.isWindows,
+  );
 }
 
 final class _DelayedSettingsStore implements Pm3SettingsRepository {
