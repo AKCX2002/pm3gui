@@ -265,12 +265,9 @@ class Pm3Process {
       final completer = Completer<bool>();
       _connectionCompleter = completer;
       var connected = false;
+      var stdoutPending = '';
 
-      // 监听 stdout
-      _stdoutSubscription = process.stdout
-          .transform(utf8.decoder)
-          .transform(const LineSplitter())
-          .listen((line) {
+      void handleStdoutRecord(String line) {
         if (!identical(_process, process) || _disposed) return;
         // 始终写入响应缓冲区，以便 sendCommandAndWait 等函数
         // 能够获得完整输出，即使 UI 出于限流而丢弃显示行。
@@ -294,23 +291,56 @@ class Pm3Process {
           if (!completer.isCompleted) completer.complete(true);
         }
 
-        // 所有行直接发送给 UI，不做限流，避免长命令输出被截断
+        // 所有记录直接发送给 UI，不做限流，避免长命令输出被截断。
         _emitOutput(line);
-      }, onError: (Object error, StackTrace stackTrace) {
-        _failConnecting(completer, 'PM3 stdout 流错误: $error');
-        unawaited(_closeCurrentProcess(
-          process,
-          connectionGeneration,
-          forceKill: true,
-        ));
-      }, onDone: () {
-        unawaited(_handleStreamClosed(
-          process,
-          connectionGeneration,
-          completer,
-          'stdout',
-        ));
-      });
+      }
+
+      void handleStdoutChunk(String chunk) {
+        if (!identical(_process, process) || _disposed) return;
+        stdoutPending += chunk;
+        while (true) {
+          final newlineIndex = stdoutPending.indexOf('\n');
+          if (newlineIndex < 0) break;
+          var line = stdoutPending.substring(0, newlineIndex);
+          stdoutPending = stdoutPending.substring(newlineIndex + 1);
+          if (line.endsWith('\r')) line = line.substring(0, line.length - 1);
+          handleStdoutRecord(line);
+        }
+
+        // RRG 交互提示符在等待 stdin 时通常没有换行。只对明确的
+        // pm3 提示符提前提交片段；普通启动文本继续等待换行，避免把
+        // "Communicating with PM3 over USB-CDC" 误判成连接成功。
+        if (stdoutPending.contains('pm3 -->')) {
+          final prompt = stdoutPending;
+          stdoutPending = '';
+          handleStdoutRecord(prompt);
+        }
+      }
+
+      // 监听 stdout
+      _stdoutSubscription = process.stdout.transform(utf8.decoder).listen(
+        handleStdoutChunk,
+        onError: (Object error, StackTrace stackTrace) {
+          _failConnecting(completer, 'PM3 stdout 流错误: $error');
+          unawaited(_closeCurrentProcess(
+            process,
+            connectionGeneration,
+            forceKill: true,
+          ));
+        },
+        onDone: () {
+          if (stdoutPending.isNotEmpty) {
+            handleStdoutRecord(stdoutPending);
+            stdoutPending = '';
+          }
+          unawaited(_handleStreamClosed(
+            process,
+            connectionGeneration,
+            completer,
+            'stdout',
+          ));
+        },
+      );
 
       // 监听 stderr
       _stderrSubscription = process.stderr
@@ -740,8 +770,6 @@ class Pm3Process {
   // 匹配 Proxmark3GUI 模式: QRegularExpression("(os:\s+|OS\.+\s+)")
   bool _isConnectionPrompt(String line) {
     return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
-        line.contains('[usb]') ||
-        line.contains('[bt]') ||
         line.contains('pm3 -->');
   }
 

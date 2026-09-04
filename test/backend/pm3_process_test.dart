@@ -148,6 +148,57 @@ pause >nul
     expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
   });
 
+  test('prompt split across chunks connects without a trailing newline',
+      () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      connectTimeout: const Duration(milliseconds: 300),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    var completed = false;
+    final connecting = process.connect(_dartExecutable, 'COM7')
+      ..whenComplete(() => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    child.stdoutController.add(
+      utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(process.state, Pm3ProcessState.connecting);
+    expect(completed, isFalse);
+
+    child.stdoutController.add(utf8.encode('[usb] pm'));
+    child.stdoutController.add(utf8.encode('3 -->'));
+
+    expect(await connecting, isTrue);
+    expect(process.state, Pm3ProcessState.connected);
+  });
+
+  test('transport tag alone does not connect before the pm3 prompt', () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    var completed = false;
+    final connecting = process.connect(_dartExecutable, 'COM7')
+      ..whenComplete(() => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    child.stdoutController.add(utf8.encode('[usb] transport ready\n'));
+    await Future<void>.delayed(Duration.zero);
+    expect(process.state, Pm3ProcessState.connecting);
+    expect(completed, isFalse);
+
+    child.stdoutController.add(utf8.encode('[usb] pm3 -->'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
   test('disconnect waits for a graceful child exit', () async {
     final process = Pm3Process(
       connectCooldown: Duration.zero,
