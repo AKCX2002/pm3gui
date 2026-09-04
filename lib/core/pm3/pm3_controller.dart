@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'pm3_backend.dart';
 import 'pm3_command.dart';
 import 'pm3_connection.dart';
@@ -9,8 +11,11 @@ final class Pm3Controller {
   Pm3Controller(this._backend);
 
   final Pm3Backend _backend;
+  final StreamController<Pm3Command> _commands =
+      StreamController<Pm3Command>.broadcast(sync: true);
 
   Stream<Pm3Event> get events => _backend.events;
+  Stream<Pm3Command> get commands => _commands.stream;
   Stream<String> get outputLines => events
       .where((event) => event is Pm3OutputEvent)
       .cast<Pm3OutputEvent>()
@@ -31,13 +36,18 @@ final class Pm3Controller {
 
   Future<void> disconnect() => _backend.disconnect();
 
-  Future<Pm3Result> execute(Pm3Command command, {Duration? timeout}) =>
-      _backend.execute(command, timeout: timeout);
+  Future<Pm3Result> execute(Pm3Command command, {Duration? timeout}) {
+    _commands.add(command);
+    return _backend.execute(command, timeout: timeout);
+  }
 
   Future<void> send(String command) async {
     await execute(Pm3Command(id: 'terminal.raw', executable: command));
   }
 
   Future<void> cancel() => _backend.cancel();
-  void dispose() => _backend.dispose();
+  void dispose() {
+    _commands.close();
+    _backend.dispose();
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pm3gui/models/mifare_card.dart';
 import 'package:pm3gui/services/file_collector.dart';
 import 'package:pm3gui/core/pm3/pm3_connection.dart';
+import 'package:pm3gui/services/pm3_session_recorder.dart';
 import 'package:pm3gui/state/connection_state.dart';
 import 'package:pm3gui/state/terminal_state.dart';
 import 'package:pm3gui/state/file_state.dart';
@@ -94,6 +95,12 @@ class AppState extends ChangeNotifier {
   late final TerminalState terminalState;
   late final FileState fileState;
   late final HardwareState hardwareState;
+  final Pm3SessionRecorder _sessionRecorder;
+  late final StreamSubscription<String> _outputSubscription;
+  late final StreamSubscription _commandSubscription;
+  late final StreamSubscription<Pm3ConnectionState> _stateSubscription;
+  Future<void> _sessionClose = Future.value();
+  String? _sessionLogError;
 
   int currentPageIndex = 0;
   NavigationIntent? _pendingIntent;
@@ -109,6 +116,7 @@ class AppState extends ChangeNotifier {
   bool get isConnected => connectionState.isConnected;
   String get lastError => connectionState.lastError;
   String get pm3Version => connectionState.pm3Version;
+  String? get sessionLogError => _sessionLogError;
 
   String get pm3Path => connectionState.pm3Path;
   set pm3Path(String value) => connectionState.setPm3Path(value);
@@ -151,21 +159,26 @@ class AppState extends ChangeNotifier {
 
   Stream<String> get pm3Output => connectionState.controller.outputLines;
 
-  AppState() {
-    connectionState = ConnectionState();
+  AppState({
+    ConnectionState? connectionState,
+    Pm3SessionRecorder? sessionRecorder,
+  }) : _sessionRecorder = sessionRecorder ?? Pm3SessionRecorder() {
+    this.connectionState = connectionState ?? ConnectionState();
     terminalState = TerminalState();
     fileState = FileState();
     hardwareState = HardwareState();
 
-    connectionState.addListener(_onConnectionChanged);
+    this.connectionState.addListener(_onConnectionChanged);
     unawaited(initialize());
 
     // Propagate terminal state changes so widgets depending on AppState
     // (via context.select on outputRevision / terminalOutput) will rebuild
     // in real-time when TerminalState notifies.
     terminalState.addListener(_onTerminalChanged);
-    connectionState.controller.outputLines.listen((line) {
+    _outputSubscription =
+        this.connectionState.controller.outputLines.listen((line) {
       terminalState.addOutput(line);
+      _recordSession(_sessionRecorder.recordOutput(line));
 
       if (line.toLowerCase().contains('saved') ||
           line.toLowerCase().contains('saved to')) {
@@ -173,11 +186,22 @@ class AppState extends ChangeNotifier {
       }
     });
 
-    connectionState.controller.stateChanges.listen((state) {
+    _commandSubscription =
+        this.connectionState.controller.commands.listen((command) {
+      _recordSession(_sessionRecorder.recordCommand(command.executable));
+    });
+
+    _stateSubscription =
+        this.connectionState.controller.stateChanges.listen((state) {
       if (state == Pm3ConnectionState.connected) {
+        _recordSession(_sessionRecorder.start(
+          devicePort: this.connectionState.portName,
+          executable: this.connectionState.pm3Path,
+        ));
         scanForFiles();
         _queryHwVersion();
       } else if (state == Pm3ConnectionState.disconnected) {
+        _sessionClose = _recordSession(_sessionRecorder.close());
         hardwareState.resetHwInfo();
       }
       notifyListeners();
@@ -204,6 +228,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> disconnect() async {
     await connectionState.disconnect();
+    await _sessionClose;
     hardwareState.resetHwInfo();
     notifyListeners();
   }
@@ -391,6 +416,16 @@ class AppState extends ChangeNotifier {
     });
   }
 
+  Future<void> _recordSession(Future<void> operation) {
+    return operation.then<void>(
+      (_) {},
+      onError: (Object error, StackTrace _) {
+        _sessionLogError = error.toString();
+        notifyListeners();
+      },
+    );
+  }
+
   Future<void> refreshHwInfo() async {
     if (!isConnected) return;
     _queryHwVersion();
@@ -402,6 +437,10 @@ class AppState extends ChangeNotifier {
       terminalState.removeListener(_onTerminalChanged);
     } catch (_) {}
     connectionState.removeListener(_onConnectionChanged);
+    unawaited(_outputSubscription.cancel());
+    unawaited(_commandSubscription.cancel());
+    unawaited(_stateSubscription.cancel());
+    unawaited(_recordSession(_sessionRecorder.close()));
     connectionState.dispose();
     super.dispose();
   }
