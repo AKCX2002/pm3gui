@@ -3,137 +3,133 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.27+-02569B?logo=flutter&logoColor=white" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.6+-0175C2?logo=dart&logoColor=white" alt="Dart"/>
-  <img src="https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows-2ea44f" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/Platforms-Windows%20x64%20%7C%20Linux%20x64-2ea44f" alt="Platforms"/>
   <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"/>
   <img src="https://img.shields.io/badge/Status-Alpha-red" alt="Status"/>
 </div>
 
-PM3 GUI 是一个面向 Proxmark3 的跨平台图形化客户端，聚焦 RFID/NFC 读写、转储管理、分析与命令操作。
+PM3 GUI 是面向 Proxmark3 的桌面图形客户端，提供常用 RFID/NFC 操作、转储文件管理和命令终端。
 
-> ⚠️ **Alpha 说明**：当前版本仍在快速迭代，部分功能/行为可能在后续版本中调整。
+> ⚠️ **Alpha 说明**：当前版本仍在迭代，页面和行为可能调整。
 
----
+## 平台与范围
 
-## Why PM3 GUI
+- Windows x64 是 1.0 主平台。
+- Linux x64 是 1.0 正式支持平台。
+- Android、iOS、Web 和 macOS 不属于 1.0 范围。
+- 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client（`pm3` 或 `proxmark3`）。
 
-- 为 PM3 CLI 提供更低门槛的可视化操作入口。
-- 保留高级用户的命令透传能力，而非替代 CLI。
-- 通过结构化文件管理和离线分析降低重复劳动。
+CI 工作流包含 Windows 和 Linux x64 桌面路径。当前开发验证在 Windows 上进行，因此不能据此宣称 Linux 构建或真实 PM3 硬件已经验证。
 
-## Core Features
+## 核心能力
 
-- **桌面平台支持**：Linux、Windows。
-- **CLI Wrapper 架构**：通过进程管道驱动 `pm3`/`proxmark3`，自动继承上游命令能力。
-- **终端模式**：支持完整命令输入、历史回溯与输出展示。
-- **Dump/Key 文件管理**：自动扫描、识别、分组与归档。
-- **数据处理能力**：支持 dump 查看、编辑、比较、转换与导出。
-
-## Architecture Overview
+- 通过 `Pm3Backend` 契约和 `DesktopCliBackend` 驱动官方 Proxmark3 client。
+- 终端支持完整命令透传、历史记录和输出查看。
+- 专用 GUI 优先覆盖高频工作流；低频、诊断及新增命令保留在 Terminal。
+- 支持 EML、BIN/DUMP、JSON 和密钥文件的查看、分析与导出。
+- 连接、命令输出和进程退出具备可诊断的本地生命周期管理。
 
 ```text
-Flutter Desktop UI / Feature
-             │
-             ▼
-       Pm3Controller
-             │
-             ▼
-        Pm3Backend
-             │
-             ▼
-    DesktopCliBackend
-             │
-             ▼
- Pm3Process (internal adapter)
-             │
-             ▼
- official proxmark3 client
+Flutter UI / Feature
+        │
+        ▼
+  Pm3Controller → Pm3Backend → DesktopCliBackend
+                                      │
+                                      ▼
+                                  Pm3Process
+                                      │
+                                      ▼
+                         official proxmark3 client
 ```
 
-Widget 和 Feature 仅通过 `Pm3Controller` 使用结构化命令、结果和事件；
-`dart:io Process` 被限制在 Desktop CLI Backend 内部。
+`Pm3Process` 是 `DesktopCliBackend` 的内部适配器，Widget 和 Feature 不直接使用 `dart:io Process`。
 
-## Installation & Quick Start
+## 配置与隐私
 
-### Prerequisites
+设置页可配置：客户端可执行文件路径、串口/设备端口、启动参数和可选工作目录。设置会自动保存到：
+
+```text
+<应用支持目录>/pm3_settings.json
+```
+
+应用支持目录由 `path_provider` 的 `getApplicationSupportDirectory()` 按当前操作系统和用户账户决定。它不是项目目录，实际绝对路径请以系统配置为准。
+
+每次成功连接会在同一应用支持目录下创建本地 Session：
+
+```text
+<应用支持目录>/sessions/YYYY-MM-DD_HHmmss_SSS/
+├─ session.json       # 端口、客户端路径、开始/结束时间
+├─ terminal.log       # 客户端输出
+└─ commands.jsonl     # 发出的命令（每行一条 JSON）
+```
+
+这些文件仅写入本机，不会由 PM3 GUI 上传。终端输出和命令参数可能包含 UID、设备信息或其他敏感数据，请保护应用支持目录，并在共享日志前自行检查内容。
+
+## 安装与运行
+
+### 环境要求
 
 - Flutter 3.27+
 - Dart 3.6+
-- Proxmark3 CLI (`pm3` 或 `proxmark3`，推荐 RRG/Iceman 分支)
+- 官方 Proxmark3 client：`pm3` 或 `proxmark3`
 
-### Run
+### 运行
 
 ```bash
 git clone https://github.com/AKCX2002/pm3gui.git
 cd pm3gui
 flutter pub get
-flutter run -d linux
+flutter run -d windows
 ```
 
-### Build
+Linux x64 可使用 `flutter run -d linux`。请先按 Flutter 官方文档安装对应桌面工具链。
+
+### 构建
 
 ```bash
-flutter build linux
 flutter build windows
+flutter build linux
 ```
 
-## Supported File Formats
+## 文件格式
 
-| Type | Extensions | Read | Export |
+| 类型 | 扩展名 | 读取 | 导出 |
 |---|---|---:|---:|
-| EML dump | `.eml` | ✅ | ✅ |
-| Binary dump | `.bin`, `.dump` | ✅ | ✅ |
-| JSON dump | `.json` | ✅ | ✅ |
-| Key dictionary | `.dic` | ✅ | ✅ |
-| Key text | `.keys.txt` | - | ✅ |
+| EML 转储 | `.eml` | ✅ | ✅ |
+| 二进制转储 | `.bin`、`.dump` | ✅ | ✅ |
+| JSON 转储 | `.json` | ✅ | ✅ |
+| 密钥字典 | `.dic` | ✅ | ✅ |
+| 密钥文本 | `.keys.txt` | - | ✅ |
 
-## Repository Layout
+## 仓库结构
 
 ```text
-lib/
-├─ core/pm3/         # 后端契约、命令、事件、结果与 Controller
-├─ backend/          # Desktop CLI 实现与 Mock Backend
-├─ models/           # 现有数据模型（逐步迁移）
-├─ parsers/          # 现有 dump/key 解析器（逐步迁移）
-├─ services/         # 文件、命令与转换服务
-├─ state/            # Provider 状态管理
-└─ ui/               # 页面与组件（逐步迁移到 features）
-
-docs/                # 规格说明、开发任务、命令映射
-.github/workflows/   # CI/CD 工作流
+lib/core/pm3/       # Pm3Backend 契约、命令、事件、结果和 Session 模型
+lib/backend/         # DesktopCliBackend、Pm3Process 和 Mock Backend
+lib/services/        # 设置、Session、文件和命令服务
+lib/state/           # Provider 状态管理
+lib/ui/              # 桌面页面和组件
+docs/                # 命令映射、规格和架构路线
+.github/workflows/   # Windows/Linux CI 与发布路径
 ```
 
-## Engineering Workflow
+## 开发与验证
 
-建议在本地提交前执行：
+提交前可运行：
 
 ```bash
-flutter pub get
-flutter analyze
-flutter test
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze --no-pub
+flutter test --no-pub
+flutter build windows --debug --no-pub
 ```
 
-CI/CD（GitHub Actions）包含：
+上述命令覆盖 Windows 上的格式、静态分析、Dart/Flutter 测试和 Windows debug 构建；不覆盖 Linux runner 构建，也不替代真实 PM3 硬件验收。CI 的 Linux x64 构建路径以 `.github/workflows/build.yml` 为准。
 
-- `build.yml`：主分支/PR 的 Windows、Linux 桌面构建与静态检查，也可手动触发。
-- `release.yml`：版本标签触发 Windows、Linux 构建并发布 Release 资产。
+## 后续路线
 
-CI 不构建或发布 Proxmark3 Client/固件。Proxmark3 由上游项目维护，GUI
-构建与 PM3 构建保持独立，避免重复消耗 CI 资源和产生来源不明确的二进制文件。
+下一阶段将建立 **Command Registry** 和 **Parser Registry**，统一命令元数据、参数及输出解析。专用 GUI 继续优先覆盖高频工作流，低频或新增命令继续通过 Terminal 使用。
 
-## Contributing
-
-欢迎提交 Issue 与 Pull Request。
-
-1. Fork 仓库并创建特性分支。
-2. 变更尽量保持小步提交，并附带验证说明。
-3. PR 描述中注明：背景、修改内容、影响范围、测试结果。
-
-## Roadmap (Short-term)
-
-- 完善更多 PM3 子命令页面覆盖。
-- 增强 dump 差异分析与异常提示。
-- 提升 Windows/Linux 设备连接与进程生命周期稳定性。
-
-## License
+## 许可证
 
 本项目使用 **GPL-3.0** 许可证，详见 [LICENSE](./LICENSE)。
