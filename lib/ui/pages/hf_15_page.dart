@@ -51,7 +51,7 @@ class _Hf15PageState extends State<Hf15Page>
     });
     final buf = StringBuffer();
     _sub?.cancel();
-    _sub = context.read<AppState>().pm3.outputStream.listen((line) {
+    _sub = context.read<AppState>().pm3Output.listen((line) {
       if (!line.startsWith('[pm3]')) {
         buf.writeln(line);
         if (mounted) setState(() => _result = buf.toString());

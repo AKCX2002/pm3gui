@@ -5,8 +5,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/state/app_state.dart';
-import 'package:pm3gui/services/pm3_process.dart';
 import 'package:pm3gui/ui/pages/connection_page.dart';
 import 'package:pm3gui/ui/pages/terminal_page.dart';
 import 'package:pm3gui/ui/pages/dump_viewer_page.dart';
@@ -134,8 +134,8 @@ class _HomePageState extends State<HomePage> {
     final currentPageIndex =
         context.select<AppState, int>((s) => s.currentPageIndex);
     final pm3Version = context.select<AppState, String>((s) => s.pm3Version);
-    final isConnected = context.select<AppState, bool>(
-        (s) => s.connectionState.connectionState == Pm3State.connected);
+    final isConnected = context.select<AppState, bool>((s) =>
+        s.connectionState.connectionState == Pm3ConnectionState.connected);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

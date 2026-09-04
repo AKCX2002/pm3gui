@@ -70,7 +70,7 @@ class _MifarePageState extends State<MifarePage>
 
     final buffer = StringBuffer();
     _outputSub?.cancel();
-    _outputSub = appState.pm3.outputStream.listen((line) {
+    _outputSub = appState.pm3Output.listen((line) {
       // 过滤掉 [pm3] 自身发送的命令回显
       if (!line.startsWith('[pm3]')) {
         buffer.writeln(line);
