@@ -76,6 +76,9 @@ class Pm3Process {
   StreamSubscription<String>? _stderrSubscription;
   Future<bool>? _connectingFuture;
   Future<void>? _disconnectingFuture;
+  Future<Pm3ProcessHandle>? _startingFuture;
+  Pm3ProcessHandle? _unownedProcess;
+  Future<void>? _unownedTermination;
   Completer<bool>? _connectionCompleter;
   bool _disposed = false;
   int _processGeneration = 0;
@@ -231,17 +234,19 @@ class Pm3Process {
       }
 
       // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
-      final process = await _processStarter(
+      final starting = _processStarter(
         execPath,
         [...arguments, '-p', port, '-f'],
         workingDirectory: workDir,
       );
+      _startingFuture = starting;
+      final process = await starting;
+      if (identical(_startingFuture, starting)) {
+        _startingFuture = null;
+      }
 
       if (_disposed || connectionGeneration != _processGeneration) {
-        if (!_disposed && connectionGeneration == _processGeneration) {
-          _lastError = 'PM3 连接在启动期间已取消';
-        }
-        await _terminateUnowned(process);
+        await _terminateUnownedOnce(process);
         return false;
       }
       _process = process;
@@ -365,6 +370,7 @@ class Pm3Process {
         return false;
       }
     } on ProcessException catch (e) {
+      _startingFuture = null;
       _lastError = '无法启动 PM3 程序: ${e.message}\n'
           '路径: $pm3Path\n'
           '请检查路径是否正确，程序是否已编译';
@@ -374,6 +380,7 @@ class Pm3Process {
       }
       return false;
     } catch (e) {
+      _startingFuture = null;
       _lastError = '连接失败: $e';
       _emitOutput('[错误] $_lastError');
       if (connectionGeneration == _processGeneration) {
@@ -493,9 +500,10 @@ class Pm3Process {
     _stdoutSubscription = null;
     _stderrSubscription = null;
     try {
-      if (process != null) process.kill();
-    } catch (_) {
-      // dispose 是同步兜底，异常不能阻止控制器关闭。
+      if (process != null) {
+        // async 函数在首个 await 前立即尝试 kill；随后保持有限后台收束。
+        unawaited(_consumeBackground(_killAndWait(process)));
+      }
     } finally {
       unawaited(_cancelSubscription(stdoutSubscription));
       unawaited(_cancelSubscription(stderrSubscription));
@@ -511,13 +519,23 @@ class Pm3Process {
   Future<void> _disconnect() async {
     final disconnectGeneration = ++_processGeneration;
     final process = _process;
+    final starting = _startingFuture;
     try {
       if (process != null) {
         await _closeCurrentProcess(
           process,
           disconnectGeneration,
           requestQuit: true,
+          publishDisconnected: false,
         );
+      }
+      if (starting != null) {
+        try {
+          final startedProcess = await starting;
+          await _terminateUnownedOnce(startedProcess);
+        } catch (error) {
+          _recordLifecycleError('等待 PM3 启动失败: $error');
+        }
       }
     } finally {
       if (!_disposed && disconnectGeneration == _processGeneration) {
@@ -531,6 +549,7 @@ class Pm3Process {
     int generation, {
     bool requestQuit = false,
     bool forceKill = false,
+    bool publishDisconnected = true,
   }) async {
     if (!identical(_process, process)) return;
     _process = null;
@@ -554,18 +573,28 @@ class Pm3Process {
     } finally {
       await _cancelSubscription(stdoutSubscription);
       await _cancelSubscription(stderrSubscription);
-      if (!_disposed && generation == _processGeneration) {
+      if (publishDisconnected &&
+          !_disposed &&
+          generation == _processGeneration) {
         _setState(Pm3ProcessState.disconnected);
       }
     }
   }
 
-  Future<void> _terminateUnowned(Pm3ProcessHandle process) async {
-    try {
-      await _killAndWait(process);
-    } finally {
-      // 该进程尚未接管流订阅，不能影响新的连接状态。
+  Future<void> _terminateUnownedOnce(Pm3ProcessHandle process) {
+    if (identical(_unownedProcess, process) && _unownedTermination != null) {
+      return _unownedTermination!;
     }
+    _unownedProcess = process;
+    late final Future<void> termination;
+    termination = _killAndWait(process).whenComplete(() {
+      if (identical(_unownedTermination, termination)) {
+        _unownedProcess = null;
+        _unownedTermination = null;
+      }
+    });
+    _unownedTermination = termination;
+    return termination;
   }
 
   Future<void> _handleStreamClosed(
@@ -610,18 +639,36 @@ class Pm3Process {
   }
 
   Future<void> _killAndWait(Pm3ProcessHandle process) async {
-    var killed = false;
-    try {
-      killed = process.kill();
-    } catch (error) {
-      _recordLifecycleError('终止 PM3 进程失败: $error');
+    var killed = _tryKill(process);
+    if (!killed) {
+      // 仅重试一次；两次失败后仍用带上限的 exitCode 等待收束。
+      killed = _tryKill(process);
     }
     if (!killed) {
-      _recordLifecycleError('终止 PM3 进程失败: kill 返回 false');
+      _recordLifecycleError('终止 PM3 进程失败: kill 两次均未成功');
     }
     final exited = await _waitForExit(process, _killExitTimeout);
     if (!exited) {
       _recordLifecycleError('终止 PM3 后等待退出超时');
+    }
+  }
+
+  bool _tryKill(Pm3ProcessHandle process) {
+    try {
+      final killed = process.kill();
+      if (!killed) _recordLifecycleError('终止 PM3 进程失败: kill 返回 false');
+      return killed;
+    } catch (error) {
+      _recordLifecycleError('终止 PM3 进程失败: $error');
+      return false;
+    }
+  }
+
+  Future<void> _consumeBackground(Future<void> future) async {
+    try {
+      await future;
+    } catch (_) {
+      // dispose 不可把后台收束异常泄露到 zone。
     }
   }
 

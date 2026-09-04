@@ -79,7 +79,7 @@ void main() {
     expect(process.state, Pm3ProcessState.disconnected);
   });
 
-  test('disconnect invalidates a connect that is still starting', () async {
+  test('disconnect waits for an invalidated start to be terminated', () async {
     final started = Completer<Pm3ProcessHandle>();
     final process = Pm3Process(
       connectCooldown: Duration.zero,
@@ -90,11 +90,19 @@ void main() {
     addTearDown(process.dispose);
 
     final connecting = process.connect(_dartExecutable, 'COM7');
-    await process.disconnect().timeout(const Duration(seconds: 2));
+    final disconnecting = process.disconnect();
+    expect(process.disconnect(), same(disconnecting));
+    var disconnectCompleted = false;
+    unawaited(disconnecting.then((_) => disconnectCompleted = true));
+
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(disconnectCompleted, isFalse);
+    expect(process.state, Pm3ProcessState.connecting);
 
     final child = _FakeProcess();
     started.complete(child);
 
+    await disconnecting.timeout(const Duration(seconds: 2));
     expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
     expect(child.killCount, 1);
     expect(process.state, Pm3ProcessState.disconnected);
@@ -191,11 +199,58 @@ void main() {
 
     expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
   });
+
+  test('dispose retries a failed kill with bounded background cleanup',
+      () async {
+    final child = _FakeProcess(killResults: [false, true]);
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      killExitTimeout: const Duration(milliseconds: 20),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+
+    process.dispose();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(child.killCount, 2);
+  });
+
+  test('dispose consumes a thrown first kill and retries once', () async {
+    final child = _FakeProcess(
+      throwOnFirstKill: true,
+      killResults: [true],
+    );
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      killExitTimeout: const Duration(milliseconds: 20),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+
+    process.dispose();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(child.killCount, 2);
+  });
 }
 
 final class _FakeProcess implements Pm3ProcessHandle {
-  _FakeProcess({this.killResult = true, bool cancelFails = false})
-      : stdoutController = StreamController<List<int>>(
+  _FakeProcess({
+    this.killResult = true,
+    List<bool>? killResults,
+    this.throwOnFirstKill = false,
+    bool cancelFails = false,
+  })  : _killResults = killResults == null ? null : List<bool>.of(killResults),
+        stdoutController = StreamController<List<int>>(
           onCancel: cancelFails
               ? () => Future<void>.error(StateError('stdout cancel failed'))
               : null,
@@ -207,6 +262,8 @@ final class _FakeProcess implements Pm3ProcessHandle {
         );
 
   final bool killResult;
+  final bool throwOnFirstKill;
+  final List<bool>? _killResults;
   final StreamController<List<int>> stdoutController;
   final StreamController<List<int>> stderrController;
   final Completer<int> _exitCode = Completer<int>();
@@ -224,8 +281,12 @@ final class _FakeProcess implements Pm3ProcessHandle {
   @override
   bool kill() {
     killCount++;
-    if (killResult && !_exitCode.isCompleted) _exitCode.complete(-9);
-    return killResult;
+    if (throwOnFirstKill && killCount == 1) {
+      throw StateError('first kill failed');
+    }
+    final result = _killResults?.removeAt(0) ?? killResult;
+    if (result && !_exitCode.isCompleted) _exitCode.complete(-9);
+    return result;
   }
 
   void failExit(Object error) {
