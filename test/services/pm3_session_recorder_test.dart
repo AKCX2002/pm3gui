@@ -99,4 +99,68 @@ void main() {
       isTrue,
     );
   });
+
+  test('stops after a bounded number of metadata reservation conflicts',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('pm3-session-');
+    addTearDown(() => directory.delete(recursive: true));
+    var reservations = 0;
+    final recorder = Pm3SessionRecorder(
+      rootDirectoryProvider: () async => directory,
+      now: () => DateTime(2026, 9, 4, 19, 30),
+      metadataFileReservation: (file) async {
+        reservations++;
+        throw FileSystemException(
+          'already exists',
+          file.path,
+          const OSError('already exists', 183),
+        );
+      },
+    );
+
+    await expectLater(
+      recorder.start(devicePort: 'COM7', executable: 'proxmark3.exe'),
+      throwsStateError,
+    );
+    expect(reservations, 8);
+  });
+
+  test('metadata write failure is not retried as a reservation conflict',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('pm3-session-');
+    addTearDown(() => directory.delete(recursive: true));
+    var reservations = 0;
+    var writes = 0;
+    final recorder = Pm3SessionRecorder(
+      rootDirectoryProvider: () async => directory,
+      metadataFileReservation: (file) async {
+        reservations++;
+        await file.create(exclusive: true);
+      },
+      metadataFileWriter: (file, _) async {
+        writes++;
+        throw FileSystemException(
+          'disk full',
+          file.path,
+          const OSError('disk full', 112),
+        );
+      },
+    );
+
+    await expectLater(
+      recorder.start(devicePort: 'COM7', executable: 'proxmark3.exe'),
+      throwsA(isA<FileSystemException>()),
+    );
+    expect(reservations, 1);
+    expect(writes, 1);
+    final partialDirectories =
+        (await directory.list().toList()).whereType<Directory>().toList();
+    expect(partialDirectories, hasLength(1));
+    expect(
+      await File(
+        '${partialDirectories.single.path}${Platform.pathSeparator}session.json',
+      ).exists(),
+      isTrue,
+    );
+  });
 }

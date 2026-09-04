@@ -22,6 +22,7 @@ import 'package:pm3gui/ui/home_page.dart';
 ///
 /// 初始化应用并提供全局状态管理
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final appState = AppState();
   AppLifecycleListener(
     onExitRequested: () async {

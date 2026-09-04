@@ -6,17 +6,30 @@ import 'package:pm3gui/core/pm3/pm3_session.dart';
 
 typedef SessionRootDirectoryProvider = Future<Directory> Function();
 typedef SessionClock = DateTime Function();
+typedef SessionMetadataFileReservation = Future<void> Function(File file);
+typedef SessionMetadataFileWriter = Future<void> Function(
+  File file,
+  String contents,
+);
 
 /// Writes one local-only log directory for each successful PM3 connection.
 final class Pm3SessionRecorder {
   Pm3SessionRecorder({
     SessionRootDirectoryProvider? rootDirectoryProvider,
     SessionClock? now,
+    SessionMetadataFileReservation? metadataFileReservation,
+    SessionMetadataFileWriter? metadataFileWriter,
   })  : _rootDirectoryProvider = rootDirectoryProvider ?? _defaultRootDirectory,
-        _now = now ?? DateTime.now;
+        _now = now ?? DateTime.now,
+        _metadataFileReservation =
+            metadataFileReservation ?? _reserveMetadataFile,
+        _metadataFileWriter = metadataFileWriter ?? _writeMetadataFile;
 
+  static const maxSessionCreationAttempts = 8;
   final SessionRootDirectoryProvider _rootDirectoryProvider;
   final SessionClock _now;
+  final SessionMetadataFileReservation _metadataFileReservation;
+  final SessionMetadataFileWriter _metadataFileWriter;
   Future<void> _writeQueue = Future.value();
   Pm3Session? _session;
 
@@ -80,9 +93,9 @@ final class Pm3SessionRecorder {
     final session = _activeSession;
     if (session == null) return;
     final closedSession = session.close(_now());
-    await _metadataFile(closedSession).writeAsString(
+    await _metadataFileWriter(
+      _metadataFile(closedSession),
       jsonEncode(closedSession.toJson()),
-      flush: true,
     );
     _session = closedSession;
   }
@@ -93,7 +106,7 @@ final class Pm3SessionRecorder {
     required String executable,
   }) async {
     var time = _now();
-    while (true) {
+    for (var attempt = 0; attempt < maxSessionCreationAttempts; attempt++) {
       final directory = Directory(
         '${root.path}${Platform.pathSeparator}${_directoryName(time)}',
       );
@@ -103,8 +116,8 @@ final class Pm3SessionRecorder {
       }
       try {
         await directory.create();
-      } on FileSystemException {
-        if (await directory.exists()) {
+      } on FileSystemException catch (error) {
+        if (_isAlreadyExists(error)) {
           time = time.add(const Duration(milliseconds: 1));
           continue;
         }
@@ -117,22 +130,26 @@ final class Pm3SessionRecorder {
         executable: executable,
         startedAt: _now(),
       );
+      final metadataFile = _metadataFile(session);
       try {
-        final metadataFile = _metadataFile(session);
-        await metadataFile.create(exclusive: true);
-        await metadataFile.writeAsString(
-          jsonEncode(session.toJson()),
-          flush: true,
-        );
-        return session;
-      } on FileSystemException {
-        if (await _metadataFile(session).exists()) {
+        await _metadataFileReservation(metadataFile);
+      } on FileSystemException catch (error) {
+        if (_isAlreadyExists(error)) {
           time = time.add(const Duration(milliseconds: 1));
           continue;
         }
         rethrow;
       }
+      // Do not delete this directory if the write below fails. A competing
+      // process may own it, so preserving the partial directory is safer than
+      // risking deletion of an existing Session; later starts skip its name.
+      await _metadataFileWriter(metadataFile, jsonEncode(session.toJson()));
+      return session;
     }
+    throw StateError(
+      'Unable to allocate a PM3 session directory after '
+      '$maxSessionCreationAttempts attempts',
+    );
   }
 
   Future<void> _enqueue(Future<void> Function() operation) {
@@ -153,6 +170,17 @@ final class Pm3SessionRecorder {
   File _commandsFile(Pm3Session session) => File(
         '${session.directoryPath}${Platform.pathSeparator}commands.jsonl',
       );
+
+  static Future<void> _reserveMetadataFile(File file) =>
+      file.create(exclusive: true);
+
+  static Future<void> _writeMetadataFile(File file, String contents) =>
+      file.writeAsString(contents, flush: true);
+
+  static bool _isAlreadyExists(FileSystemException error) {
+    final code = error.osError?.errorCode;
+    return code == 17 || code == 80 || code == 183;
+  }
 
   static Future<Directory> _defaultRootDirectory() async {
     final supportDirectory = await getApplicationSupportDirectory();
