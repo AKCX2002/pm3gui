@@ -25,7 +25,7 @@ abstract interface class Pm3ProcessHandle {
   Future<int> get exitCode;
 
   Future<void> writeLine(String line);
-  bool kill();
+  Future<bool> terminate({required bool force});
 }
 
 typedef Pm3ProcessStarter = Future<Pm3ProcessHandle> Function(
@@ -49,7 +49,28 @@ final class _IoPm3ProcessHandle implements Pm3ProcessHandle {
   Future<int> get exitCode => _process.exitCode;
 
   @override
-  bool kill() => _process.kill();
+  Future<bool> terminate({required bool force}) async {
+    if (!Platform.isWindows) {
+      return _process.kill(
+        force ? ProcessSignal.sigkill : ProcessSignal.sigterm,
+      );
+    }
+
+    final arguments = ['/PID', '${_process.pid}', '/T', '/F'];
+    final result = await Process.run(
+      'taskkill',
+      arguments,
+      runInShell: false,
+    );
+    if (result.exitCode == 0) return true;
+    final detail = '${result.stderr}${result.stdout}'.trim();
+    throw ProcessException(
+      'taskkill',
+      arguments,
+      '整树终止失败 (exit=${result.exitCode})${detail.isEmpty ? '' : ': $detail'}',
+      result.exitCode,
+    );
+  }
 
   @override
   Future<void> writeLine(String line) async {
@@ -285,7 +306,8 @@ class Pm3Process {
           return;
         }
 
-        if (!connected && _isConnectionPrompt(line)) {
+        if (!connected &&
+            _isConnectionPrompt(line, allowOsVersion: !isWindowsBatch)) {
           connected = true;
           _extractVersion(line);
           _setState(Pm3ProcessState.connected);
@@ -558,6 +580,13 @@ class Pm3Process {
 
   Future<void> _disconnect() async {
     final disconnectGeneration = ++_processGeneration;
+    final connectionCompleter = _connectionCompleter;
+    if (connectionCompleter != null && !connectionCompleter.isCompleted) {
+      connectionCompleter.complete(false);
+    }
+    if (identical(_connectionCompleter, connectionCompleter)) {
+      _connectionCompleter = null;
+    }
     final process = _process;
     final starting = _startingFuture;
     try {
@@ -679,25 +708,35 @@ class Pm3Process {
   }
 
   Future<void> _killAndWait(Pm3ProcessHandle process) async {
-    var killed = _tryKill(process);
-    if (!killed) {
-      // 仅重试一次；两次失败后仍用带上限的 exitCode 等待收束。
-      killed = _tryKill(process);
+    final terminated = await _tryTerminate(process, force: false);
+    if (!terminated) {
+      _recordLifecycleError('终止 PM3 进程失败: TERM/整树终止未成功');
     }
-    if (!killed) {
-      _recordLifecycleError('终止 PM3 进程失败: kill 两次均未成功');
+    var exited = await _waitForExit(process, _killExitTimeout);
+    if (!exited) {
+      final forceTerminated = await _tryTerminate(process, force: true);
+      if (!forceTerminated) {
+        _recordLifecycleError('强制终止 PM3 进程失败: KILL/整树终止未成功');
+      }
+      exited = await _waitForExit(process, _killExitTimeout);
     }
-    final exited = await _waitForExit(process, _killExitTimeout);
     if (!exited) {
       _recordLifecycleError('终止 PM3 后等待退出超时');
     }
   }
 
-  bool _tryKill(Pm3ProcessHandle process) {
+  Future<bool> _tryTerminate(
+    Pm3ProcessHandle process, {
+    required bool force,
+  }) async {
     try {
-      final killed = process.kill();
-      if (!killed) _recordLifecycleError('终止 PM3 进程失败: kill 返回 false');
-      return killed;
+      final terminated = await process.terminate(force: force);
+      if (!terminated) {
+        _recordLifecycleError(
+          '终止 PM3 进程失败: ${force ? 'KILL' : 'TERM'} 返回 false',
+        );
+      }
+      return terminated;
     } catch (error) {
       _recordLifecycleError('终止 PM3 进程失败: $error');
       return false;
@@ -765,11 +804,12 @@ class Pm3Process {
     return false;
   }
 
-  // 从输出行检测连接成功
-  // 匹配 Proxmark3GUI 模式: QRegularExpression("(os:\s+|OS\.+\s+)")
-  bool _isConnectionPrompt(String line) {
-    return RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line) ||
-        line.contains('pm3 -->');
+  // 原生客户端保留旧 OS 版本行兼容；Windows BAT 的握手命令会在提示符
+  // 前输出 OS 信息，因此 BAT 必须等到真实 pm3 提示符。
+  bool _isConnectionPrompt(String line, {required bool allowOsVersion}) {
+    return line.contains('pm3 -->') ||
+        (allowOsVersion &&
+            RegExp(r'(os:\s+|OS\.+\s+)', caseSensitive: false).hasMatch(line));
   }
 
   /// 从行中提取版本信息

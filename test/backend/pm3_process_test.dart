@@ -94,6 +94,71 @@ pause >nul
     expect(process.state, Pm3ProcessState.disconnected);
   });
 
+  test('Windows forced disconnect terminates the exact batch process tree',
+      () async {
+    if (!Platform.isWindows) return;
+
+    final childScript = File(
+      '${fixtureDirectory.path}${Platform.pathSeparator}tree_child.dart',
+    );
+    final childPidFile = File(
+      '${fixtureDirectory.path}${Platform.pathSeparator}tree_child.pid',
+    );
+    await childScript.writeAsString(_treeChildFixtureSource);
+    final batchFile = File(
+      '${fixtureDirectory.path}${Platform.pathSeparator}tree_fixture.bat',
+    );
+    await batchFile.writeAsString('''@echo off
+start "" /b "$_dartExecutable" "${childScript.path}" "${childPidFile.path}"
+:wait_for_pid
+if not exist "${childPidFile.path}" (
+  ping 127.0.0.1 -n 2 >nul
+  goto wait_for_pid
+)
+echo pm3 --^>
+set /p pm3_command=
+pause >nul
+''');
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 100),
+      killExitTimeout: const Duration(seconds: 1),
+    );
+    addTearDown(process.dispose);
+    int? childPid;
+
+    try {
+      expect(
+        await process.connect(batchFile.path, '').timeout(
+              const Duration(seconds: 5),
+            ),
+        isTrue,
+      );
+      expect(
+        await _waitUntil(() async => childPidFile.existsSync()),
+        isTrue,
+      );
+      childPid = int.parse(await childPidFile.readAsString());
+      expect(await _isWindowsPidRunning(childPid), isTrue);
+
+      await process.disconnect().timeout(const Duration(seconds: 3));
+
+      expect(
+        await _waitUntil(() => _isWindowsPidRunning(childPid!),
+            expected: false),
+        isTrue,
+      );
+    } finally {
+      if (childPid != null && await _isWindowsPidRunning(childPid)) {
+        await Process.run(
+          'taskkill',
+          ['/PID', '$childPid', '/T', '/F'],
+          runInShell: false,
+        );
+      }
+    }
+  });
+
   test('native client keeps configured arguments port and flush flag',
       () async {
     final child = _FakeProcess();
@@ -236,6 +301,11 @@ pause >nul
     expect(process.state, Pm3ProcessState.connecting);
     expect(completed, isFalse);
 
+    child.stdoutController.add(utf8.encode('os: RRG/Iceman v4.20469\n'));
+    await Future<void>.delayed(Duration.zero);
+    expect(process.state, Pm3ProcessState.connecting);
+    expect(completed, isFalse);
+
     child.stdoutController.add(
       utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
     );
@@ -246,6 +316,28 @@ pause >nul
       utf8.encode('[usb|script] pm3 --> hw version'),
     );
     expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+  });
+
+  test('disconnect completes an owned in-flight connection immediately',
+      () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 300),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+
+    final disconnecting = process.disconnect();
+    expect(
+      await connecting.timeout(const Duration(milliseconds: 100)),
+      isFalse,
+    );
+    await disconnecting.timeout(const Duration(seconds: 2));
+    expect(process.state, Pm3ProcessState.disconnected);
   });
 
   test('transport tag alone does not connect before the pm3 prompt', () async {
@@ -326,6 +418,28 @@ pause >nul
 
     await process.disconnect().timeout(const Duration(seconds: 2));
 
+    expect(process.state, Pm3ProcessState.disconnected);
+  });
+
+  test('termination escalates from TERM to KILL when TERM is ignored',
+      () async {
+    final child = _FakeProcess(ignoreGracefulTermination: true);
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 20),
+      killExitTimeout: const Duration(milliseconds: 20),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+
+    await process.disconnect().timeout(const Duration(seconds: 2));
+
+    expect(child.terminationForces, [false, true]);
     expect(process.state, Pm3ProcessState.disconnected);
   });
 
@@ -498,6 +612,7 @@ final class _FakeProcess implements Pm3ProcessHandle {
     this.killResult = true,
     List<bool>? killResults,
     this.throwOnFirstKill = false,
+    this.ignoreGracefulTermination = false,
     this.writeError,
     bool cancelFails = false,
   })  : _killResults = killResults == null ? null : List<bool>.of(killResults),
@@ -514,12 +629,14 @@ final class _FakeProcess implements Pm3ProcessHandle {
 
   final bool killResult;
   final bool throwOnFirstKill;
+  final bool ignoreGracefulTermination;
   final Object? writeError;
   final List<bool>? _killResults;
   final StreamController<List<int>> stdoutController;
   final StreamController<List<int>> stderrController;
   final Completer<int> _exitCode = Completer<int>();
   final List<String> writtenLines = [];
+  final List<bool> terminationForces = [];
   int killCount = 0;
 
   @override
@@ -532,13 +649,18 @@ final class _FakeProcess implements Pm3ProcessHandle {
   Future<int> get exitCode => _exitCode.future;
 
   @override
-  bool kill() {
+  Future<bool> terminate({required bool force}) async {
     killCount++;
+    terminationForces.add(force);
     if (throwOnFirstKill && killCount == 1) {
       throw StateError('first kill failed');
     }
     final result = _killResults?.removeAt(0) ?? killResult;
-    if (result && !_exitCode.isCompleted) _exitCode.complete(-9);
+    if (result &&
+        (force || !ignoreGracefulTermination) &&
+        !_exitCode.isCompleted) {
+      _exitCode.complete(-9);
+    }
     return result;
   }
 
@@ -571,6 +693,39 @@ void main(List<String> arguments) {
   });
 }
 ''';
+
+const _treeChildFixtureSource = r'''
+import 'dart:async';
+import 'dart:io';
+
+Future<void> main(List<String> arguments) async {
+  await File(arguments.single).writeAsString('$pid');
+  Timer.periodic(const Duration(hours: 1), (_) {});
+}
+''';
+
+Future<bool> _isWindowsPidRunning(int processId) async {
+  final result = await Process.run(
+    'tasklist',
+    ['/FI', 'PID eq $processId', '/FO', 'CSV', '/NH'],
+    runInShell: false,
+  );
+  return result.exitCode == 0 &&
+      (result.stdout as String).contains('","$processId","');
+}
+
+Future<bool> _waitUntil(
+  Future<bool> Function() condition, {
+  bool expected = true,
+  Duration timeout = const Duration(seconds: 3),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (DateTime.now().isBefore(deadline)) {
+    if (await condition() == expected) return true;
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+  }
+  return await condition() == expected;
+}
 
 String get _dartExecutable {
   final executable = File(Platform.resolvedExecutable);
