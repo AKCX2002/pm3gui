@@ -103,10 +103,10 @@ final class DesktopCliBackend implements Pm3Backend {
 
   @override
   void dispose() {
-    _outputSubscription.cancel();
-    _stateSubscription.cancel();
     _process.dispose();
-    _events.close();
+    unawaited(_outputSubscription.cancel());
+    unawaited(_stateSubscription.cancel());
+    unawaited(_events.close());
   }
 
   static Pm3ConnectionState _mapState(Pm3ProcessState state) => switch (state) {

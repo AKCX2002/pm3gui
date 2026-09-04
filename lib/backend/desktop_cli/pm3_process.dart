@@ -20,6 +20,12 @@ enum Pm3ProcessState {
 /// 包装 pm3 命令行进程以进行通信
 class Pm3Process {
   Process? _process; // PM3 进程实例
+  StreamSubscription<String>? _stdoutSubscription;
+  StreamSubscription<String>? _stderrSubscription;
+  Future<bool>? _connectingFuture;
+  Future<void>? _disconnectingFuture;
+  bool _disposed = false;
+  int _processGeneration = 0;
   Pm3ProcessState _state = Pm3ProcessState.disconnected; // 当前连接状态
   String _version = ''; // PM3 版本信息
   String _lastError = ''; // 最后一次错误信息
@@ -43,7 +49,19 @@ class Pm3Process {
   bool get isConnected => _state == Pm3ProcessState.connected;
 
   /// 连接尝试之间的最小间隔（防止重试风暴）
-  static const _connectCooldown = Duration(seconds: 3);
+  static const _defaultConnectCooldown = Duration(seconds: 3);
+
+  Pm3Process({
+    Duration connectCooldown = _defaultConnectCooldown,
+    Duration gracefulExitTimeout = const Duration(milliseconds: 500),
+    Duration connectTimeout = const Duration(seconds: 15),
+  })  : _connectCooldown = connectCooldown,
+        _gracefulExitTimeout = gracefulExitTimeout,
+        _connectTimeout = connectTimeout;
+
+  final Duration _connectCooldown;
+  final Duration _gracefulExitTimeout;
+  final Duration _connectTimeout;
 
   /// 解析 pm3 可执行文件路径
   ///
@@ -87,6 +105,33 @@ class Pm3Process {
     String port, {
     List<String> arguments = const [],
     String? workingDirectory,
+  }) {
+    if (_disposed) {
+      _lastError = 'PM3 进程管理器已释放';
+      return Future.value(false);
+    }
+    if (_connectingFuture != null) return _connectingFuture!;
+
+    late final Future<bool> connection;
+    connection = _connect(
+      pm3Path,
+      port,
+      arguments: arguments,
+      workingDirectory: workingDirectory,
+    ).whenComplete(() {
+      if (identical(_connectingFuture, connection)) {
+        _connectingFuture = null;
+      }
+    });
+    _connectingFuture = connection;
+    return connection;
+  }
+
+  Future<bool> _connect(
+    String pm3Path,
+    String port, {
+    required List<String> arguments,
+    required String? workingDirectory,
   }) async {
     // 冷却期 — 防止重试风暴
     if (_lastConnectAttempt != null) {
@@ -94,7 +139,7 @@ class Pm3Process {
       if (elapsed < _connectCooldown) {
         final wait = _connectCooldown - elapsed;
         _lastError = '请等待 ${wait.inSeconds + 1} 秒后再试';
-        _outputController.add('[请等待冷却: ${wait.inSeconds + 1}s]');
+        _emitOutput('[请等待冷却: ${wait.inSeconds + 1}s]');
         return false;
       }
     }
@@ -113,34 +158,43 @@ class Pm3Process {
       if (resolved == null) {
         _lastError = '找不到 PM3 程序: $pm3Path\n'
             '请在连接页面设置 proxmark3.exe 或 proxmark3 的正确路径';
-        _outputController.add('[错误] $_lastError');
+        _emitOutput('[错误] $_lastError');
         _setState(Pm3ProcessState.disconnected);
         return false;
       }
 
       final (execPath, resolvedWorkDir) = resolved;
       final workDir = workingDirectory ?? resolvedWorkDir;
-      _outputController.add('[使用 PM3: $execPath]');
+      _emitOutput('[使用 PM3: $execPath]');
       if (workDir != null) {
-        _outputController.add('[工作目录: $workDir]');
+        _emitOutput('[工作目录: $workDir]');
       }
 
       // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
-      _process = await Process.start(
+      final process = await Process.start(
         execPath,
         [...arguments, '-p', port, '-f'],
         workingDirectory: workDir,
         mode: ProcessStartMode.normal,
       );
 
+      if (_disposed) {
+        process.kill();
+        await process.exitCode;
+        return false;
+      }
+      _process = process;
+      final processGeneration = ++_processGeneration;
+
       final completer = Completer<bool>();
       var connected = false;
 
       // 监听 stdout
-      _process!.stdout
+      _stdoutSubscription = process.stdout
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
+        if (!identical(_process, process) || _disposed) return;
         // 始终写入响应缓冲区，以便 sendCommandAndWait 等函数
         // 能够获得完整输出，即使 UI 出于限流而丢弃显示行。
         _responseBuffer.writeln(line);
@@ -148,6 +202,7 @@ class Pm3Process {
         // 检测致命错误和连接提示
         if (_detectFatalError(line)) {
           if (!completer.isCompleted) completer.complete(false);
+          unawaited(_disconnectProcess(process));
           return;
         }
 
@@ -159,49 +214,54 @@ class Pm3Process {
         }
 
         // 所有行直接发送给 UI，不做限流，避免长命令输出被截断
-        _outputController.add(line);
+        _emitOutput(line);
       });
 
       // 监听 stderr
-      _process!.stderr
+      _stderrSubscription = process.stderr
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
+        if (!identical(_process, process) || _disposed) return;
         _detectFatalError(line);
-        _outputController.add('[ERR] $line');
+        _emitOutput('[ERR] $line');
       });
 
       // 处理进程退出
-      _process!.exitCode.then((code) {
-        _outputController.add('[PM3 进程退出, code=$code]');
-        if (_state != Pm3ProcessState.disconnected) {
+      unawaited(process.exitCode.then((code) async {
+        if (!identical(_process, process) || _disposed) return;
+        _emitOutput('[PM3 进程退出, code=$code]');
+        if (!connected) {
+          _lastError = 'PM3 进程在连接提示前退出 (code=$code)';
+          if (!completer.isCompleted) completer.complete(false);
+        }
+        await _clearProcess(process);
+        if (_processGeneration == processGeneration) {
           _setState(Pm3ProcessState.disconnected);
         }
-        _process = null;
-      });
+      }));
 
       // 等待连接，带超时
-      return await completer.future.timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          if (!connected) {
-            _lastError = '连接超时 (15s)，请检查设备是否已连接';
-            _outputController.add('[连接超时]');
-            disconnect();
-          }
-          return false;
-        },
-      );
+      try {
+        return await completer.future.timeout(_connectTimeout);
+      } on TimeoutException {
+        if (!connected && identical(_process, process)) {
+          _lastError = '连接超时 (${_connectTimeout.inSeconds}s)，请检查设备是否已连接';
+          _emitOutput('[连接超时]');
+          await _disconnectProcess(process);
+        }
+        return false;
+      }
     } on ProcessException catch (e) {
       _lastError = '无法启动 PM3 程序: ${e.message}\n'
           '路径: $pm3Path\n'
           '请检查路径是否正确，程序是否已编译';
-      _outputController.add('[错误] $_lastError');
+      _emitOutput('[错误] $_lastError');
       _setState(Pm3ProcessState.disconnected);
       return false;
     } catch (e) {
       _lastError = '连接失败: $e';
-      _outputController.add('[错误] $_lastError');
+      _emitOutput('[错误] $_lastError');
       _setState(Pm3ProcessState.disconnected);
       return false;
     }
@@ -236,11 +296,11 @@ class Pm3Process {
   /// 向交互式会话发送命令
   Future<void> sendCommand(String command) async {
     if (_process == null || _state != Pm3ProcessState.connected) {
-      _outputController.add('[未连接]');
+      _emitOutput('[未连接]');
       return;
     }
     _responseBuffer.clear();
-    _outputController.add('[pm3] $command');
+    _emitOutput('[pm3] $command');
     _process!.stdin.writeln(command);
     await _process!.stdin.flush();
   }
@@ -258,7 +318,7 @@ class Pm3Process {
     }
 
     _responseBuffer.clear();
-    _outputController.add('[pm3] $command');
+    _emitOutput('[pm3] $command');
     _process!.stdin.writeln(command);
     await _process!.stdin.flush();
 
@@ -289,25 +349,80 @@ class Pm3Process {
   }
 
   /// 断开与 PM3 的连接
-  Future<void> disconnect() async {
-    if (_process != null) {
-      try {
-        _process!.stdin.writeln('quit');
-        await _process!.stdin.flush();
-        // 给它一点时间优雅退出
-        await Future.delayed(const Duration(milliseconds: 500));
-        _process!.kill();
-      } catch (_) {}
-      _process = null;
-    }
-    _setState(Pm3ProcessState.disconnected);
+  Future<void> disconnect() {
+    if (_disconnectingFuture != null) return _disconnectingFuture!;
+
+    late final Future<void> disconnecting;
+    disconnecting = _disconnect().whenComplete(() {
+      if (identical(_disconnectingFuture, disconnecting)) {
+        _disconnectingFuture = null;
+      }
+    });
+    _disconnectingFuture = disconnecting;
+    return disconnecting;
   }
 
   /// 释放资源
   void dispose() {
-    disconnect();
+    if (_disposed) return;
+    _disposed = true;
+    final process = _process;
+    _process = null;
+    if (process != null) {
+      process.kill();
+    }
+    final stdoutSubscription = _stdoutSubscription;
+    final stderrSubscription = _stderrSubscription;
+    _stdoutSubscription = null;
+    _stderrSubscription = null;
+    if (stdoutSubscription != null) unawaited(stdoutSubscription.cancel());
+    if (stderrSubscription != null) unawaited(stderrSubscription.cancel());
     _outputController.close();
     _stateController.close();
+  }
+
+  Future<void> _disconnect() async {
+    final process = _process;
+    if (process != null) {
+      await _disconnectProcess(process);
+    }
+    _setState(Pm3ProcessState.disconnected);
+  }
+
+  Future<void> _disconnectProcess(Process process) async {
+    if (!identical(_process, process)) return;
+    try {
+      process.stdin.writeln('quit');
+      await process.stdin.flush();
+    } catch (_) {}
+
+    try {
+      await process.exitCode.timeout(_gracefulExitTimeout);
+    } on TimeoutException {
+      process.kill();
+      await process.exitCode;
+    }
+
+    await _clearProcess(process);
+  }
+
+  Future<void> _clearProcess(Process process) async {
+    if (!identical(_process, process)) return;
+    _process = null;
+    final stdoutSubscription = _stdoutSubscription;
+    final stderrSubscription = _stderrSubscription;
+    _stdoutSubscription = null;
+    _stderrSubscription = null;
+    if (stdoutSubscription != null) {
+      try {
+        await stdoutSubscription.cancel();
+      } catch (_) {}
+    }
+    if (stderrSubscription != null) {
+      try {
+        await stderrSubscription.cancel();
+      } catch (_) {}
+    }
   }
 
   /// 检测致命错误，这意味着我们应该停止尝试
@@ -359,7 +474,12 @@ class Pm3Process {
 
   /// 设置状态并通知监听器
   void _setState(Pm3ProcessState newState) {
+    if (_disposed || _state == newState) return;
     _state = newState;
     _stateController.add(newState);
+  }
+
+  void _emitOutput(String line) {
+    if (!_disposed) _outputController.add(line);
   }
 }
