@@ -571,6 +571,9 @@ pause >nul
       connectCooldown: Duration.zero,
       processStarter: (_, __, {workingDirectory}) async => child,
     );
+    final states = <Pm3ProcessState>[];
+    final stateSubscription = process.stateStream.listen(states.add);
+    addTearDown(stateSubscription.cancel);
     final connecting = process.connect(_dartExecutable, 'COM7');
     await Future<void>.delayed(Duration.zero);
     child.stdoutController.add(utf8.encode('pm3 -->\n'));
@@ -584,6 +587,11 @@ pause >nul
     terminationGate.complete();
     await shuttingDown.timeout(const Duration(seconds: 2));
     expect(child.killCount, 1);
+    expect(process.state, Pm3ProcessState.disconnected);
+    expect(
+      states.where((state) => state == Pm3ProcessState.disconnected),
+      hasLength(1),
+    );
   });
 
   test('dispose retries a failed kill with bounded background cleanup',

@@ -579,6 +579,10 @@ class Pm3Process {
     } finally {
       await _cancelSubscription(stdoutSubscription);
       await _cancelSubscription(stderrSubscription);
+      if (_state != Pm3ProcessState.disconnected) {
+        _state = Pm3ProcessState.disconnected;
+        _stateController.add(Pm3ProcessState.disconnected);
+      }
       await _outputController.close();
       await _stateController.close();
     }
