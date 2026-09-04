@@ -79,6 +79,44 @@ void main() {
     await saving;
   });
 
+  test('initialization merges a changed path with persisted client settings',
+      () async {
+    const restoredSettings = Pm3ClientSettings(
+      executable: 'restored-proxmark3',
+      port: 'COM7',
+      arguments: ['--flush'],
+      workingDirectory: 'C:/pm3',
+    );
+    const expected = Pm3ClientSettings(
+      executable: 'user-selected-proxmark3',
+      port: 'COM7',
+      arguments: ['--flush'],
+      workingDirectory: 'C:/pm3',
+    );
+    final loadCompleter = Completer<Pm3ClientSettings?>();
+    final saveCompleter = Completer<void>();
+    final store = DelayedSettingsStore(
+      loadFuture: loadCompleter.future,
+      saveGates: [saveCompleter],
+    );
+    final state = ConnectionState(settingsStore: store);
+    addTearDown(state.dispose);
+
+    final initializing = state.initialize();
+    final saving = state.setPm3Path(expected.executable);
+    loadCompleter.complete(restoredSettings);
+    await initializing;
+
+    expect(state.pm3Path, expected.executable);
+    expect(state.portName, expected.port);
+    expect(state.pm3Arguments, expected.arguments);
+    expect(state.pm3WorkingDirectory, expected.workingDirectory);
+
+    saveCompleter.complete();
+    await saving;
+    expect(store.persisted, expected);
+  });
+
   test(
       'fire-and-forget setters persist the last input when writes complete out of order',
       () async {

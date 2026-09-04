@@ -21,7 +21,10 @@ class ConnectionState extends ChangeNotifier {
   final Pm3SettingsRepository _settingsStore;
   Future<void>? _initialization;
   Future<void> _settingsQueue = Future.value();
-  bool _hasUserSettingsInput = false;
+  bool _pm3PathDirty = false;
+  bool _portDirty = false;
+  bool _argumentsDirty = false;
+  bool _workingDirectoryDirty = false;
 
   String pm3Path = '';
   String portName = '';
@@ -50,12 +53,16 @@ class ConnectionState extends ChangeNotifier {
 
   Future<void> _restoreSettings() async {
     final settings = await _settingsStore.load();
-    if (settings == null || _hasUserSettingsInput) return;
+    if (settings == null) return;
 
-    pm3Path = settings.executable;
-    portName = settings.port;
-    pm3Arguments = settings.arguments;
-    pm3WorkingDirectory = settings.workingDirectory;
+    if (!_pm3PathDirty) pm3Path = settings.executable;
+    if (!_portDirty) portName = settings.port;
+    if (!_argumentsDirty) {
+      pm3Arguments = List<String>.unmodifiable(settings.arguments);
+    }
+    if (!_workingDirectoryDirty) {
+      pm3WorkingDirectory = settings.workingDirectory;
+    }
     notifyListeners();
   }
 
@@ -66,21 +73,21 @@ class ConnectionState extends ChangeNotifier {
 
   Future<void> setPort(String port) {
     portName = port;
-    _hasUserSettingsInput = true;
+    _portDirty = true;
     notifyListeners();
     return _saveSettings();
   }
 
   Future<void> setPm3Path(String path) {
     pm3Path = path;
-    _hasUserSettingsInput = true;
+    _pm3PathDirty = true;
     notifyListeners();
     return _saveSettings();
   }
 
   Future<void> setPm3Arguments(List<String> arguments) {
     pm3Arguments = List<String>.unmodifiable(arguments);
-    _hasUserSettingsInput = true;
+    _argumentsDirty = true;
     notifyListeners();
     return _saveSettings();
   }
@@ -88,7 +95,7 @@ class ConnectionState extends ChangeNotifier {
   Future<void> setPm3WorkingDirectory(String? workingDirectory) {
     pm3WorkingDirectory =
         workingDirectory?.trim().isEmpty ?? true ? null : workingDirectory;
-    _hasUserSettingsInput = true;
+    _workingDirectoryDirty = true;
     notifyListeners();
     return _saveSettings();
   }
@@ -99,14 +106,18 @@ class ConnectionState extends ChangeNotifier {
   }
 
   Future<void> _saveSettings() {
-    final settings = Pm3ClientSettings(
-      executable: pm3Path,
-      port: portName,
-      arguments: pm3Arguments,
-      workingDirectory: pm3WorkingDirectory,
+    initialize();
+    return _enqueueSettingsOperation(
+      () => _settingsStore.save(_currentSettings()),
     );
-    return _enqueueSettingsOperation(() => _settingsStore.save(settings));
   }
+
+  Pm3ClientSettings _currentSettings() => Pm3ClientSettings(
+        executable: pm3Path,
+        port: portName,
+        arguments: pm3Arguments,
+        workingDirectory: pm3WorkingDirectory,
+      );
 
   Future<void> _enqueueSettingsOperation(Future<void> Function() operation) {
     final next = _settingsQueue.then((_) => operation());
