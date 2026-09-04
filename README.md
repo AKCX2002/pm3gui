@@ -3,7 +3,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.27+-02569B?logo=flutter&logoColor=white" alt="Flutter"/>
   <img src="https://img.shields.io/badge/Dart-3.6+-0175C2?logo=dart&logoColor=white" alt="Dart"/>
-  <img src="https://img.shields.io/badge/Platforms-Android%20%7C%20Linux%20%7C%20Windows-2ea44f" alt="Platforms"/>
+  <img src="https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows-2ea44f" alt="Platforms"/>
   <img src="https://img.shields.io/badge/License-GPL--3.0-blue" alt="License"/>
   <img src="https://img.shields.io/badge/Status-Alpha-red" alt="Status"/>
 </div>
@@ -22,7 +22,7 @@ PM3 GUI 是一个面向 Proxmark3 的跨平台图形化客户端，聚焦 RFID/N
 
 ## Core Features
 
-- **跨平台支持**：Android、Linux、Windows。
+- **桌面平台支持**：Linux、Windows。
 - **CLI Wrapper 架构**：通过进程管道驱动 `pm3`/`proxmark3`，自动继承上游命令能力。
 - **终端模式**：支持完整命令输入、历史回溯与输出展示。
 - **Dump/Key 文件管理**：自动扫描、识别、分组与归档。
@@ -64,7 +64,6 @@ flutter run -d linux
 ```bash
 flutter build linux
 flutter build windows
-flutter build apk --split-per-abi
 ```
 
 ## Supported File Formats
@@ -103,9 +102,11 @@ flutter test
 
 CI/CD（GitHub Actions）包含：
 
-- `build.yml`：主分支/PR 多平台构建与静态检查。
-- `release.yml`：标签触发构建并发布 Release 资产。
-- `sync-pm3.yml`：同步并构建上游 Proxmark3 客户端/固件。
+- `build.yml`：主分支/PR 的 Windows、Linux 桌面构建与静态检查，也可手动触发。
+- `release.yml`：版本标签触发 Windows、Linux 构建并发布 Release 资产。
+
+CI 不构建或发布 Proxmark3 Client/固件。Proxmark3 由上游项目维护，GUI
+构建与 PM3 构建保持独立，避免重复消耗 CI 资源和产生来源不明确的二进制文件。
 
 ## Contributing
 
@@ -119,7 +120,7 @@ CI/CD（GitHub Actions）包含：
 
 - 完善更多 PM3 子命令页面覆盖。
 - 增强 dump 差异分析与异常提示。
-- 提升 Windows/Android 设备连接稳定性。
+- 提升 Windows/Linux 设备连接与进程生命周期稳定性。
 
 ## License
 
