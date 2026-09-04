@@ -153,6 +153,54 @@ void main() {
 
     expect(store.persisted?.executable, 'last-proxmark3');
   });
+
+  test('save failure is consumed and exposed through observable state',
+      () async {
+    final state = ConnectionState(settingsStore: _ThrowingSettingsStore());
+    addTearDown(state.dispose);
+    var notifications = 0;
+    state.addListener(() => notifications++);
+
+    await expectLater(state.setPm3Path('new-client'), completes);
+
+    expect(state.isSavingSettings, isFalse);
+    expect(state.settingsError, contains('save failed'));
+    expect(notifications, greaterThanOrEqualTo(2));
+  });
+
+  test('flushSettings waits for initialization and the final queued save',
+      () async {
+    final saveGate = Completer<void>();
+    final store = DelayedSettingsStore(
+      loadFuture: Future.value(null),
+      saveGates: [saveGate],
+    );
+    final state = ConnectionState(settingsStore: store);
+    addTearDown(state.dispose);
+
+    state.setPm3Path('last-client');
+    var flushed = false;
+    final flushing = state.flushSettings()..then((_) => flushed = true);
+    await Future<void>.delayed(Duration.zero);
+    expect(state.isSavingSettings, isTrue);
+    expect(flushed, isFalse);
+
+    saveGate.complete();
+    await flushing;
+
+    expect(state.isSavingSettings, isFalse);
+    expect(store.persisted?.executable, 'last-client');
+  });
+}
+
+final class _ThrowingSettingsStore implements Pm3SettingsRepository {
+  @override
+  Future<Pm3ClientSettings?> load() async => null;
+
+  @override
+  Future<void> save(Pm3ClientSettings settings) async {
+    throw StateError('save failed');
+  }
 }
 
 final class DelayedSettingsStore implements Pm3SettingsRepository {

@@ -46,9 +46,9 @@ Flutter UI / Feature
 
 ## 配置与隐私
 
-连接页负责选择并持久化串口/设备端口；设置页管理客户端入口路径、启动参数和可选工作目录。Windows 请优先选择官方发行包**根目录**的 `pm3.bat`，不要绕过发行包初始化流程直接选择内部客户端。PM3 GUI 会通过 `cmd.exe /d /c call` 启动该脚本并保留标准输入输出交互；脚本自行完成环境初始化、启动内部客户端并自动检测设备，因此 GUI 保存的端口和额外启动参数不会传给 `.bat`/`.cmd`。原生 `proxmark3.exe` 和 Linux `proxmark3` 仍按所选端口启动。
+连接页负责选择并持久化串口/设备端口；设置页管理客户端入口路径、启动参数和可选工作目录。启动参数按“一行一个参数”编辑，空格、引号和反斜杠均按原字符串保留。Windows 请优先选择官方发行包**根目录**的 `pm3.bat`，不要绕过发行包初始化流程直接选择内部客户端。PM3 GUI 会通过 `cmd.exe /d /c call` 启动该脚本并保留标准输入输出交互；脚本自行完成环境初始化、启动内部客户端并自动检测设备，因此 GUI 保存的端口和额外启动参数不会传给 `.bat`/`.cmd`。原生 `proxmark3.exe` 和 Linux `proxmark3` 仍按所选端口启动。
 
-PM3EASY512K 等已由官方 [RfidResearchGroup/proxmark3](https://github.com/RfidResearchGroup/proxmark3) 客户端支持的设备沿用同一入口，不需要 GUI 维护独立型号驱动或白名单。相关设置会自动保存到：
+PM3EASY512K 等已由官方 [RfidResearchGroup/proxmark3](https://github.com/RfidResearchGroup/proxmark3) 客户端支持的设备沿用同一入口，不需要 GUI 维护独立型号驱动或白名单。相关设置使用同目录临时文件原子替换，并在界面显示保存中或失败状态；应用关闭会等待最后一次设置写入。设置文件位于：
 
 ```text
 <应用支持目录>/pm3_settings.json

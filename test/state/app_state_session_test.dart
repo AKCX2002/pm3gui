@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pm3gui/backend/mock/mock_pm3_backend.dart';
 import 'package:pm3gui/core/pm3/pm3_backend.dart';
+import 'package:pm3gui/core/pm3/pm3_client_settings.dart';
 import 'package:pm3gui/core/pm3/pm3_command.dart';
 import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/core/pm3/pm3_controller.dart';
@@ -80,6 +81,88 @@ void main() {
     expect(backend.disconnectCount, 1);
     expect(backend.disposeCount, 1);
   });
+
+  test('shutdown waits for the last settings save', () async {
+    final saveGate = Completer<void>();
+    final settingsStore = _DelayedSettingsStore(saveGate);
+    final state = AppState(
+      connectionState: ConnectionState(
+        controller: Pm3Controller(MockPm3Backend()),
+        settingsStore: settingsStore,
+      ),
+    );
+
+    state.setPm3Path('last-client');
+    var completed = false;
+    final shuttingDown = state.shutdown()..then((_) => completed = true);
+    await Future<void>.delayed(Duration.zero);
+    expect(completed, isFalse);
+
+    saveGate.complete();
+    await shuttingDown;
+
+    expect(settingsStore.persisted?.executable, 'last-client');
+  });
+
+  test('shutdown waits for backend subscriptions and resources', () async {
+    final shutdownGate = Completer<void>();
+    final backend = _FinalOutputOnDisconnectBackend(
+      shutdownGate: shutdownGate.future,
+    );
+    final state = AppState(
+      connectionState: ConnectionState(
+        controller: Pm3Controller(backend),
+        settingsStore: _NoopSettingsStore(),
+      ),
+    );
+    var completed = false;
+
+    final shuttingDown = state.shutdown()..then((_) => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(completed, isFalse);
+    shutdownGate.complete();
+    await shuttingDown;
+    expect(backend.disposeCount, 1);
+  });
+
+  test('batch connection does not send a second hw version command', () async {
+    final connectionState = ConnectionState(
+      controller: Pm3Controller(MockPm3Backend()),
+      settingsStore: _NoopSettingsStore(),
+    )
+      ..pm3Path = r'C:\proxmark3\pm3.bat'
+      ..portName = '';
+    final commands = <String>[];
+    final commandSubscription =
+        connectionState.controller.commands.listen((command) {
+      commands.add(command.executable);
+    });
+    final state = AppState(connectionState: connectionState);
+
+    expect(await state.connect(), isTrue);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(commands, isEmpty);
+    await state.shutdown();
+    await commandSubscription.cancel();
+  });
+}
+
+final class _DelayedSettingsStore implements Pm3SettingsRepository {
+  _DelayedSettingsStore(this.saveGate);
+
+  final Completer<void> saveGate;
+  Pm3ClientSettings? persisted;
+
+  @override
+  Future<Pm3ClientSettings?> load() async => null;
+
+  @override
+  Future<void> save(Pm3ClientSettings settings) async {
+    await saveGate.future;
+    persisted = settings;
+  }
 }
 
 final class _NoopSettingsStore implements Pm3SettingsRepository {
@@ -91,6 +174,9 @@ final class _NoopSettingsStore implements Pm3SettingsRepository {
 }
 
 final class _FinalOutputOnDisconnectBackend implements Pm3Backend {
+  _FinalOutputOnDisconnectBackend({this.shutdownGate});
+
+  final Future<void>? shutdownGate;
   final StreamController<Pm3Event> _events =
       StreamController<Pm3Event>.broadcast(sync: true);
   Pm3ConnectionState _state = Pm3ConnectionState.disconnected;
@@ -137,9 +223,10 @@ final class _FinalOutputOnDisconnectBackend implements Pm3Backend {
   }
 
   @override
-  void dispose() {
+  Future<void> shutdown() async {
     disposeCount++;
-    _events.close();
+    await shutdownGate;
+    await _events.close();
   }
 
   void _setState(Pm3ConnectionState state) {

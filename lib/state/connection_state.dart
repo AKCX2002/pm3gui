@@ -23,10 +23,13 @@ class ConnectionState extends ChangeNotifier {
   final Pm3SettingsRepository _settingsStore;
   Future<void>? _initialization;
   Future<void> _settingsQueue = Future.value();
+  Future<void>? _shutdownFuture;
   bool _pm3PathDirty = false;
   bool _portDirty = false;
   bool _argumentsDirty = false;
   bool _workingDirectoryDirty = false;
+  int _pendingSettingsSaves = 0;
+  String? _settingsError;
 
   String pm3Path = '';
   String portName = '';
@@ -38,12 +41,16 @@ class ConnectionState extends ChangeNotifier {
   String get pm3Version => controller.version;
   bool get isConnected => controller.isConnected;
   String get lastError => controller.lastError;
+  bool get isSavingSettings => _pendingSettingsSaves > 0;
+  String? get settingsError => _settingsError;
+  bool get usesWindowsBatchClient {
+    final lowerPath = pm3Path.toLowerCase();
+    return Platform.isWindows &&
+        (lowerPath.endsWith('.bat') || lowerPath.endsWith('.cmd'));
+  }
 
   Future<bool> connect() async {
-    final lowerPath = pm3Path.toLowerCase();
-    final batchAutoDetectsPort = Platform.isWindows &&
-        (lowerPath.endsWith('.bat') || lowerPath.endsWith('.cmd'));
-    if (portName.isEmpty && !batchAutoDetectsPort) return false;
+    if (portName.isEmpty && !usesWindowsBatchClient) return false;
 
     return controller.connect(Pm3ConnectionConfig(
       executable: pm3Path,
@@ -112,9 +119,25 @@ class ConnectionState extends ChangeNotifier {
 
   Future<void> _saveSettings() {
     initialize();
-    return _enqueueSettingsOperation(
+    _pendingSettingsSaves++;
+    _settingsError = null;
+    notifyListeners();
+    final saving = _enqueueSettingsOperation(
       () => _settingsStore.save(_currentSettings()),
     );
+    final trackedSaving = saving.then<void>(
+      (_) {
+        _settingsError = null;
+      },
+      onError: (Object error, StackTrace _) {
+        _settingsError = '设置保存失败: $error';
+      },
+    ).whenComplete(() {
+      _pendingSettingsSaves--;
+      notifyListeners();
+    });
+    _settingsQueue = trackedSaving;
+    return trackedSaving;
   }
 
   Pm3ClientSettings _currentSettings() => Pm3ClientSettings(
@@ -133,9 +156,25 @@ class ConnectionState extends ChangeNotifier {
     return next;
   }
 
+  Future<void> flushSettings() async {
+    await initialize();
+    while (true) {
+      final pending = _settingsQueue;
+      await pending;
+      if (identical(pending, _settingsQueue)) return;
+    }
+  }
+
   Future<void> sendCommand(String cmd) async {
     if (cmd.trim().isEmpty) return;
     await controller.send(cmd);
+  }
+
+  Future<void> shutdown() => _shutdownFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
+    await flushSettings();
+    await controller.shutdown();
   }
 
   @override

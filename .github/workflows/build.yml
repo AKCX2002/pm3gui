@@ -56,6 +56,9 @@ jobs:
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
+      - name: Test
+        run: flutter test --no-pub
+
       - name: Build Linux
         run: flutter build linux --release
 

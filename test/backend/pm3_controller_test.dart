@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pm3gui/backend/mock/mock_pm3_backend.dart';
 import 'package:pm3gui/core/pm3/pm3_backend.dart';
@@ -63,9 +65,37 @@ void main() {
 
     expect(backend.commandWasObservedAtExecution, isTrue);
   });
+
+  test('controller shutdown waits for backend resource release', () async {
+    final releaseGate = Completer<void>();
+    final backend = _DelayedShutdownBackend(releaseGate.future);
+    final controller = Pm3Controller(backend);
+    var completed = false;
+
+    final shuttingDown = controller.shutdown().then((_) => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(completed, isFalse);
+    releaseGate.complete();
+    await shuttingDown;
+    expect(backend.shutdownCount, 1);
+  });
 }
 
-final class _ObservingBackend implements Pm3Backend {
+final class _DelayedShutdownBackend extends _ObservingBackend {
+  _DelayedShutdownBackend(this.release) : super(() => true);
+
+  final Future<void> release;
+  int shutdownCount = 0;
+
+  @override
+  Future<void> shutdown() async {
+    shutdownCount++;
+    await release;
+  }
+}
+
+class _ObservingBackend implements Pm3Backend {
   _ObservingBackend(this._wasCommandObserved);
 
   final bool Function() _wasCommandObserved;
@@ -104,5 +134,5 @@ final class _ObservingBackend implements Pm3Backend {
   Future<void> disconnect() async {}
 
   @override
-  void dispose() {}
+  Future<void> shutdown() async {}
 }

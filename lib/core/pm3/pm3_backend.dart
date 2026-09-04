@@ -13,5 +13,5 @@ abstract interface class Pm3Backend {
   Future<void> disconnect();
   Future<Pm3Result> execute(Pm3Command command, {Duration? timeout});
   Future<void> cancel();
-  void dispose();
+  Future<void> shutdown();
 }

@@ -564,6 +564,28 @@ pause >nul
     expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
   });
 
+  test('shutdown waits until process termination is confirmed', () async {
+    final terminationGate = Completer<void>();
+    final child = _FakeProcess(terminationGate: terminationGate.future);
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+    var completed = false;
+
+    final shuttingDown = process.shutdown()..then((_) => completed = true);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(completed, isFalse);
+    terminationGate.complete();
+    await shuttingDown.timeout(const Duration(seconds: 2));
+    expect(child.killCount, 1);
+  });
+
   test('dispose retries a failed kill with bounded background cleanup',
       () async {
     final child = _FakeProcess(killResults: [false, true]);
@@ -614,6 +636,7 @@ final class _FakeProcess implements Pm3ProcessHandle {
     this.throwOnFirstKill = false,
     this.ignoreGracefulTermination = false,
     this.writeError,
+    this.terminationGate,
     bool cancelFails = false,
   })  : _killResults = killResults == null ? null : List<bool>.of(killResults),
         stdoutController = StreamController<List<int>>(
@@ -631,6 +654,7 @@ final class _FakeProcess implements Pm3ProcessHandle {
   final bool throwOnFirstKill;
   final bool ignoreGracefulTermination;
   final Object? writeError;
+  final Future<void>? terminationGate;
   final List<bool>? _killResults;
   final StreamController<List<int>> stdoutController;
   final StreamController<List<int>> stderrController;
@@ -652,6 +676,7 @@ final class _FakeProcess implements Pm3ProcessHandle {
   Future<bool> terminate({required bool force}) async {
     killCount++;
     terminationForces.add(force);
+    await terminationGate;
     if (throwOnFirstKill && killCount == 1) {
       throw StateError('first kill failed');
     }

@@ -62,5 +62,5 @@ final class MockPm3Backend implements Pm3Backend {
   }
 
   @override
-  void dispose() => _events.close();
+  Future<void> shutdown() => _events.close();
 }

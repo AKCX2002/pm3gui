@@ -13,6 +13,7 @@ final class Pm3Controller {
   final Pm3Backend _backend;
   final StreamController<Pm3Command> _commands =
       StreamController<Pm3Command>.broadcast(sync: true);
+  Future<void>? _shutdownFuture;
 
   Stream<Pm3Event> get events => _backend.events;
   Stream<Pm3Command> get commands => _commands.stream;
@@ -46,8 +47,18 @@ final class Pm3Controller {
   }
 
   Future<void> cancel() => _backend.cancel();
+
+  Future<void> shutdown() => _shutdownFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
+    try {
+      await _commands.close();
+    } finally {
+      await _backend.shutdown();
+    }
+  }
+
   void dispose() {
-    _commands.close();
-    _backend.dispose();
+    unawaited(shutdown());
   }
 }

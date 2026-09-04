@@ -103,6 +103,8 @@ class Pm3Process {
   Future<void>? _unownedTermination;
   Completer<bool>? _connectionCompleter;
   bool _disposed = false;
+  bool _shuttingDown = false;
+  Future<void>? _shutdownFuture;
   int _processGeneration = 0;
   Pm3ProcessState _state = Pm3ProcessState.disconnected; // 当前连接状态
   String _version = ''; // PM3 版本信息
@@ -190,7 +192,7 @@ class Pm3Process {
     List<String> arguments = const [],
     String? workingDirectory,
   }) {
-    if (_disposed) {
+    if (_disposed || _shuttingDown) {
       _lastError = 'PM3 进程管理器已释放';
       return Future.value(false);
     }
@@ -545,9 +547,12 @@ class Pm3Process {
     return disconnecting;
   }
 
-  /// 释放资源
-  void dispose() {
+  /// 释放资源；完成时所有进程和流订阅均已收束。
+  Future<void> shutdown() => _shutdownFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
     if (_disposed) return;
+    _shuttingDown = true;
     _disposed = true;
     ++_processGeneration;
     final connectionCompleter = _connectionCompleter;
@@ -556,26 +561,31 @@ class Pm3Process {
     }
     _connectionCompleter = null;
     final process = _process;
+    final starting = _startingFuture;
     _process = null;
     final stdoutSubscription = _stdoutSubscription;
     final stderrSubscription = _stderrSubscription;
     _stdoutSubscription = null;
     _stderrSubscription = null;
     try {
-      if (process != null) {
-        // async 函数在首个 await 前立即尝试 kill；随后保持有限后台收束。
-        unawaited(_consumeBackground(_killAndWait(process)));
+      if (process != null) await _killAndWait(process);
+      if (starting != null) {
+        try {
+          await _terminateUnownedOnce(await starting);
+        } catch (error) {
+          _recordLifecycleError('等待 PM3 启动失败: $error');
+        }
       }
     } finally {
-      unawaited(_cancelSubscription(stdoutSubscription));
-      unawaited(_cancelSubscription(stderrSubscription));
-      try {
-        _outputController.close();
-      } catch (_) {}
-      try {
-        _stateController.close();
-      } catch (_) {}
+      await _cancelSubscription(stdoutSubscription);
+      await _cancelSubscription(stderrSubscription);
+      await _outputController.close();
+      await _stateController.close();
     }
+  }
+
+  void dispose() {
+    unawaited(_consumeBackground(shutdown()));
   }
 
   Future<void> _disconnect() async {

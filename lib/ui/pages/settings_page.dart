@@ -4,6 +4,7 @@ library;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pm3gui/core/pm3/pm3_argument_codec.dart';
 import 'package:pm3gui/services/file_dialog_service.dart';
 import 'package:pm3gui/state/app_state.dart';
 
@@ -18,11 +19,21 @@ class _SettingsPageState extends State<SettingsPage> {
   final _pm3PathController = TextEditingController();
   final _argumentsController = TextEditingController();
   final _workingDirectoryController = TextEditingController();
+  final _argumentsFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _argumentsFocusNode.addListener(_refreshAfterArgumentsEditing);
+  }
 
   @override
   void dispose() {
     _pm3PathController.dispose();
     _argumentsController.dispose();
+    _argumentsFocusNode
+      ..removeListener(_refreshAfterArgumentsEditing)
+      ..dispose();
     _workingDirectoryController.dispose();
     super.dispose();
   }
@@ -31,7 +42,12 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     _syncController(_pm3PathController, appState.pm3Path);
-    _syncController(_argumentsController, appState.pm3Arguments.join(' '));
+    if (!_argumentsFocusNode.hasFocus) {
+      _syncController(
+        _argumentsController,
+        encodePm3Arguments(appState.pm3Arguments),
+      );
+    }
     _syncController(
       _workingDirectoryController,
       appState.pm3WorkingDirectory ?? '',
@@ -85,19 +101,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _argumentsController,
+                    focusNode: _argumentsFocusNode,
                     decoration: InputDecoration(
                       labelText: 'PM3 启动参数',
-                      hintText: '--flush',
+                      hintText: '--flush\n--example=value with spaces',
                       helperText: Platform.isWindows
                           ? '选择 pm3.bat 时由脚本自行初始化并自动检测设备，'
-                              '此处参数不会传给脚本'
-                          : null,
+                              '此处参数不会传给脚本。每行一个参数；空格、引号和反斜杠按原样保留'
+                          : '每行一个参数；空格、引号和反斜杠按原样保留',
                     ),
+                    minLines: 2,
+                    maxLines: 6,
                     onChanged: (value) => appState.setPm3Arguments(
-                      value
-                          .split(RegExp(r'\s+'))
-                          .where((argument) => argument.isNotEmpty)
-                          .toList(),
+                      decodePm3Arguments(value),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -108,6 +124,29 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     onChanged: appState.setPm3WorkingDirectory,
                   ),
+                  if (appState.isSavingSettings) ...[
+                    const SizedBox(height: 12),
+                    const Row(
+                      key: ValueKey('settings-saving'),
+                      children: [
+                        SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 8),
+                        Text('正在保存设置…'),
+                      ],
+                    ),
+                  ],
+                  if (appState.settingsError case final error?) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      error,
+                      key: const ValueKey('settings-error'),
+                      style:
+                          TextStyle(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -184,5 +223,9 @@ class _SettingsPageState extends State<SettingsPage> {
       text: value,
       selection: TextSelection.collapsed(offset: value.length),
     );
+  }
+
+  void _refreshAfterArgumentsEditing() {
+    if (!_argumentsFocusNode.hasFocus && mounted) setState(() {});
   }
 }

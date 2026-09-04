@@ -27,6 +27,7 @@ final class DesktopCliBackend implements Pm3Backend {
   late final StreamSubscription<String> _outputSubscription;
   late final StreamSubscription<Pm3ProcessState> _stateSubscription;
   Pm3ConnectionConfig? _config;
+  Future<void>? _shutdownFuture;
 
   /// Selects a sensible external-client default without leaking platform
   /// checks into application state or features.
@@ -115,11 +116,21 @@ final class DesktopCliBackend implements Pm3Backend {
   }
 
   @override
-  void dispose() {
-    _process.dispose();
-    unawaited(_outputSubscription.cancel());
-    unawaited(_stateSubscription.cancel());
-    unawaited(_events.close());
+  Future<void> shutdown() => _shutdownFuture ??= _shutdown();
+
+  Future<void> _shutdown() async {
+    try {
+      await _process.shutdown();
+    } finally {
+      try {
+        await Future.wait([
+          _outputSubscription.cancel(),
+          _stateSubscription.cancel(),
+        ]);
+      } finally {
+        await _events.close();
+      }
+    }
   }
 
   static Pm3ConnectionState _mapState(Pm3ProcessState state) => switch (state) {

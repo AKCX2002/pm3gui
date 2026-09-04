@@ -123,6 +123,8 @@ class AppState extends ChangeNotifier {
   String get lastError => connectionState.lastError;
   String get pm3Version => connectionState.pm3Version;
   String? get sessionLogError => _sessionLogError;
+  bool get isSavingSettings => connectionState.isSavingSettings;
+  String? get settingsError => connectionState.settingsError;
 
   String get pm3Path => connectionState.pm3Path;
   set pm3Path(String value) => connectionState.setPm3Path(value);
@@ -205,7 +207,9 @@ class AppState extends ChangeNotifier {
           executable: this.connectionState.pm3Path,
         ));
         scanForFiles();
-        _queryHwVersion();
+        _queryHwVersion(
+          sendCommand: !this.connectionState.usesWindowsBatchClient,
+        );
       } else if (state == Pm3ConnectionState.disconnected) {
         if (!_disconnectInProgress) {
           _sessionClose = _recordSession(_sessionRecorder.close());
@@ -397,7 +401,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> scanForFiles() async {
     await fileState.scanForFiles(connectionState.pm3Path);
-    notifyListeners();
+    _notifyListenersIfActive();
   }
 
   Future<int> organizeCollectedFiles(String baseDir) async {
@@ -406,7 +410,7 @@ class AppState extends ChangeNotifier {
     return count;
   }
 
-  void _queryHwVersion() {
+  void _queryHwVersion({bool sendCommand = true}) {
     final buffer = StringBuffer();
     unawaited(_hwVersionOutputSubscription?.cancel() ?? Future.value());
     _hwVersionTimer?.cancel();
@@ -415,7 +419,7 @@ class AppState extends ChangeNotifier {
     });
     _hwVersionOutputSubscription = subscription;
 
-    connectionState.controller.send('hw version');
+    if (sendCommand) connectionState.controller.send('hw version');
 
     _hwVersionTimer = Timer(const Duration(seconds: 3), () {
       unawaited(subscription.cancel());
@@ -427,12 +431,13 @@ class AppState extends ChangeNotifier {
     });
   }
 
-  /// Completes only after the PM3 backend, Session queue and subscriptions
-  /// have been released in that order.
+  /// Completes after settings, Session queue, subscriptions and the PM3 backend
+  /// have all been released.
   Future<void> shutdown() => _shutdownFuture ??= _shutdown();
 
   Future<void> _shutdown() async {
     try {
+      await connectionState.flushSettings();
       await _disconnectAndCloseSession();
     } finally {
       await _releaseResources();
@@ -461,15 +466,22 @@ class AppState extends ChangeNotifier {
       terminalState.removeListener(_onTerminalChanged);
     } catch (_) {}
     connectionState.removeListener(_onConnectionChanged);
-    await Future.wait([
-      _outputSubscription.cancel(),
-      _commandSubscription.cancel(),
-      _stateSubscription.cancel(),
-      if (hwVersionOutputSubscription != null)
-        hwVersionOutputSubscription.cancel(),
-    ]);
-    connectionState.dispose();
-    _disposeNotifier();
+    try {
+      await Future.wait([
+        _outputSubscription.cancel(),
+        _commandSubscription.cancel(),
+        _stateSubscription.cancel(),
+        if (hwVersionOutputSubscription != null)
+          hwVersionOutputSubscription.cancel(),
+      ]);
+    } finally {
+      try {
+        await connectionState.shutdown();
+      } finally {
+        connectionState.dispose();
+        _disposeNotifier();
+      }
+    }
   }
 
   Future<void> _recordSession(Future<void> operation) {

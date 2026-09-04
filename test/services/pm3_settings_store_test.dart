@@ -19,6 +19,46 @@ void main() {
     await store.save(expected);
 
     expect(await store.load(), expected);
+    expect(
+      await directory.list().map((entry) => entry.path).toList(),
+      [
+        '${directory.path}${Platform.pathSeparator}pm3_settings.json',
+      ],
+    );
+  });
+
+  test('failed atomic replacement preserves old settings and removes temp file',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('pm3-settings-');
+    addTearDown(() => directory.delete(recursive: true));
+    final originalStore =
+        Pm3SettingsStore(directoryProvider: () async => directory);
+    const original = Pm3ClientSettings(
+      executable: 'original-client',
+      port: 'COM7',
+    );
+    await originalStore.save(original);
+    final failingStore = Pm3SettingsStore(
+      directoryProvider: () async => directory,
+      fileReplacer: (_, __) async =>
+          throw FileSystemException('replace failed'),
+    );
+
+    await expectLater(
+      failingStore.save(const Pm3ClientSettings(
+        executable: 'new-client',
+        port: 'COM8',
+      )),
+      throwsA(isA<FileSystemException>()),
+    );
+
+    expect(await originalStore.load(), original);
+    expect(
+      await directory.list().map((entry) => entry.path).toList(),
+      [
+        '${directory.path}${Platform.pathSeparator}pm3_settings.json',
+      ],
+    );
   });
 
   test('invalid JSON falls back without throwing', () async {

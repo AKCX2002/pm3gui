@@ -37,7 +37,7 @@
 - 测试：`test/services/pm3_settings_store_test.dart`
 - 测试：`test/state/connection_state_test.dart`
 
-- [ ] **步骤 1：编写失败的设置存储测试**
+- [x] **步骤 1：编写失败的设置存储测试**
 
 ```dart
 test('round-trips desktop client settings', () async {
@@ -59,13 +59,13 @@ test('invalid JSON falls back without throwing', () async {
 });
 ```
 
-- [ ] **步骤 2：运行红灯测试**
+- [x] **步骤 2：运行红灯测试**
 
 运行：`flutter test --no-pub test/services/pm3_settings_store_test.dart`
 
 预期：FAIL，缺少 `Pm3ClientSettings` 和 `Pm3SettingsStore`。
 
-- [ ] **步骤 3：实现最小模型与存储**
+- [x] **步骤 3：实现最小模型与存储**
 
 ```dart
 final class Pm3ClientSettings {
@@ -92,11 +92,11 @@ final class Pm3ClientSettings {
 
 `Pm3SettingsStore` 使用注入的目录提供器，将 JSON 保存为 `pm3_settings.json`；`load()` 对缺失、无效 JSON、错误字段返回 `null`。
 
-- [ ] **步骤 4：把设置接入状态层和 UI**
+- [x] **步骤 4：把设置接入状态层和 UI**
 
 `ConnectionState.initialize()` 在启动时恢复设置；`setPm3Path`、`setPort` 和新的参数/工作目录 setter 保存快照。设置页与连接页使用 `FileDialogService.pickSingleFilePath()` 选择 `proxmark3.exe`/`proxmark3`，不再要求用户只能手输路径。
 
-- [ ] **步骤 5：运行绿灯和相关回归测试**
+- [x] **步骤 5：运行绿灯和相关回归测试**
 
 运行：
 
@@ -107,7 +107,7 @@ flutter test --no-pub
 
 预期：全部通过。
 
-- [ ] **步骤 6：Commit**
+- [x] **步骤 6：Commit**
 
 ```text
 feat(配置): 持久化 PM3 客户端设置
@@ -123,7 +123,7 @@ feat(配置): 持久化 PM3 客户端设置
 - 测试：`test/services/pm3_session_recorder_test.dart`
 - 测试：`test/backend/pm3_controller_test.dart`
 
-- [ ] **步骤 1：编写失败的 Session 测试**
+- [x] **步骤 1：编写失败的 Session 测试**
 
 ```dart
 test('records metadata, terminal output and command history', () async {
@@ -140,21 +140,21 @@ test('records metadata, terminal output and command history', () async {
 });
 ```
 
-- [ ] **步骤 2：运行红灯测试**
+- [x] **步骤 2：运行红灯测试**
 
 运行：`flutter test --no-pub test/services/pm3_session_recorder_test.dart`
 
 预期：FAIL，Session 类型和记录器不存在。
 
-- [ ] **步骤 3：实现串行写入的 Session 记录器**
+- [x] **步骤 3：实现串行写入的 Session 记录器**
 
 每次成功连接创建 `sessions/YYYY-MM-DD_HHmmss_SSS/`，立即写 `session.json`。所有输出追加到 `terminal.log`，所有命令以单行 JSON 追加到 `commands.jsonl`。写操作通过内部 Future 链串行化；`close()` 等待尾部写入并在元数据中写入 `endedAt`。
 
-- [ ] **步骤 4：接入控制器和应用状态**
+- [x] **步骤 4：接入控制器和应用状态**
 
 `Pm3Controller.execute()` 在调用后端前发出命令观察点；`AppState` 在 connected 时启动 Session，在 output 事件时记录输出，在 disconnected/dispose 时关闭。记录失败只更新本地可诊断状态，不阻断 PM3 命令。
 
-- [ ] **步骤 5：运行绿灯和相关回归测试**
+- [x] **步骤 5：运行绿灯和相关回归测试**
 
 运行：
 
@@ -165,7 +165,7 @@ flutter test --no-pub
 
 预期：全部通过，并证明 close 后文件内容完整。
 
-- [ ] **步骤 6：Commit**
+- [x] **步骤 6：Commit**
 
 ```text
 feat(日志): 添加本地 PM3 Session 记录
@@ -178,7 +178,7 @@ feat(日志): 添加本地 PM3 Session 记录
 - 修改：`lib/backend/desktop_cli/desktop_cli_backend.dart`
 - 测试：`test/backend/pm3_process_test.dart`
 
-- [ ] **步骤 1：编写失败的进程生命周期测试**
+- [x] **步骤 1：编写失败的进程生命周期测试**
 
 测试运行时创建一个 Dart 子进程 fixture：启动后打印 `pm3 -->`，收到 `quit` 后退出；另一个 fixture 在输出提示符前直接退出。
 
@@ -197,17 +197,17 @@ test('connect returns false when child exits before prompt', () async {
 });
 ```
 
-- [ ] **步骤 2：运行红灯测试**
+- [x] **步骤 2：运行红灯测试**
 
 运行：`flutter test --no-pub test/backend/pm3_process_test.dart`
 
 预期：FAIL；现有构造器不可注入 cooldown，且早退连接等待到 15 秒超时。
 
-- [ ] **步骤 3：实现最小生命周期修复**
+- [x] **步骤 3：实现最小生命周期修复**
 
 保存 stdout/stderr 订阅；早退时完成连接 Future；`disconnect()` 先写 `quit` 并等待有限时间，超时才 `kill()`；清理订阅和进程引用后再发送 disconnected；`dispose()` 标记已释放并保证后续异步回调不向关闭的 controller 写入。
 
-- [ ] **步骤 4：运行绿灯和相关回归测试**
+- [x] **步骤 4：运行绿灯和相关回归测试**
 
 运行：
 
@@ -218,7 +218,7 @@ flutter test --no-pub
 
 预期：全部通过，测试进程无残留。
 
-- [ ] **步骤 5：Commit**
+- [x] **步骤 5：Commit**
 
 ```text
 fix(后端): 完善 PM3 进程退出生命周期
@@ -230,11 +230,11 @@ fix(后端): 完善 PM3 进程退出生命周期
 - 修改：`README.md`
 - 修改：`docs/refactoring_plan.md`
 
-- [ ] **步骤 1：同步设计基线**
+- [x] **步骤 1：同步设计基线**
 
 明确 Windows x64 为主平台、Linux x64 正式支持；Android/macOS/Web 不属于 1.0。记录外部 client 设置、本地 Session 文件、后端生命周期和下一阶段 Command/Parser 工作。
 
-- [ ] **步骤 2：格式化与静态检查**
+- [x] **步骤 2：格式化与静态检查**
 
 运行：
 
@@ -245,7 +245,7 @@ flutter analyze --no-pub
 
 预期：改动文件格式正确；分析不得新增 warning/error。仓库既有 `tools/verify_extract.dart` 4 条 `avoid_print` info 单独报告。
 
-- [ ] **步骤 3：完整测试与 Windows 构建**
+- [x] **步骤 3：完整测试与 Windows 构建**
 
 运行：
 
@@ -256,7 +256,7 @@ flutter build windows --debug --no-pub
 
 预期：测试 0 失败；Windows debug 构建退出码 0。Linux 构建需要 Linux 主机，当前 Windows 只做代码路径与 CI 配置静态核查。
 
-- [ ] **步骤 4：Commit**
+- [x] **步骤 4：Commit**
 
 ```text
 docs(架构): 更新桌面基础层实施状态
