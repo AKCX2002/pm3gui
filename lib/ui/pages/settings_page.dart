@@ -4,14 +4,38 @@ library;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:pm3gui/services/file_dialog_service.dart';
 import 'package:pm3gui/state/app_state.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final _pm3PathController = TextEditingController();
+  final _argumentsController = TextEditingController();
+  final _workingDirectoryController = TextEditingController();
+
+  @override
+  void dispose() {
+    _pm3PathController.dispose();
+    _argumentsController.dispose();
+    _workingDirectoryController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
+    _syncController(_pm3PathController, appState.pm3Path);
+    _syncController(_argumentsController, appState.pm3Arguments.join(' '));
+    _syncController(
+      _workingDirectoryController,
+      appState.pm3WorkingDirectory ?? '',
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -37,12 +61,43 @@ class SettingsPage extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                   ),
                   TextFormField(
-                    initialValue: appState.pm3Path,
-                    decoration: const InputDecoration(
+                    controller: _pm3PathController,
+                    decoration: InputDecoration(
                       labelText: 'PM3 程序路径',
                       hintText: './pm3 或 /usr/bin/proxmark3',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.folder_open),
+                        tooltip: '选择 PM3 程序',
+                        onPressed: () async {
+                          final path =
+                              await FileDialogService.pickSingleFilePath();
+                          if (path != null) await appState.setPm3Path(path);
+                        },
+                      ),
                     ),
                     onChanged: appState.setPm3Path,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _argumentsController,
+                    decoration: const InputDecoration(
+                      labelText: 'PM3 启动参数',
+                      hintText: '--flush',
+                    ),
+                    onChanged: (value) => appState.setPm3Arguments(
+                      value
+                          .split(RegExp(r'\s+'))
+                          .where((argument) => argument.isNotEmpty)
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _workingDirectoryController,
+                    decoration: const InputDecoration(
+                      labelText: 'PM3 工作目录（可选）',
+                    ),
+                    onChanged: appState.setPm3WorkingDirectory,
                   ),
                 ],
               ),
@@ -111,6 +166,14 @@ class SettingsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _syncController(TextEditingController controller, String value) {
+    if (controller.text == value) return;
+    controller.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
     );
   }
 }

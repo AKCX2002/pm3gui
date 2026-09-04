@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/state/app_state.dart';
 import 'package:pm3gui/services/file_collector.dart';
+import 'package:pm3gui/services/file_dialog_service.dart';
 import 'package:pm3gui/ui/theme.dart';
 
 class ConnectionPage extends StatefulWidget {
@@ -19,15 +20,27 @@ class ConnectionPage extends StatefulWidget {
 
 class _ConnectionPageState extends State<ConnectionPage> {
   bool _scanning = false;
+  final _pm3PathController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _scanPorts();
-    // Initial file scan
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppState>().scanForFiles();
-    });
+    _initialize();
+  }
+
+  @override
+  void dispose() {
+    _pm3PathController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initialize() async {
+    final appState = context.read<AppState>();
+    await appState.initialize();
+    if (!mounted) return;
+    await _scanPorts();
+    if (!mounted) return;
+    await appState.scanForFiles();
   }
 
   Future<void> _scanPorts() async {
@@ -73,6 +86,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
     final isConnecting = context.select<AppState, bool>((s) =>
         s.connectionState.connectionState == Pm3ConnectionState.connecting);
     final pm3Path = context.select<AppState, String>((s) => s.pm3Path);
+    if (_pm3PathController.text != pm3Path) {
+      _pm3PathController.value = TextEditingValue(
+        text: pm3Path,
+        selection: TextSelection.collapsed(offset: pm3Path.length),
+      );
+    }
     final availablePorts =
         context.select<AppState, List<String>>((s) => s.availablePorts);
     final portName = context.select<AppState, String>((s) => s.portName);
@@ -122,17 +141,29 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   icon: Icons.folder_open,
                   title: 'PM3 程序路径',
                   child: TextFormField(
-                    initialValue: pm3Path,
+                    controller: _pm3PathController,
                     style:
                         const TextStyle(fontFamily: 'monospace', fontSize: 13),
                     decoration: InputDecoration(
                       hintText: './pm3 或 /usr/bin/proxmark3',
                       prefixIcon: const Icon(Icons.terminal, size: 18),
                       suffixIcon: File(pm3Path).existsSync()
-                          ? Icon(Icons.check_circle,
-                              size: 18, color: AppTheme.accentBlue)
-                          : Icon(Icons.warning,
-                              size: 18, color: const Color(0xFFF87171)),
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle,
+                                    size: 18, color: AppTheme.accentBlue),
+                                _pickPm3PathButton(appState),
+                              ],
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.warning,
+                                    size: 18, color: Color(0xFFF87171)),
+                                _pickPm3PathButton(appState),
+                              ],
+                            ),
                     ),
                     onChanged: appState.setPm3Path,
                   ),
@@ -431,6 +462,15 @@ class _ConnectionPageState extends State<ConnectionPage> {
       ],
     );
   }
+
+  Widget _pickPm3PathButton(AppState appState) => IconButton(
+        icon: const Icon(Icons.folder_open, size: 18),
+        tooltip: '选择 PM3 程序',
+        onPressed: () async {
+          final path = await FileDialogService.pickSingleFilePath();
+          if (path != null) await appState.setPm3Path(path);
+        },
+      );
 
   // ── Connection header ──────────────────────────────────────────────────
 

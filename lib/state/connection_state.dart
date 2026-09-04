@@ -3,19 +3,26 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/backend/desktop_cli/desktop_cli_backend.dart';
+import 'package:pm3gui/core/pm3/pm3_client_settings.dart';
 import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/core/pm3/pm3_controller.dart';
+import 'package:pm3gui/services/pm3_settings_store.dart';
 
 class ConnectionState extends ChangeNotifier {
-  ConnectionState({Pm3Controller? controller})
-      : controller = controller ?? Pm3Controller(DesktopCliBackend()) {
+  ConnectionState({Pm3Controller? controller, Pm3SettingsStore? settingsStore})
+      : controller = controller ?? Pm3Controller(DesktopCliBackend()),
+        _settingsStore = settingsStore ?? Pm3SettingsStore() {
     pm3Path = DesktopCliBackend.detectExecutable();
   }
 
   final Pm3Controller controller;
+  final Pm3SettingsStore _settingsStore;
+  Future<void>? _initialization;
 
   String pm3Path = '';
   String portName = '';
+  List<String> pm3Arguments = const [];
+  String? pm3WorkingDirectory;
   List<String> availablePorts = [];
 
   Pm3ConnectionState get connectionState => controller.state;
@@ -29,7 +36,22 @@ class ConnectionState extends ChangeNotifier {
     return controller.connect(Pm3ConnectionConfig(
       executable: pm3Path,
       port: portName,
+      arguments: pm3Arguments,
+      workingDirectory: pm3WorkingDirectory,
     ));
+  }
+
+  Future<void> initialize() => _initialization ??= _restoreSettings();
+
+  Future<void> _restoreSettings() async {
+    final settings = await _settingsStore.load();
+    if (settings == null) return;
+
+    pm3Path = settings.executable;
+    portName = settings.port;
+    pm3Arguments = settings.arguments;
+    pm3WorkingDirectory = settings.workingDirectory;
+    notifyListeners();
   }
 
   Future<void> disconnect() async {
@@ -37,20 +59,42 @@ class ConnectionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPort(String port) {
+  Future<void> setPort(String port) {
     portName = port;
     notifyListeners();
+    return _saveSettings();
   }
 
-  void setPm3Path(String path) {
+  Future<void> setPm3Path(String path) {
     pm3Path = path;
     notifyListeners();
+    return _saveSettings();
+  }
+
+  Future<void> setPm3Arguments(List<String> arguments) {
+    pm3Arguments = List<String>.unmodifiable(arguments);
+    notifyListeners();
+    return _saveSettings();
+  }
+
+  Future<void> setPm3WorkingDirectory(String? workingDirectory) {
+    pm3WorkingDirectory =
+        workingDirectory?.trim().isEmpty ?? true ? null : workingDirectory;
+    notifyListeners();
+    return _saveSettings();
   }
 
   void setAvailablePorts(List<String> ports) {
     availablePorts = ports;
     notifyListeners();
   }
+
+  Future<void> _saveSettings() => _settingsStore.save(Pm3ClientSettings(
+        executable: pm3Path,
+        port: portName,
+        arguments: pm3Arguments,
+        workingDirectory: pm3WorkingDirectory,
+      ));
 
   Future<void> sendCommand(String cmd) async {
     if (cmd.trim().isEmpty) return;

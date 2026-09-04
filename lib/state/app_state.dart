@@ -116,6 +116,9 @@ class AppState extends ChangeNotifier {
   String get portName => connectionState.portName;
   set portName(String value) => connectionState.setPort(value);
 
+  List<String> get pm3Arguments => connectionState.pm3Arguments;
+  String? get pm3WorkingDirectory => connectionState.pm3WorkingDirectory;
+
   List<String> get availablePorts => connectionState.availablePorts;
   set availablePorts(List<String> value) =>
       connectionState.setAvailablePorts(value);
@@ -154,6 +157,9 @@ class AppState extends ChangeNotifier {
     fileState = FileState();
     hardwareState = HardwareState();
 
+    connectionState.addListener(_onConnectionChanged);
+    unawaited(initialize());
+
     // Propagate terminal state changes so widgets depending on AppState
     // (via context.select on outputRevision / terminalOutput) will rebuild
     // in real-time when TerminalState notifies.
@@ -182,6 +188,12 @@ class AppState extends ChangeNotifier {
     // Forward terminal state changes to AppState listeners.
     notifyListeners();
   }
+
+  void _onConnectionChanged() {
+    notifyListeners();
+  }
+
+  Future<void> initialize() => connectionState.initialize();
 
   Future<bool> connect() async {
     hardwareState.resetHwInfo();
@@ -266,14 +278,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  void setPort(String port) {
-    connectionState.setPort(port);
-    notifyListeners();
+  Future<void> setPort(String port) {
+    return connectionState.setPort(port);
   }
 
-  void setPm3Path(String path) {
-    connectionState.setPm3Path(path);
-    notifyListeners();
+  Future<void> setPm3Path(String path) {
+    return connectionState.setPm3Path(path);
+  }
+
+  Future<void> setPm3Arguments(List<String> arguments) {
+    return connectionState.setPm3Arguments(arguments);
+  }
+
+  Future<void> setPm3WorkingDirectory(String? workingDirectory) {
+    return connectionState.setPm3WorkingDirectory(workingDirectory);
   }
 
   void clearTerminal() {
@@ -383,6 +401,7 @@ class AppState extends ChangeNotifier {
     try {
       terminalState.removeListener(_onTerminalChanged);
     } catch (_) {}
+    connectionState.removeListener(_onConnectionChanged);
     connectionState.dispose();
     super.dispose();
   }
