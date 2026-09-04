@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -76,6 +78,162 @@ void main() {
 
     expect(process.state, Pm3ProcessState.disconnected);
   });
+
+  test('disconnect invalidates a connect that is still starting', () async {
+    final started = Completer<Pm3ProcessHandle>();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 20),
+      killExitTimeout: const Duration(milliseconds: 20),
+      processStarter: (_, __, {workingDirectory}) => started.future,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await process.disconnect().timeout(const Duration(seconds: 2));
+
+    final child = _FakeProcess();
+    started.complete(child);
+
+    expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
+    expect(child.killCount, 1);
+    expect(process.state, Pm3ProcessState.disconnected);
+  });
+
+  test('stderr fatal error fails connection without waiting for timeout',
+      () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stderrController.add(utf8.encode('error serial port unavailable\n'));
+
+    expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
+    expect(process.lastError, contains('串口连接错误'));
+  });
+
+  test('output stream closing before prompt fails connection immediately',
+      () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    await child.stdoutController.close();
+
+    expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
+    expect(process.lastError, contains('stdout 流已关闭'));
+  });
+
+  test('kill failure and exit failure do not leave disconnect pending',
+      () async {
+    final child = _FakeProcess(killResult: false);
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      gracefulExitTimeout: const Duration(milliseconds: 20),
+      killExitTimeout: const Duration(milliseconds: 20),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+
+    await process.disconnect().timeout(const Duration(seconds: 2));
+
+    expect(process.state, Pm3ProcessState.disconnected);
+    expect(process.lastError, contains('终止'));
+  });
+
+  test('exitCode error closes a connected process without a zone error',
+      () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
+
+    child.failExit(StateError('exitCode failed'));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(process.state, Pm3ProcessState.disconnected);
+    expect(process.lastError, contains('退出状态错误'));
+  });
+
+  test('dispose consumes subscription cancellation errors', () async {
+    final child = _FakeProcess(cancelFails: true);
+    final process = Pm3Process(
+      connectCooldown: Duration.zero,
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+
+    final connecting = process.connect(_dartExecutable, 'COM7');
+    await Future<void>.delayed(Duration.zero);
+    process.dispose();
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(await connecting.timeout(const Duration(seconds: 2)), isFalse);
+  });
+}
+
+final class _FakeProcess implements Pm3ProcessHandle {
+  _FakeProcess({this.killResult = true, bool cancelFails = false})
+      : stdoutController = StreamController<List<int>>(
+          onCancel: cancelFails
+              ? () => Future<void>.error(StateError('stdout cancel failed'))
+              : null,
+        ),
+        stderrController = StreamController<List<int>>(
+          onCancel: cancelFails
+              ? () => Future<void>.error(StateError('stderr cancel failed'))
+              : null,
+        );
+
+  final bool killResult;
+  final StreamController<List<int>> stdoutController;
+  final StreamController<List<int>> stderrController;
+  final Completer<int> _exitCode = Completer<int>();
+  int killCount = 0;
+
+  @override
+  Stream<List<int>> get stdout => stdoutController.stream;
+
+  @override
+  Stream<List<int>> get stderr => stderrController.stream;
+
+  @override
+  Future<int> get exitCode => _exitCode.future;
+
+  @override
+  bool kill() {
+    killCount++;
+    if (killResult && !_exitCode.isCompleted) _exitCode.complete(-9);
+    return killResult;
+  }
+
+  void failExit(Object error) {
+    if (!_exitCode.isCompleted) _exitCode.completeError(error);
+  }
+
+  @override
+  Future<void> writeLine(String line) async {}
 }
 
 const _fixtureSource = r'''

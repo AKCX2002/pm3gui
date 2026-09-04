@@ -17,13 +17,66 @@ enum Pm3ProcessState {
   connected // 已连接
 }
 
+/// 交互式 PM3 子进程所需的最小句柄，供生命周期测试注入可控实现。
+abstract interface class Pm3ProcessHandle {
+  Stream<List<int>> get stdout;
+  Stream<List<int>> get stderr;
+  Future<int> get exitCode;
+
+  Future<void> writeLine(String line);
+  bool kill();
+}
+
+typedef Pm3ProcessStarter = Future<Pm3ProcessHandle> Function(
+  String executable,
+  List<String> arguments, {
+  String? workingDirectory,
+});
+
+final class _IoPm3ProcessHandle implements Pm3ProcessHandle {
+  _IoPm3ProcessHandle(this._process);
+
+  final Process _process;
+
+  @override
+  Stream<List<int>> get stdout => _process.stdout;
+
+  @override
+  Stream<List<int>> get stderr => _process.stderr;
+
+  @override
+  Future<int> get exitCode => _process.exitCode;
+
+  @override
+  bool kill() => _process.kill();
+
+  @override
+  Future<void> writeLine(String line) async {
+    _process.stdin.writeln(line);
+    await _process.stdin.flush();
+  }
+}
+
+Future<Pm3ProcessHandle> _startPm3Process(
+  String executable,
+  List<String> arguments, {
+  String? workingDirectory,
+}) async =>
+    _IoPm3ProcessHandle(await Process.start(
+      executable,
+      arguments,
+      workingDirectory: workingDirectory,
+      mode: ProcessStartMode.normal,
+    ));
+
 /// 包装 pm3 命令行进程以进行通信
 class Pm3Process {
-  Process? _process; // PM3 进程实例
+  Pm3ProcessHandle? _process; // PM3 进程实例
   StreamSubscription<String>? _stdoutSubscription;
   StreamSubscription<String>? _stderrSubscription;
   Future<bool>? _connectingFuture;
   Future<void>? _disconnectingFuture;
+  Completer<bool>? _connectionCompleter;
   bool _disposed = false;
   int _processGeneration = 0;
   Pm3ProcessState _state = Pm3ProcessState.disconnected; // 当前连接状态
@@ -55,13 +108,19 @@ class Pm3Process {
     Duration connectCooldown = _defaultConnectCooldown,
     Duration gracefulExitTimeout = const Duration(milliseconds: 500),
     Duration connectTimeout = const Duration(seconds: 15),
+    Duration killExitTimeout = const Duration(seconds: 2),
+    Pm3ProcessStarter processStarter = _startPm3Process,
   })  : _connectCooldown = connectCooldown,
         _gracefulExitTimeout = gracefulExitTimeout,
-        _connectTimeout = connectTimeout;
+        _connectTimeout = connectTimeout,
+        _killExitTimeout = killExitTimeout,
+        _processStarter = processStarter;
 
   final Duration _connectCooldown;
   final Duration _gracefulExitTimeout;
   final Duration _connectTimeout;
+  final Duration _killExitTimeout;
+  final Pm3ProcessStarter _processStarter;
 
   /// 解析 pm3 可执行文件路径
   ///
@@ -151,6 +210,7 @@ class Pm3Process {
     }
 
     _setState(Pm3ProcessState.connecting);
+    final connectionGeneration = ++_processGeneration;
 
     try {
       // 解析实际可执行文件路径
@@ -171,22 +231,23 @@ class Pm3Process {
       }
 
       // 启动 pm3，使用 -p port -f（实时输出的刷新模式）
-      final process = await Process.start(
+      final process = await _processStarter(
         execPath,
         [...arguments, '-p', port, '-f'],
         workingDirectory: workDir,
-        mode: ProcessStartMode.normal,
       );
 
-      if (_disposed) {
-        process.kill();
-        await process.exitCode;
+      if (_disposed || connectionGeneration != _processGeneration) {
+        if (!_disposed && connectionGeneration == _processGeneration) {
+          _lastError = 'PM3 连接在启动期间已取消';
+        }
+        await _terminateUnowned(process);
         return false;
       }
       _process = process;
-      final processGeneration = ++_processGeneration;
 
       final completer = Completer<bool>();
+      _connectionCompleter = completer;
       var connected = false;
 
       // 监听 stdout
@@ -201,8 +262,12 @@ class Pm3Process {
 
         // 检测致命错误和连接提示
         if (_detectFatalError(line)) {
-          if (!completer.isCompleted) completer.complete(false);
-          unawaited(_disconnectProcess(process));
+          _failConnecting(completer, 'PM3 stdout 出现致命错误');
+          unawaited(_closeCurrentProcess(
+            process,
+            connectionGeneration,
+            forceKill: true,
+          ));
           return;
         }
 
@@ -215,6 +280,20 @@ class Pm3Process {
 
         // 所有行直接发送给 UI，不做限流，避免长命令输出被截断
         _emitOutput(line);
+      }, onError: (Object error, StackTrace stackTrace) {
+        _failConnecting(completer, 'PM3 stdout 流错误: $error');
+        unawaited(_closeCurrentProcess(
+          process,
+          connectionGeneration,
+          forceKill: true,
+        ));
+      }, onDone: () {
+        unawaited(_handleStreamClosed(
+          process,
+          connectionGeneration,
+          completer,
+          'stdout',
+        ));
       });
 
       // 监听 stderr
@@ -223,23 +302,52 @@ class Pm3Process {
           .transform(const LineSplitter())
           .listen((line) {
         if (!identical(_process, process) || _disposed) return;
-        _detectFatalError(line);
+        if (_detectFatalError(line)) {
+          _failConnecting(completer, 'PM3 stderr 出现致命错误');
+          unawaited(_closeCurrentProcess(
+            process,
+            connectionGeneration,
+            forceKill: true,
+          ));
+          return;
+        }
         _emitOutput('[ERR] $line');
+      }, onError: (Object error, StackTrace stackTrace) {
+        _failConnecting(completer, 'PM3 stderr 流错误: $error');
+        unawaited(_closeCurrentProcess(
+          process,
+          connectionGeneration,
+          forceKill: true,
+        ));
+      }, onDone: () {
+        unawaited(_handleStreamClosed(
+          process,
+          connectionGeneration,
+          completer,
+          'stderr',
+        ));
       });
 
       // 处理进程退出
-      unawaited(process.exitCode.then((code) async {
-        if (!identical(_process, process) || _disposed) return;
-        _emitOutput('[PM3 进程退出, code=$code]');
-        if (!connected) {
-          _lastError = 'PM3 进程在连接提示前退出 (code=$code)';
-          if (!completer.isCompleted) completer.complete(false);
-        }
-        await _clearProcess(process);
-        if (_processGeneration == processGeneration) {
-          _setState(Pm3ProcessState.disconnected);
-        }
-      }));
+      unawaited(process.exitCode.then<void>(
+        (code) async {
+          if (!identical(_process, process) || _disposed) return;
+          _emitOutput('[PM3 进程退出, code=$code]');
+          if (!connected) {
+            _lastError = 'PM3 进程在连接提示前退出 (code=$code)';
+            if (!completer.isCompleted) completer.complete(false);
+          }
+          await _closeCurrentProcess(process, connectionGeneration);
+        },
+        onError: (Object error, StackTrace stackTrace) async {
+          _failConnecting(completer, 'PM3 进程退出状态错误: $error');
+          await _closeCurrentProcess(
+            process,
+            connectionGeneration,
+            forceKill: true,
+          );
+        },
+      ));
 
       // 等待连接，带超时
       try {
@@ -248,7 +356,11 @@ class Pm3Process {
         if (!connected && identical(_process, process)) {
           _lastError = '连接超时 (${_connectTimeout.inSeconds}s)，请检查设备是否已连接';
           _emitOutput('[连接超时]');
-          await _disconnectProcess(process);
+          await _closeCurrentProcess(
+            process,
+            connectionGeneration,
+            requestQuit: true,
+          );
         }
         return false;
       }
@@ -257,12 +369,16 @@ class Pm3Process {
           '路径: $pm3Path\n'
           '请检查路径是否正确，程序是否已编译';
       _emitOutput('[错误] $_lastError');
-      _setState(Pm3ProcessState.disconnected);
+      if (connectionGeneration == _processGeneration) {
+        _setState(Pm3ProcessState.disconnected);
+      }
       return false;
     } catch (e) {
       _lastError = '连接失败: $e';
       _emitOutput('[错误] $_lastError');
-      _setState(Pm3ProcessState.disconnected);
+      if (connectionGeneration == _processGeneration) {
+        _setState(Pm3ProcessState.disconnected);
+      }
       return false;
     }
   }
@@ -301,8 +417,7 @@ class Pm3Process {
     }
     _responseBuffer.clear();
     _emitOutput('[pm3] $command');
-    _process!.stdin.writeln(command);
-    await _process!.stdin.flush();
+    await _process!.writeLine(command);
   }
 
   /// 发送命令并等待输出稳定
@@ -319,8 +434,7 @@ class Pm3Process {
 
     _responseBuffer.clear();
     _emitOutput('[pm3] $command');
-    _process!.stdin.writeln(command);
-    await _process!.stdin.flush();
+    await _process!.writeLine(command);
 
     // Wait until either output stabilizes or a terminator pattern is observed.
     var lastLength = 0;
@@ -366,63 +480,174 @@ class Pm3Process {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    ++_processGeneration;
+    final connectionCompleter = _connectionCompleter;
+    if (connectionCompleter != null && !connectionCompleter.isCompleted) {
+      connectionCompleter.complete(false);
+    }
+    _connectionCompleter = null;
     final process = _process;
     _process = null;
-    if (process != null) {
-      process.kill();
-    }
     final stdoutSubscription = _stdoutSubscription;
     final stderrSubscription = _stderrSubscription;
     _stdoutSubscription = null;
     _stderrSubscription = null;
-    if (stdoutSubscription != null) unawaited(stdoutSubscription.cancel());
-    if (stderrSubscription != null) unawaited(stderrSubscription.cancel());
-    _outputController.close();
-    _stateController.close();
+    try {
+      if (process != null) process.kill();
+    } catch (_) {
+      // dispose 是同步兜底，异常不能阻止控制器关闭。
+    } finally {
+      unawaited(_cancelSubscription(stdoutSubscription));
+      unawaited(_cancelSubscription(stderrSubscription));
+      try {
+        _outputController.close();
+      } catch (_) {}
+      try {
+        _stateController.close();
+      } catch (_) {}
+    }
   }
 
   Future<void> _disconnect() async {
+    final disconnectGeneration = ++_processGeneration;
     final process = _process;
-    if (process != null) {
-      await _disconnectProcess(process);
+    try {
+      if (process != null) {
+        await _closeCurrentProcess(
+          process,
+          disconnectGeneration,
+          requestQuit: true,
+        );
+      }
+    } finally {
+      if (!_disposed && disconnectGeneration == _processGeneration) {
+        _setState(Pm3ProcessState.disconnected);
+      }
     }
-    _setState(Pm3ProcessState.disconnected);
   }
 
-  Future<void> _disconnectProcess(Process process) async {
-    if (!identical(_process, process)) return;
-    try {
-      process.stdin.writeln('quit');
-      await process.stdin.flush();
-    } catch (_) {}
-
-    try {
-      await process.exitCode.timeout(_gracefulExitTimeout);
-    } on TimeoutException {
-      process.kill();
-      await process.exitCode;
-    }
-
-    await _clearProcess(process);
-  }
-
-  Future<void> _clearProcess(Process process) async {
+  Future<void> _closeCurrentProcess(
+    Pm3ProcessHandle process,
+    int generation, {
+    bool requestQuit = false,
+    bool forceKill = false,
+  }) async {
     if (!identical(_process, process)) return;
     _process = null;
     final stdoutSubscription = _stdoutSubscription;
     final stderrSubscription = _stderrSubscription;
     _stdoutSubscription = null;
     _stderrSubscription = null;
-    if (stdoutSubscription != null) {
-      try {
-        await stdoutSubscription.cancel();
-      } catch (_) {}
+    try {
+      if (requestQuit) {
+        try {
+          await process.writeLine('quit');
+        } catch (error) {
+          _recordLifecycleError('发送 quit 失败: $error');
+        }
+        final exited = await _waitForExit(process, _gracefulExitTimeout);
+        if (!exited) forceKill = true;
+      }
+      if (forceKill) {
+        await _killAndWait(process);
+      }
+    } finally {
+      await _cancelSubscription(stdoutSubscription);
+      await _cancelSubscription(stderrSubscription);
+      if (!_disposed && generation == _processGeneration) {
+        _setState(Pm3ProcessState.disconnected);
+      }
     }
-    if (stderrSubscription != null) {
-      try {
-        await stderrSubscription.cancel();
-      } catch (_) {}
+  }
+
+  Future<void> _terminateUnowned(Pm3ProcessHandle process) async {
+    try {
+      await _killAndWait(process);
+    } finally {
+      // 该进程尚未接管流订阅，不能影响新的连接状态。
     }
+  }
+
+  Future<void> _handleStreamClosed(
+    Pm3ProcessHandle process,
+    int generation,
+    Completer<bool> completer,
+    String streamName,
+  ) async {
+    if (!identical(_process, process) || _disposed) return;
+    // 管道关闭通常早于 exitCode 回调；短暂等待能保留真实退出码，
+    // 但绝不退回到连接的 15 秒超时。
+    try {
+      final code = await process.exitCode.timeout(
+        const Duration(milliseconds: 100),
+      );
+      if (!identical(_process, process) || _disposed) return;
+      _emitOutput('[PM3 进程退出, code=$code]');
+      _lastError = 'PM3 进程在连接提示前退出 (code=$code)';
+      _failConnecting(completer, _lastError);
+      await _closeCurrentProcess(process, generation);
+      return;
+    } on TimeoutException {
+      // 输出管道孤立关闭，以下路径强制收口该进程。
+    } catch (error) {
+      _recordLifecycleError('PM3 $streamName 流关闭后读取退出状态失败: $error');
+    }
+    if (!identical(_process, process) || _disposed) return;
+    _failConnecting(completer, 'PM3 $streamName 流已关闭');
+    await _closeCurrentProcess(process, generation, forceKill: true);
+  }
+
+  Future<bool> _waitForExit(Pm3ProcessHandle process, Duration timeout) async {
+    try {
+      await process.exitCode.timeout(timeout);
+      return true;
+    } on TimeoutException {
+      return false;
+    } catch (error) {
+      _recordLifecycleError('等待 PM3 退出失败: $error');
+      return false;
+    }
+  }
+
+  Future<void> _killAndWait(Pm3ProcessHandle process) async {
+    var killed = false;
+    try {
+      killed = process.kill();
+    } catch (error) {
+      _recordLifecycleError('终止 PM3 进程失败: $error');
+    }
+    if (!killed) {
+      _recordLifecycleError('终止 PM3 进程失败: kill 返回 false');
+    }
+    final exited = await _waitForExit(process, _killExitTimeout);
+    if (!exited) {
+      _recordLifecycleError('终止 PM3 后等待退出超时');
+    }
+  }
+
+  Future<void> _cancelSubscription(
+      StreamSubscription<String>? subscription) async {
+    if (subscription == null) return;
+    try {
+      await subscription.cancel();
+    } catch (_) {
+      // 所有取消 Future 都在此处被消费，避免进入未处理 zone error。
+    }
+  }
+
+  void _failConnecting(Completer<bool> completer, String fallbackError) {
+    if (_disposed) return;
+    if (_lastError.isEmpty) _lastError = fallbackError;
+    if (!completer.isCompleted) completer.complete(false);
+  }
+
+  void _recordLifecycleError(String message) {
+    if (_lastError.isEmpty) {
+      _lastError = message;
+    } else if (!_lastError.contains(message)) {
+      _lastError = '$_lastError；$message';
+    }
+    _emitOutput('[错误] $message');
   }
 
   /// 检测致命错误，这意味着我们应该停止尝试
