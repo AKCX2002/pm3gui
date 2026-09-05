@@ -23,17 +23,21 @@ void main() {
     late Directory temp;
     await tester.runAsync(() async {
       temp = await Directory.systemTemp.createTemp('command-editor-');
+      final responses = <String, String>{};
       final conn = connection.ConnectionState(
-        controller: Pm3Controller(MockPm3Backend(responses: {
-          'terminal.raw': '[+] 000 | 003 | A0A1A2A3A4A5 | 1 | ------------ | 0',
-        })),
+        controller: Pm3Controller(MockPm3Backend(responses: responses)),
         settingsStore: _Settings(),
-      )..pm3Path = 'pm3.bat';
+      )
+        ..pm3Path = 'mock-client'
+        ..portName = 'test-port';
       app = AppState(
           connectionState: conn,
           sessionRecorder:
               Pm3SessionRecorder(rootDirectoryProvider: () async => temp));
-      await app.connect();
+      expect(await app.connect(), isTrue);
+      // Only the user command should receive the key table, not startup hw version.
+      responses['terminal.raw'] =
+          '[+] 000 | 003 | A0A1A2A3A4A5 | 1 | ------------ | 0';
     });
     addTearDown(() => tester.runAsync(() async {
           await app.shutdown();
