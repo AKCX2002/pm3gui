@@ -20,7 +20,7 @@ PM3 GUI 是面向 Proxmark3 的 GPL-3.0 开源桌面图形客户端，提供常�
 - Android、iOS、Web 和 macOS 不属于 1.0 范围。
 - 本项目不打包 Proxmark3 固件或客户端；设备通信使用用户安装的官方 Proxmark3 client。Windows 优先使用官方发行包根目录的 `pm3.bat`，Linux 使用 `proxmark3`。
 
-CI 工作流包含 Windows 和 Linux x64 桌面路径。当前有限实机证据来自 Windows x64：使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（客户端识别为 `PM3 GENERIC / AT91SAM7S512 / 512K`），已通过根目录 `pm3.bat` 完成客户端连接、真实提示符识别、只读 `hw version` 和断开。该结果不能外推为 Linux、其他设备、完整固件交互或真实卡片操作已经验证。
+CI 工作流包含 Windows 和 Linux x64 桌面路径。当前有限实机证据来自 Windows x64：使用用户提供、对应 RRG commit `da509461` 的发行包和 PM3EASY512K（客户端识别为 `PM3 GENERIC / AT91SAM7S512 / 512K`），已通过根目录 `pm3.bat` 完成客户端连接、只读 `hw version` 和断开。2026-09-05 补充通过 Mifare 页面“检测卡片”到真实客户端与设备的验证：一次点击发送一次命令，页面显示 ATQA/SAK；客户端报告可能类型为 MIFARE Classic 1K。另已验证 6 秒静默命令和超过 10 秒的搜索输出。该结果不能外推为 Linux、其他设备、写卡、擦除或完整固件交互已经验证。
 
 ## 下载与发布
 
@@ -34,6 +34,7 @@ CI 工作流包含 Windows 和 Linux x64 桌面路径。当前有限实机证据
 - 通过 `Pm3Backend` 契约和 `DesktopCliBackend` 驱动官方 Proxmark3 client。
 - 终端支持完整命令透传、历史记录和输出查看。
 - 专用 GUI 优先覆盖高频工作流；低频、诊断及新增命令保留在 Terminal。
+- 功能页子终端持续接收输出，切换页面即停止；再次执行命令时开始新的捕获。执行中仍显示已收到的内容，总终端独立保留输出历史。
 - 支持 EML、BIN/DUMP、JSON 和密钥文件的查看、分析与导出。
 - 连接、命令输出和进程退出具备可诊断的本地生命周期管理。
 
@@ -51,6 +52,16 @@ Flutter UI / Feature
 ```
 
 `Pm3Process` 是 `DesktopCliBackend` 的内部适配器，Widget 和 Feature 不直接使用 `dart:io Process`。
+
+管道模式使用 RRG 客户端的 `rem` 命令生成顺序完成标记（已验证客户端 `da509461`），不会因短暂停顿或表格分隔线提前结束。默认持续等待，长命令执行期间可从连接页断开会话；切页只停止子终端监听，不终止命令。显式指定超时的调用在超时后断开会话，避免未完成命令与后续输出混合。
+
+终端补全合并现有中文帮助与 `docs/pm3_commands_client.json` 客户端快照。更新客户端后，可在项目根目录执行以下只读帮助同步；Windows 使用发行包根目录入口，原生客户端在路径后增加端口参数：
+
+```powershell
+dart run tools/sync_command_catalog.dart 'C:/path/to/pm3.bat'
+```
+
+同步完成后重新构建 GUI。快照反映采集时客户端与已连接设备可见的命令，不代表每项功能已有专用页面或完成实卡验证。
 
 ## 配置与隐私
 

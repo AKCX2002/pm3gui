@@ -14,6 +14,8 @@ final class Pm3Controller {
   final StreamController<Pm3Command> _commands =
       StreamController<Pm3Command>.broadcast(sync: true);
   Future<void>? _shutdownFuture;
+  bool _isExecuting = false;
+  bool get isExecuting => _isExecuting;
 
   Stream<Pm3Event> get events => _backend.events;
   Stream<Pm3Command> get commands => _commands.stream;
@@ -37,9 +39,15 @@ final class Pm3Controller {
 
   Future<void> disconnect() => _backend.disconnect();
 
-  Future<Pm3Result> execute(Pm3Command command, {Duration? timeout}) {
-    _commands.add(command);
-    return _backend.execute(command, timeout: timeout);
+  Future<Pm3Result> execute(Pm3Command command, {Duration? timeout}) async {
+    if (_isExecuting) throw StateError('PM3 命令仍在执行，请等待完成或断开连接');
+    _isExecuting = true;
+    try {
+      _commands.add(command);
+      return await _backend.execute(command, timeout: timeout);
+    } finally {
+      _isExecuting = false;
+    }
   }
 
   Future<void> send(String command) async {

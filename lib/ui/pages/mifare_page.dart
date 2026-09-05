@@ -48,19 +48,14 @@ class _MifarePageState extends State<MifarePage>
     super.dispose();
   }
 
-  void _execute(String cmd) {
-    _executeWithResult(cmd);
+  Future<void> _execute(String cmd) async {
+    await _executeWithResult(cmd);
   }
 
   /// 执行命令并捕获结果到 _lastResult
-  void _executeWithResult(String cmd) {
+  Future<void> _executeWithResult(String cmd) async {
     final appState = context.read<AppState>();
-    if (!appState.isConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接 PM3')),
-      );
-      return;
-    }
+    if (!ensurePm3Ready(context)) return;
 
     setState(() {
       _lastCmd = cmd;
@@ -70,22 +65,16 @@ class _MifarePageState extends State<MifarePage>
 
     final buffer = StringBuffer();
     _outputSub?.cancel();
-    _outputSub = appState.pm3Output.listen((line) {
+    _outputSub = appState.pm3PageOutput.listen((line) {
       // 过滤掉 [pm3] 自身发送的命令回显
       if (!line.startsWith('[pm3]')) {
         buffer.writeln(line);
-        setState(() => _lastResult = buffer.toString());
+        if (mounted) setState(() => _lastResult = buffer.toString());
       }
     });
 
-    appState.sendCommand(cmd);
-
-    // 设定超时自动停止监听
-    Future.delayed(const Duration(seconds: 5), () {
-      _outputSub?.cancel();
-      _outputSub = null;
-      if (mounted) setState(() => _isExecuting = false);
-    });
+    await appState.sendCommand(cmd);
+    if (mounted) setState(() => _isExecuting = false);
   }
 
   @override

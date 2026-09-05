@@ -1,6 +1,7 @@
 /// YAML-driven PM3 command catalog for terminal quick input/suggestions.
 library;
 
+import 'dart:convert';
 import 'package:flutter/services.dart';
 
 class Pm3CommandEntry {
@@ -72,7 +73,21 @@ class Pm3CommandCatalog {
 
   static Future<List<Pm3CommandEntry>> load({bool preferZh = true}) async {
     final text = await _loadYamlText(preferZh: preferZh);
-    return _parseEntries(text);
+    final entries = _parseEntries(text);
+    final snapshot = jsonDecode(await rootBundle.loadString(
+        'docs/pm3_commands_client.json')) as Map<String, dynamic>;
+    final known = entries.map((entry) => entry.command).toSet();
+    for (final item in (snapshot['commands'] as List).cast<Map<String, dynamic>>()) {
+      final command = item['command'] as String;
+      if (!known.add(command)) continue;
+      entries.add(Pm3CommandEntry(
+        className: 'Client',
+        name: command.split(' ').last,
+        command: command,
+        description: item['description'] as String,
+      ));
+    }
+    return entries;
   }
 
   static Future<String> _loadYamlText({required bool preferZh}) async {

@@ -1,0 +1,4138 @@
+{
+  "source": "Installed Proxmark3 client help; available commands for the connected device",
+  "clientVersion": "Iceman/master/v4.21611-636-gda509461b-suspect 2026-08-02 01:15:35 567cf9c5f",
+  "commands": [
+    {
+      "command": "analyse",
+      "description": "{ Analyse utils... }"
+    },
+    {
+      "command": "analyse a",
+      "description": "num bits test"
+    },
+    {
+      "command": "analyse chksum",
+      "description": "Checksum with adding, masking and one's complement"
+    },
+    {
+      "command": "analyse crc",
+      "description": "Stub method for CRC evaluations"
+    },
+    {
+      "command": "analyse dates",
+      "description": "Look for datestamps in a given array of bytes"
+    },
+    {
+      "command": "analyse demodbuff",
+      "description": "Load binary string to DemodBuffer"
+    },
+    {
+      "command": "analyse foo",
+      "description": "muxer"
+    },
+    {
+      "command": "analyse freq",
+      "description": "Calc wave lengths"
+    },
+    {
+      "command": "analyse help",
+      "description": "This help"
+    },
+    {
+      "command": "analyse lfsr",
+      "description": "LFSR tests"
+    },
+    {
+      "command": "analyse lrc",
+      "description": "Generate final byte for XOR LRC"
+    },
+    {
+      "command": "analyse nuid",
+      "description": "create NUID from 7byte UID"
+    },
+    {
+      "command": "analyse regex",
+      "description": "Regex utility (subset: ^ $ . * with \\\\ escape)"
+    },
+    {
+      "command": "analyse units",
+      "description": "convert ETU <> US <> SSP_CLK (3.39MHz)"
+    },
+    {
+      "command": "auto",
+      "description": "Automated detection process for unknown tags"
+    },
+    {
+      "command": "clear",
+      "description": "Clear screen"
+    },
+    {
+      "command": "data",
+      "description": "{ Plot window / data buffer manipulation... }"
+    },
+    {
+      "command": "data askedgedetect",
+      "description": "Adjust Graph for manual ASK demod"
+    },
+    {
+      "command": "data asn1",
+      "description": "ASN1 decoder"
+    },
+    {
+      "command": "data atr",
+      "description": "ATR lookup"
+    },
+    {
+      "command": "data autocorr",
+      "description": "Autocorrelation over window"
+    },
+    {
+      "command": "data autodemod",
+      "description": "Detect modulation, encoding and clock, then demodulate"
+    },
+    {
+      "command": "data bitsamples",
+      "description": "Get raw samples as bitstring"
+    },
+    {
+      "command": "data bmap",
+      "description": "Convert hex value according a binary template"
+    },
+    {
+      "command": "data clear",
+      "description": "Clears various buffers used by the graph window"
+    },
+    {
+      "command": "data crypto",
+      "description": "Encrypt and decrypt data"
+    },
+    {
+      "command": "data cthreshold",
+      "description": "Average out all values between"
+    },
+    {
+      "command": "data decimate",
+      "description": "Decimate samples"
+    },
+    {
+      "command": "data detectclock",
+      "description": "Detect ASK, FSK, NRZ, PSK clock rate of wave in GraphBuffer"
+    },
+    {
+      "command": "data diff",
+      "description": "Diff of input files"
+    },
+    {
+      "command": "data dirthreshold",
+      "description": "Max rising higher up-thres/ Min falling lower down-thres"
+    },
+    {
+      "command": "data envelope",
+      "description": "Generate square envelope of samples"
+    },
+    {
+      "command": "data fft",
+      "description": "Fourier transform of the GraphBuffer"
+    },
+    {
+      "command": "data fitscore",
+      "description": "Rank matched filter hypotheses for modulation, encoding and clock"
+    },
+    {
+      "command": "data fsktonrz",
+      "description": "Convert fsk2 to nrz wave for alternate fsk demodulating (for weak fsk)"
+    },
+    {
+      "command": "data getbitstream",
+      "description": "Convert GraphBuffer's >=1 values to 1 and <1 to 0"
+    },
+    {
+      "command": "data grid",
+      "description": "overlay grid on graph window"
+    },
+    {
+      "command": "data help",
+      "description": "This help"
+    },
+    {
+      "command": "data hexsamples",
+      "description": "Dump big buffer as hex bytes"
+    },
+    {
+      "command": "data hide",
+      "description": "Hide the graph window"
+    },
+    {
+      "command": "data hpf",
+      "description": "Remove DC offset from trace"
+    },
+    {
+      "command": "data iir",
+      "description": "Apply IIR buttersworth filter on plot data"
+    },
+    {
+      "command": "data load",
+      "description": "Load contents of file into graph window"
+    },
+    {
+      "command": "data ltrim",
+      "description": "Trim samples from left of trace"
+    },
+    {
+      "command": "data manrawdecode",
+      "description": "Manchester decode binary stream in DemodBuffer"
+    },
+    {
+      "command": "data modulation",
+      "description": "Identify LF signal for clock and modulation"
+    },
+    {
+      "command": "data mtrim",
+      "description": "Trim out samples from the specified start to the specified stop"
+    },
+    {
+      "command": "data norm",
+      "description": "Normalize max/min to +/-128"
+    },
+    {
+      "command": "data num",
+      "description": "Converts dec/hex/bin"
+    },
+    {
+      "command": "data plot",
+      "description": "Show the graph window"
+    },
+    {
+      "command": "data print",
+      "description": "Print the data in the DemodBuffer"
+    },
+    {
+      "command": "data qrcode",
+      "description": "Create a QR code"
+    },
+    {
+      "command": "data rawdemod",
+      "description": "Demodulate the data in the GraphBuffer and output binary"
+    },
+    {
+      "command": "data rtrim",
+      "description": "Trim samples from right of trace"
+    },
+    {
+      "command": "data samples",
+      "description": "Get raw samples for graph window ( GraphBuffer )"
+    },
+    {
+      "command": "data save",
+      "description": "Save signal trace data"
+    },
+    {
+      "command": "data setdebugmode",
+      "description": "Set Debugging Level on client side"
+    },
+    {
+      "command": "data setgraphmarkers",
+      "description": "Set the markers in the graph window"
+    },
+    {
+      "command": "data shiftgraphzero",
+      "description": "Shift 0 for Graphed wave + or - shift value"
+    },
+    {
+      "command": "data spectrum",
+      "description": "Spectral peaks, symbol rate and modulation family hint"
+    },
+    {
+      "command": "data timescale",
+      "description": "Set cursor display timescale"
+    },
+    {
+      "command": "data undecimate",
+      "description": "Un-decimate samples"
+    },
+    {
+      "command": "data xor",
+      "description": "Xor a input string"
+    },
+    {
+      "command": "data zerocrossings",
+      "description": "Count time between zero-crossings"
+    },
+    {
+      "command": "emv",
+      "description": "{ EMV ISO-14443 / ISO-7816... }"
+    },
+    {
+      "command": "emv challenge",
+      "description": "Generate challenge"
+    },
+    {
+      "command": "emv exec",
+      "description": "Executes EMV contactless transaction"
+    },
+    {
+      "command": "emv genac",
+      "description": "Generate ApplicationCryptogram"
+    },
+    {
+      "command": "emv gpo",
+      "description": "Execute GetProcessingOptions"
+    },
+    {
+      "command": "emv help",
+      "description": "This help"
+    },
+    {
+      "command": "emv intauth",
+      "description": "Internal authentication"
+    },
+    {
+      "command": "emv list",
+      "description": "List ISO7816 history"
+    },
+    {
+      "command": "emv pse",
+      "description": "Execute PPSE. It selects 2PAY.SYS.DDF01 or 1PAY.SYS.DDF01 directory"
+    },
+    {
+      "command": "emv reader",
+      "description": "Act like an EMV reader"
+    },
+    {
+      "command": "emv readrec",
+      "description": "Read files from card"
+    },
+    {
+      "command": "emv roca",
+      "description": "Extract public keys and run ROCA test"
+    },
+    {
+      "command": "emv scan",
+      "description": "Scan EMV card and save it contents to json file for emulator"
+    },
+    {
+      "command": "emv search",
+      "description": "Try to select all applets from applets list and print installed applets"
+    },
+    {
+      "command": "emv select",
+      "description": "Select applet"
+    },
+    {
+      "command": "emv test",
+      "description": "Perform crypto logic self tests"
+    },
+    {
+      "command": "exit",
+      "description": "Exit program"
+    },
+    {
+      "command": "help",
+      "description": "Use `<command> help` for details of a command"
+    },
+    {
+      "command": "hf",
+      "description": "{ High frequency commands... }"
+    },
+    {
+      "command": "hf 14a",
+      "description": "{ ISO14443A RFIDs...                  }"
+    },
+    {
+      "command": "hf 14a antifuzz",
+      "description": "Fuzzing the anticollision phase.  Warning! Readers may react strange"
+    },
+    {
+      "command": "hf 14a apdu",
+      "description": "Send ISO 14443-4 APDU to tag"
+    },
+    {
+      "command": "hf 14a apdufind",
+      "description": "Enumerate APDUs - CLA/INS/P1P2"
+    },
+    {
+      "command": "hf 14a chaining",
+      "description": "Control ISO 14443-4 input chaining"
+    },
+    {
+      "command": "hf 14a config",
+      "description": "Configure 14a settings (use with caution)"
+    },
+    {
+      "command": "hf 14a cuids",
+      "description": "Collect n>0 ISO14443-a UIDs in one go"
+    },
+    {
+      "command": "hf 14a help",
+      "description": "This help"
+    },
+    {
+      "command": "hf 14a info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf 14a list",
+      "description": "List ISO 14443-a history"
+    },
+    {
+      "command": "hf 14a ndefformat",
+      "description": "Format ISO 14443-A as NFC Type 4 tag"
+    },
+    {
+      "command": "hf 14a ndefread",
+      "description": "Read an NDEF file from ISO 14443-A Type 4 tag"
+    },
+    {
+      "command": "hf 14a ndefwrite",
+      "description": "Write NDEF records to ISO 14443-A tag"
+    },
+    {
+      "command": "hf 14a raw",
+      "description": "Send raw hex data to tag"
+    },
+    {
+      "command": "hf 14a reader",
+      "description": "Act like an ISO14443-a reader"
+    },
+    {
+      "command": "hf 14a sim",
+      "description": "Simulate ISO 14443-a tag"
+    },
+    {
+      "command": "hf 14a simaid",
+      "description": "Simulate ISO 14443-a AID Selection"
+    },
+    {
+      "command": "hf 14a sniff",
+      "description": "sniff ISO 14443-a traffic"
+    },
+    {
+      "command": "hf 14b",
+      "description": "{ ISO14443B RFIDs...                  }"
+    },
+    {
+      "command": "hf 14b apdu",
+      "description": "Send ISO 14443-4 APDU to tag"
+    },
+    {
+      "command": "hf 14b config",
+      "description": "Configure 14b settings (use with caution)"
+    },
+    {
+      "command": "hf 14b ctdump",
+      "description": "Dump ASK CTS/C-ticket"
+    },
+    {
+      "command": "hf 14b ctrdbl",
+      "description": "Read ASK CTS/C-ticket block"
+    },
+    {
+      "command": "hf 14b dump",
+      "description": "Read all memory pages of an ISO-14443-B tag, save to file"
+    },
+    {
+      "command": "hf 14b help",
+      "description": "This help"
+    },
+    {
+      "command": "hf 14b info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf 14b list",
+      "description": "List ISO-14443-B history"
+    },
+    {
+      "command": "hf 14b ndefread",
+      "description": "Read NDEF file on tag"
+    },
+    {
+      "command": "hf 14b raw",
+      "description": "Send raw hex data to tag"
+    },
+    {
+      "command": "hf 14b rdbl",
+      "description": "Read SRI512/SRIX4 block"
+    },
+    {
+      "command": "hf 14b reader",
+      "description": "Act as a ISO-14443-B reader to identify a tag"
+    },
+    {
+      "command": "hf 14b restore",
+      "description": "Restore from file to all memory pages of an ISO-14443-B tag"
+    },
+    {
+      "command": "hf 14b setuid",
+      "description": "Set UID for magic card"
+    },
+    {
+      "command": "hf 14b sim",
+      "description": "Fake ISO ISO-14443-B tag"
+    },
+    {
+      "command": "hf 14b sniff",
+      "description": "Eavesdrop ISO-14443-B"
+    },
+    {
+      "command": "hf 14b tearoff",
+      "description": "Tear-off attack on ST25TB/SRx counter blocks"
+    },
+    {
+      "command": "hf 14b valid",
+      "description": "SRIX4 checksum test"
+    },
+    {
+      "command": "hf 14b view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf 14b wrbl",
+      "description": "Write data to a SRI512/SRIX4 tag"
+    },
+    {
+      "command": "hf 15",
+      "description": "{ ISO15693 RFIDs...                   }"
+    },
+    {
+      "command": "hf 15 csetuid",
+      "description": "Set UID for magic card"
+    },
+    {
+      "command": "hf 15 demod",
+      "description": "Demodulate ISO-15693 from tag"
+    },
+    {
+      "command": "hf 15 dump",
+      "description": "Read all memory pages of an ISO-15693 tag, save to file"
+    },
+    {
+      "command": "hf 15 eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "hf 15 esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "hf 15 eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "hf 15 findafi",
+      "description": "Brute force AFI of an ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 help",
+      "description": "This help"
+    },
+    {
+      "command": "hf 15 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf 15 list",
+      "description": "List ISO-15693 history"
+    },
+    {
+      "command": "hf 15 passprotectafi",
+      "description": "Password protect AFI - Cannot be undone"
+    },
+    {
+      "command": "hf 15 passprotecteas",
+      "description": "Password protect EAS - Cannot be undone"
+    },
+    {
+      "command": "hf 15 raw",
+      "description": "Send raw hex data to tag"
+    },
+    {
+      "command": "hf 15 rdbl",
+      "description": "Read a block"
+    },
+    {
+      "command": "hf 15 rdmulti",
+      "description": "Reads multiple blocks"
+    },
+    {
+      "command": "hf 15 reader",
+      "description": "Act like an ISO-15693 reader"
+    },
+    {
+      "command": "hf 15 restore",
+      "description": "Restore from file to all memory pages of an ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 samples",
+      "description": "Acquire samples as reader (enables carrier, sends inquiry)"
+    },
+    {
+      "command": "hf 15 sim",
+      "description": "Fake an ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 slixeasdisable",
+      "description": "Disable EAS mode on SLIX ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 slixeasenable",
+      "description": "Enable EAS mode on SLIX ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 slixprivacyenable",
+      "description": "Enable privacy mode on SLIX ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 slixprotectpage",
+      "description": "Protect pages on SLIX ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 slixwritepwd",
+      "description": "Writes a password on a SLIX ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 sniff",
+      "description": "Sniff ISO-15693 traffic"
+    },
+    {
+      "command": "hf 15 view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf 15 wipe",
+      "description": "Wipe card to zeros"
+    },
+    {
+      "command": "hf 15 wrbl",
+      "description": "Write a block"
+    },
+    {
+      "command": "hf 15 writeafi",
+      "description": "Writes the AFI on an ISO-15693 tag"
+    },
+    {
+      "command": "hf 15 writedsfid",
+      "description": "Writes the DSFID on an ISO-15693 tag"
+    },
+    {
+      "command": "hf aliro",
+      "description": "{ ALIRO digital access credentials... }"
+    },
+    {
+      "command": "hf aliro help",
+      "description": "This help"
+    },
+    {
+      "command": "hf aliro info",
+      "description": "Get Aliro applet information"
+    },
+    {
+      "command": "hf aliro list",
+      "description": "List ISO 14443A/7816 history"
+    },
+    {
+      "command": "hf aliro read",
+      "description": "Run SELECT-AUTH0-AUTH1 and optional step-up document retrieval"
+    },
+    {
+      "command": "hf calypso",
+      "description": "{ Calypso transport cards...          }"
+    },
+    {
+      "command": "hf calypso dump",
+      "description": "Dump nodes after application profile scan"
+    },
+    {
+      "command": "hf calypso help",
+      "description": "This help"
+    },
+    {
+      "command": "hf calypso info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf calypso list",
+      "description": "List Calypso history"
+    },
+    {
+      "command": "hf calypso probecmdcompat",
+      "description": "Probe SELECT command compatibility"
+    },
+    {
+      "command": "hf cipurse",
+      "description": "{ Cipurse transport Cards...          }"
+    },
+    {
+      "command": "hf cipurse aread",
+      "description": "Read file attributes"
+    },
+    {
+      "command": "hf cipurse auth",
+      "description": "Authenticate CIPURSE tag"
+    },
+    {
+      "command": "hf cipurse awrite",
+      "description": "Write file attributes"
+    },
+    {
+      "command": "hf cipurse create",
+      "description": "Create file, application, key via DGI record"
+    },
+    {
+      "command": "hf cipurse default",
+      "description": "Set default key and file id for all the other commands"
+    },
+    {
+      "command": "hf cipurse delete",
+      "description": "Delete file"
+    },
+    {
+      "command": "hf cipurse formatall",
+      "description": "Erase all the data from chip"
+    },
+    {
+      "command": "hf cipurse help",
+      "description": "This help."
+    },
+    {
+      "command": "hf cipurse info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf cipurse read",
+      "description": "Read binary file"
+    },
+    {
+      "command": "hf cipurse select",
+      "description": "Select CIPURSE application or file"
+    },
+    {
+      "command": "hf cipurse test",
+      "description": "Regression self tests"
+    },
+    {
+      "command": "hf cipurse updakey",
+      "description": "Update key attributes"
+    },
+    {
+      "command": "hf cipurse updkey",
+      "description": "Update key"
+    },
+    {
+      "command": "hf cipurse write",
+      "description": "Write binary file"
+    },
+    {
+      "command": "hf emrtd",
+      "description": "{ Machine Readable Travel Document... }"
+    },
+    {
+      "command": "hf emrtd dump",
+      "description": "Dump eMRTD files to binary files"
+    },
+    {
+      "command": "hf emrtd help",
+      "description": "This help"
+    },
+    {
+      "command": "hf emrtd info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf emrtd list",
+      "description": "List ISO 14443A/7816 history"
+    },
+    {
+      "command": "hf epa",
+      "description": "{ German Identification Card...       }"
+    },
+    {
+      "command": "hf epa cnonces",
+      "description": "Acquire encrypted PACE nonces of specific size"
+    },
+    {
+      "command": "hf epa help",
+      "description": "This help"
+    },
+    {
+      "command": "hf epa replay",
+      "description": "Perform PACE protocol by replaying given APDUs"
+    },
+    {
+      "command": "hf epa sim",
+      "description": "Simulate PACE protocol"
+    },
+    {
+      "command": "hf felica",
+      "description": "{ ISO18092 / FeliCa RFIDs...          }"
+    },
+    {
+      "command": "hf felica auth1",
+      "description": "authenticate a card. Start mutual authentication with Auth1"
+    },
+    {
+      "command": "hf felica auth2",
+      "description": "allow a card to authenticate a Reader/Writer. Complete mutual authentication"
+    },
+    {
+      "command": "hf felica discnodes",
+      "description": "discover Area Code and Service Code nodes."
+    },
+    {
+      "command": "hf felica dump",
+      "description": "Wait for and try dumping FeliCa"
+    },
+    {
+      "command": "hf felica help",
+      "description": "This help"
+    },
+    {
+      "command": "hf felica info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf felica list",
+      "description": "List ISO 18092/FeliCa history"
+    },
+    {
+      "command": "hf felica liteauth",
+      "description": "authenticate a card."
+    },
+    {
+      "command": "hf felica litedump",
+      "description": "Wait for and try dumping FelicaLite"
+    },
+    {
+      "command": "hf felica litesim",
+      "description": "Emulating ISO/18092 FeliCa Lite tag"
+    },
+    {
+      "command": "hf felica raw",
+      "description": "Send raw hex data to tag"
+    },
+    {
+      "command": "hf felica rdbl",
+      "description": "read block data from authentication-not-required Service."
+    },
+    {
+      "command": "hf felica reader",
+      "description": "Act like an ISO18092/FeliCa reader"
+    },
+    {
+      "command": "hf felica resetmode",
+      "description": "reset Mode to Mode 0."
+    },
+    {
+      "command": "hf felica rqresponse",
+      "description": "verify the existence of a card and its Mode."
+    },
+    {
+      "command": "hf felica rqservice",
+      "description": "verify the existence of Area and Service, and to acquire Key Version."
+    },
+    {
+      "command": "hf felica rqspecver",
+      "description": "acquire the version of card OS."
+    },
+    {
+      "command": "hf felica rqsyscode",
+      "description": "acquire System Code registered to the card."
+    },
+    {
+      "command": "hf felica scsvcode",
+      "description": "acquire Area Code and Service Code."
+    },
+    {
+      "command": "hf felica seacauth1",
+      "description": "FeliCa SEAC Authentication1"
+    },
+    {
+      "command": "hf felica sim",
+      "description": "Emulate FeliCa Standard from dump file"
+    },
+    {
+      "command": "hf felica sniff",
+      "description": "Sniff ISO 18092/FeliCa traffic"
+    },
+    {
+      "command": "hf felica wrbl",
+      "description": "write block data to an authentication-not-required Service."
+    },
+    {
+      "command": "hf fido",
+      "description": "{ FIDO and FIDO2 authenticators...    }"
+    },
+    {
+      "command": "hf fido assert",
+      "description": "FIDO2 GetAssertion command."
+    },
+    {
+      "command": "hf fido auth",
+      "description": "FIDO U2F Authentication Message."
+    },
+    {
+      "command": "hf fido help",
+      "description": "This help."
+    },
+    {
+      "command": "hf fido info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf fido list",
+      "description": "List ISO 14443A history"
+    },
+    {
+      "command": "hf fido make",
+      "description": "FIDO2 MakeCredential command."
+    },
+    {
+      "command": "hf fido reg",
+      "description": "FIDO U2F Registration Message."
+    },
+    {
+      "command": "hf fmcos",
+      "description": "{ FMCOS CPU cards...                  }"
+    },
+    {
+      "command": "hf fmcos append",
+      "description": "APPEND RECORD to cyclic / linear EF"
+    },
+    {
+      "command": "hf fmcos authexternal",
+      "description": "EXTERNAL AUTHENTICATE using DES/3DES key"
+    },
+    {
+      "command": "hf fmcos authinternal",
+      "description": "INTERNAL AUTHENTICATE (card proves key knowledge)"
+    },
+    {
+      "command": "hf fmcos balance",
+      "description": "GET BALANCE (wallet or passbook)"
+    },
+    {
+      "command": "hf fmcos block",
+      "description": "BLOCK card or application"
+    },
+    {
+      "command": "hf fmcos createdir",
+      "description": "CREATE DIRECTORY (DF)"
+    },
+    {
+      "command": "hf fmcos createfile",
+      "description": "CREATE EF (binary / fixed / variable / loop / wallet)"
+    },
+    {
+      "command": "hf fmcos createkeyfile",
+      "description": "CREATE KEYFILE"
+    },
+    {
+      "command": "hf fmcos credit",
+      "description": "ADD CREDIT to wallet or passbook"
+    },
+    {
+      "command": "hf fmcos erase",
+      "description": "ERASE DF contents"
+    },
+    {
+      "command": "hf fmcos help",
+      "description": "This help"
+    },
+    {
+      "command": "hf fmcos history",
+      "description": "READ transaction history from loop EF"
+    },
+    {
+      "command": "hf fmcos info",
+      "description": "Detect card and print file-system info"
+    },
+    {
+      "command": "hf fmcos key",
+      "description": "WRITE KEY to keyfile"
+    },
+    {
+      "command": "hf fmcos overdraft",
+      "description": "UPDATE OVERDRAFT LIMIT"
+    },
+    {
+      "command": "hf fmcos pinchange",
+      "description": "CHANGE PIN (old + new, requires old PIN)"
+    },
+    {
+      "command": "hf fmcos pinreset",
+      "description": "RESET PIN (new PIN + change-PIN key MAC)"
+    },
+    {
+      "command": "hf fmcos pinunblock",
+      "description": "UNBLOCK PIN (encrypted new PIN + MAC)"
+    },
+    {
+      "command": "hf fmcos pinverify",
+      "description": "VERIFY PIN (present PIN to card)"
+    },
+    {
+      "command": "hf fmcos purchase",
+      "description": "PURCHASE from wallet or passbook"
+    },
+    {
+      "command": "hf fmcos readbinary",
+      "description": "READ BINARY from transparent EF"
+    },
+    {
+      "command": "hf fmcos readrecord",
+      "description": "READ RECORD from record-based EF"
+    },
+    {
+      "command": "hf fmcos select",
+      "description": "SELECT FILE by 2-byte ID or AID name"
+    },
+    {
+      "command": "hf fmcos tidcreatebin",
+      "description": "CREATE binary EF (TID format)"
+    },
+    {
+      "command": "hf fmcos tidcreatedf",
+      "description": "CREATE sub-DF (TID format)"
+    },
+    {
+      "command": "hf fmcos tidcreaterec",
+      "description": "CREATE record EF (TID format)"
+    },
+    {
+      "command": "hf fmcos tiderase",
+      "description": "ERASE TID card file system"
+    },
+    {
+      "command": "hf fmcos tidprovision",
+      "description": "Full TID provisioning sequence"
+    },
+    {
+      "command": "hf fmcos tidsetauth",
+      "description": "SET INTERNAL AUTH key"
+    },
+    {
+      "command": "hf fmcos tidsetcard",
+      "description": "SET CARD configuration block"
+    },
+    {
+      "command": "hf fmcos tidsetuid",
+      "description": "SET UID"
+    },
+    {
+      "command": "hf fmcos unblock",
+      "description": "UNBLOCK application"
+    },
+    {
+      "command": "hf fmcos writebinary",
+      "description": "UPDATE BINARY in transparent EF"
+    },
+    {
+      "command": "hf fmcos writerecord",
+      "description": "UPDATE RECORD in record-based EF"
+    },
+    {
+      "command": "hf fudan",
+      "description": "{ Fudan RFIDs...                      }"
+    },
+    {
+      "command": "hf fudan dump",
+      "description": "Dump FUDAN tag to binary file"
+    },
+    {
+      "command": "hf fudan help",
+      "description": "This help"
+    },
+    {
+      "command": "hf fudan rdbl",
+      "description": "Read a fudan tag"
+    },
+    {
+      "command": "hf fudan reader",
+      "description": "Act like a fudan reader"
+    },
+    {
+      "command": "hf fudan view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf fudan wrbl",
+      "description": "Write a fudan tag"
+    },
+    {
+      "command": "hf gallagher",
+      "description": "{ Gallagher DESFire RFIDs...          }"
+    },
+    {
+      "command": "hf gallagher clone",
+      "description": "Clone Gallagher credentials to a DESFire or Classic card"
+    },
+    {
+      "command": "hf gallagher decode",
+      "description": "Decode Gallagher credential block"
+    },
+    {
+      "command": "hf gallagher delete",
+      "description": "Delete Gallagher credentials from a DESFire card"
+    },
+    {
+      "command": "hf gallagher diversifykey",
+      "description": "Diversify Gallagher key"
+    },
+    {
+      "command": "hf gallagher encode",
+      "description": "Encode Gallagher credential block"
+    },
+    {
+      "command": "hf gallagher help",
+      "description": "This help"
+    },
+    {
+      "command": "hf gallagher reader",
+      "description": "Read & decode all Gallagher credentials on a DESFire or Classic card"
+    },
+    {
+      "command": "hf gallagher test",
+      "description": "Test the function of Gallagher Mifare Core"
+    },
+    {
+      "command": "hf gst",
+      "description": "{ Google Smart Tap passes...          }"
+    },
+    {
+      "command": "hf gst help",
+      "description": "This help"
+    },
+    {
+      "command": "hf gst info",
+      "description": "Get Google Smart Tap applet information"
+    },
+    {
+      "command": "hf gst list",
+      "description": "List ISO 14443A/7816 history"
+    },
+    {
+      "command": "hf gst read",
+      "description": "Read and decode Google Smart Tap pass objects"
+    },
+    {
+      "command": "hf gst test",
+      "description": "Perform self tests"
+    },
+    {
+      "command": "hf help",
+      "description": "This help"
+    },
+    {
+      "command": "hf iclass",
+      "description": "{ ICLASS RFIDs...                     }"
+    },
+    {
+      "command": "hf iclass blacktears",
+      "description": "Automated tearoff attack on new silicon cards to enable non-secure page mode"
+    },
+    {
+      "command": "hf iclass calcnewkey",
+      "description": "Calc diversified keys (blocks 3 & 4) to write new keys"
+    },
+    {
+      "command": "hf iclass chk",
+      "description": "Check keys"
+    },
+    {
+      "command": "hf iclass configcard",
+      "description": "Reader configuration card generator"
+    },
+    {
+      "command": "hf iclass creditepurse",
+      "description": "Credit epurse value"
+    },
+    {
+      "command": "hf iclass decrypt",
+      "description": "Decrypt given block data or tag dump file"
+    },
+    {
+      "command": "hf iclass dump",
+      "description": "Dump Picopass / iCLASS tag to file"
+    },
+    {
+      "command": "hf iclass eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "hf iclass encode",
+      "description": "Encode binary wiegand to block 7"
+    },
+    {
+      "command": "hf iclass encrypt",
+      "description": "Encrypt given block data"
+    },
+    {
+      "command": "hf iclass esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "hf iclass esetblk",
+      "description": "Set emulator memory block data"
+    },
+    {
+      "command": "hf iclass eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "hf iclass help",
+      "description": "This help"
+    },
+    {
+      "command": "hf iclass info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf iclass legbrute",
+      "description": "Bruteforces 40 bits of a partial diversified key, provided 24 bits of the key and two valid nr-macs"
+    },
+    {
+      "command": "hf iclass legrec",
+      "description": "Recovers 24 bits of the diversified key of a legacy card provided a valid nr-mac combination"
+    },
+    {
+      "command": "hf iclass liberate",
+      "description": "Detect and liberate MKF / iCopy-X cloned cards"
+    },
+    {
+      "command": "hf iclass list",
+      "description": "List iclass history"
+    },
+    {
+      "command": "hf iclass loclass",
+      "description": "Use loclass to perform bruteforce reader attack"
+    },
+    {
+      "command": "hf iclass lookup",
+      "description": "Uses authentication trace to check for key in dictionary file"
+    },
+    {
+      "command": "hf iclass managekeys",
+      "description": "Manage keys to use with iclass commands"
+    },
+    {
+      "command": "hf iclass permutekey",
+      "description": "Permute function from 'heart of darkness' paper"
+    },
+    {
+      "command": "hf iclass rdbl",
+      "description": "Read Picopass / iCLASS block"
+    },
+    {
+      "command": "hf iclass reader",
+      "description": "Act like a Picopass / iCLASS reader"
+    },
+    {
+      "command": "hf iclass restore",
+      "description": "Restore a dump file onto a Picopass / iCLASS tag"
+    },
+    {
+      "command": "hf iclass sim",
+      "description": "Simulate iCLASS tag"
+    },
+    {
+      "command": "hf iclass sniff",
+      "description": "Eavesdrop Picopass / iCLASS communication"
+    },
+    {
+      "command": "hf iclass tagsim",
+      "description": "Simulate a full iCLASS 2K tag from FC/CN and keys"
+    },
+    {
+      "command": "hf iclass tear",
+      "description": "Performs tearoff attack on iCLASS block"
+    },
+    {
+      "command": "hf iclass unhash",
+      "description": "Reverses a diversified key to retrieve hash0 pre-images after DES encryption"
+    },
+    {
+      "command": "hf iclass view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf iclass wrbl",
+      "description": "Write Picopass / iCLASS block"
+    },
+    {
+      "command": "hf ict",
+      "description": "{ ICT MFC/DESfire RFIDs...            }"
+    },
+    {
+      "command": "hf ict credential",
+      "description": "Read ICT credential and decode"
+    },
+    {
+      "command": "hf ict help",
+      "description": "This help"
+    },
+    {
+      "command": "hf ict info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf ict list",
+      "description": "List ICT history"
+    },
+    {
+      "command": "hf ict reader",
+      "description": "Act like an IS14443-a reader"
+    },
+    {
+      "command": "hf jooki",
+      "description": "{ Jooki RFIDs...                      }"
+    },
+    {
+      "command": "hf jooki clone",
+      "description": "Write a Jooki token"
+    },
+    {
+      "command": "hf jooki decode",
+      "description": "Decode Jooki token"
+    },
+    {
+      "command": "hf jooki encode",
+      "description": "Encode Jooki token"
+    },
+    {
+      "command": "hf jooki help",
+      "description": "This help"
+    },
+    {
+      "command": "hf jooki sim",
+      "description": "Simulate Jooki token"
+    },
+    {
+      "command": "hf ksx6924",
+      "description": "{ KS X 6924 (T-Money, Snapper+) RFIDs }"
+    },
+    {
+      "command": "hf ksx6924 balance",
+      "description": "Get current purse balance"
+    },
+    {
+      "command": "hf ksx6924 help",
+      "description": "This help"
+    },
+    {
+      "command": "hf ksx6924 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf ksx6924 init",
+      "description": "Perform transaction initialization with Mpda"
+    },
+    {
+      "command": "hf ksx6924 prec",
+      "description": "Send proprietary get record command (CLA=90, INS=4C)"
+    },
+    {
+      "command": "hf ksx6924 select",
+      "description": "Select application, and leave field up"
+    },
+    {
+      "command": "hf legic",
+      "description": "{ LEGIC RFIDs...                      }"
+    },
+    {
+      "command": "hf legic clone",
+      "description": "Clone a LEGIC Prime dump to a new MCC or different tag"
+    },
+    {
+      "command": "hf legic crc",
+      "description": "Calculate Legic CRC over given bytes"
+    },
+    {
+      "command": "hf legic dump",
+      "description": "Dump LEGIC Prime tag to binary file"
+    },
+    {
+      "command": "hf legic einfo",
+      "description": "Display deobfuscated and decoded emulator memory"
+    },
+    {
+      "command": "hf legic eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "hf legic esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "hf legic eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "hf legic help",
+      "description": "This help"
+    },
+    {
+      "command": "hf legic info",
+      "description": "Display deobfuscated and decoded LEGIC Prime tag data"
+    },
+    {
+      "command": "hf legic list",
+      "description": "List LEGIC history"
+    },
+    {
+      "command": "hf legic migrate",
+      "description": "Clone a LEGIC Prime dump to a tag; DCF stays opt-in"
+    },
+    {
+      "command": "hf legic rdbl",
+      "description": "Read bytes from a LEGIC Prime tag"
+    },
+    {
+      "command": "hf legic reader",
+      "description": "LEGIC Prime Reader UID and tag info"
+    },
+    {
+      "command": "hf legic restore",
+      "description": "Restore an exact dump back onto the same LEGIC Prime card family"
+    },
+    {
+      "command": "hf legic sim",
+      "description": "Start tag simulator"
+    },
+    {
+      "command": "hf legic view",
+      "description": "Display deobfuscated and decoded content from tag dump file"
+    },
+    {
+      "command": "hf legic wipe",
+      "description": "Wipe a LEGIC Prime tag"
+    },
+    {
+      "command": "hf legic wrbl",
+      "description": "Write data to a LEGIC Prime tag"
+    },
+    {
+      "command": "hf list",
+      "description": "List protocol data in trace buffer"
+    },
+    {
+      "command": "hf lto",
+      "description": "{ LTO Cartridge Memory RFIDs...       }"
+    },
+    {
+      "command": "hf lto dump",
+      "description": "Dump LTO-CM tag to file"
+    },
+    {
+      "command": "hf lto help",
+      "description": "This help"
+    },
+    {
+      "command": "hf lto info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf lto list",
+      "description": "List LTO-CM history"
+    },
+    {
+      "command": "hf lto rdbl",
+      "description": "Read block"
+    },
+    {
+      "command": "hf lto reader",
+      "description": "Act like a LTO-CM reader"
+    },
+    {
+      "command": "hf lto restore",
+      "description": "Restore dump file to LTO-CM tag"
+    },
+    {
+      "command": "hf lto wrbl",
+      "description": "Write block"
+    },
+    {
+      "command": "hf mf",
+      "description": "{ MIFARE RFIDs...                     }"
+    },
+    {
+      "command": "hf mf acl",
+      "description": "Decode and print MIFARE Classic access rights bytes"
+    },
+    {
+      "command": "hf mf auth4",
+      "description": "ISO14443-4 AES authentication"
+    },
+    {
+      "command": "hf mf autopwn",
+      "description": "Automatic key recovery tool for MIFARE Classic"
+    },
+    {
+      "command": "hf mf brute",
+      "description": "Smart bruteforce to exploit weak key generators"
+    },
+    {
+      "command": "hf mf cgetblk",
+      "description": "Read block from card"
+    },
+    {
+      "command": "hf mf cgetsc",
+      "description": "Read sector from card"
+    },
+    {
+      "command": "hf mf chk",
+      "description": "Check keys"
+    },
+    {
+      "command": "hf mf cload",
+      "description": "Load dump to card"
+    },
+    {
+      "command": "hf mf csave",
+      "description": "Save dump from card into file or emulator"
+    },
+    {
+      "command": "hf mf csetblk",
+      "description": "Write block to card"
+    },
+    {
+      "command": "hf mf csetuid",
+      "description": "Set UID on card"
+    },
+    {
+      "command": "hf mf cview",
+      "description": "View card"
+    },
+    {
+      "command": "hf mf cwipe",
+      "description": "Wipe card to default UID/Sectors/Keys"
+    },
+    {
+      "command": "hf mf darkside",
+      "description": "Darkside attack"
+    },
+    {
+      "command": "hf mf decrypt",
+      "description": "Decrypt Crypto1 data from sniff or trace"
+    },
+    {
+      "command": "hf mf dump",
+      "description": "Dump MIFARE Classic tag to binary file"
+    },
+    {
+      "command": "hf mf ecfill",
+      "description": "Fill emulator memory with help of keys from emulator"
+    },
+    {
+      "command": "hf mf eclr",
+      "description": "Clear emulator memory"
+    },
+    {
+      "command": "hf mf egetblk",
+      "description": "Get emulator memory block"
+    },
+    {
+      "command": "hf mf egetsc",
+      "description": "Get emulator memory sector"
+    },
+    {
+      "command": "hf mf ekeyprn",
+      "description": "Print keys from emulator memory"
+    },
+    {
+      "command": "hf mf eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "hf mf encodehid",
+      "description": "Encode a HID Credential / NDEF record to card"
+    },
+    {
+      "command": "hf mf esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "hf mf esetblk",
+      "description": "Set emulator memory block"
+    },
+    {
+      "command": "hf mf eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "hf mf fchk",
+      "description": "Check keys fast, targets all keys on card"
+    },
+    {
+      "command": "hf mf gchpwd",
+      "description": "Change card access password. Warning!"
+    },
+    {
+      "command": "hf mf gdmgetblk",
+      "description": "Read public block from GDM card"
+    },
+    {
+      "command": "hf mf gdmgetcfg",
+      "description": "Get configuration data from GDM card"
+    },
+    {
+      "command": "hf mf gdmgethidblk",
+      "description": "Read hidden block from GDM card"
+    },
+    {
+      "command": "hf mf gdmparsecfg",
+      "description": "Parse configuration data for GDM card"
+    },
+    {
+      "command": "hf mf gdmsetblk",
+      "description": "Write public block to GDM card"
+    },
+    {
+      "command": "hf mf gdmsetcfg",
+      "description": "Set configuration data on GDM card"
+    },
+    {
+      "command": "hf mf gdmsethidblk",
+      "description": "Write hidden block to GDM card"
+    },
+    {
+      "command": "hf mf gdmsetsig",
+      "description": "Set MFC EV1 signature on GDM card"
+    },
+    {
+      "command": "hf mf gdmsetuid",
+      "description": "Set UID on GDM card"
+    },
+    {
+      "command": "hf mf gdmwipe",
+      "description": "Wipe GDM card to factory defaults"
+    },
+    {
+      "command": "hf mf gen3blk",
+      "description": "Overwrite manufacturer block"
+    },
+    {
+      "command": "hf mf gen3freeze",
+      "description": "Perma lock UID changes. irreversible"
+    },
+    {
+      "command": "hf mf gen3uid",
+      "description": "Set UID without changing manufacturer block"
+    },
+    {
+      "command": "hf mf ggetblk",
+      "description": "Read block from card"
+    },
+    {
+      "command": "hf mf ginfo",
+      "description": "Info about configuration of the card"
+    },
+    {
+      "command": "hf mf gload",
+      "description": "Load dump to card"
+    },
+    {
+      "command": "hf mf gsave",
+      "description": "Save dump from card into file or emulator"
+    },
+    {
+      "command": "hf mf gsetblk",
+      "description": "Write block to card"
+    },
+    {
+      "command": "hf mf gview",
+      "description": "View card"
+    },
+    {
+      "command": "hf mf hardnested",
+      "description": "Nested attack for hardened MIFARE Classic cards"
+    },
+    {
+      "command": "hf mf help",
+      "description": "This help"
+    },
+    {
+      "command": "hf mf info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf mf isen",
+      "description": "Information Static Encrypted Nonces"
+    },
+    {
+      "command": "hf mf keygen",
+      "description": "Generate key table for some known KDFs"
+    },
+    {
+      "command": "hf mf list",
+      "description": "List MIFARE history"
+    },
+    {
+      "command": "hf mf mad",
+      "description": "Checks and prints MAD"
+    },
+    {
+      "command": "hf mf madread",
+      "description": "Read data from MAD AID sectors"
+    },
+    {
+      "command": "hf mf madverify",
+      "description": "Verify data in MAD AID sectors"
+    },
+    {
+      "command": "hf mf madwrite",
+      "description": "Write data to MAD AID sectors"
+    },
+    {
+      "command": "hf mf nack",
+      "description": "Test for MIFARE NACK bug"
+    },
+    {
+      "command": "hf mf ndefformat",
+      "description": "Format MIFARE Classic Tag as NFC Tag"
+    },
+    {
+      "command": "hf mf ndefread",
+      "description": "Read and print NDEF records from card"
+    },
+    {
+      "command": "hf mf ndefwrite",
+      "description": "Write NDEF records to card"
+    },
+    {
+      "command": "hf mf nested",
+      "description": "Nested attack"
+    },
+    {
+      "command": "hf mf personalize",
+      "description": "Personalize UID (MIFARE Classic EV1 only)"
+    },
+    {
+      "command": "hf mf rdbl",
+      "description": "Read MIFARE Classic block"
+    },
+    {
+      "command": "hf mf rdsc",
+      "description": "Read MIFARE Classic sector"
+    },
+    {
+      "command": "hf mf restore",
+      "description": "Restore MIFARE Classic binary file to tag"
+    },
+    {
+      "command": "hf mf sen",
+      "description": "FM11RF08S Static Encrypted Nonce attack"
+    },
+    {
+      "command": "hf mf setmod",
+      "description": "Set MIFARE Classic EV1 load modulation strength"
+    },
+    {
+      "command": "hf mf sim",
+      "description": "Simulate MIFARE card"
+    },
+    {
+      "command": "hf mf staticnested",
+      "description": "Nested attack against static nonce MIFARE Classic cards"
+    },
+    {
+      "command": "hf mf supercard",
+      "description": "Extract info from a `super card`"
+    },
+    {
+      "command": "hf mf value",
+      "description": "Value blocks"
+    },
+    {
+      "command": "hf mf view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf mf wipe",
+      "description": "Wipe card to zeros and default keys/acc"
+    },
+    {
+      "command": "hf mf wrbl",
+      "description": "Write MIFARE Classic block"
+    },
+    {
+      "command": "hf mfdes",
+      "description": "{ MIFARE Desfire RFIDs...             }"
+    },
+    {
+      "command": "hf mfdes auth",
+      "description": "MIFARE DesFire Authentication"
+    },
+    {
+      "command": "hf mfdes bruteaid",
+      "description": "Recover AIDs by bruteforce"
+    },
+    {
+      "command": "hf mfdes brutedamslot",
+      "description": "Recover DAM slots to delegated AIDs by bruteforce"
+    },
+    {
+      "command": "hf mfdes bruteisofid",
+      "description": "Recover file ISO IDs by bruteforce"
+    },
+    {
+      "command": "hf mfdes changekey",
+      "description": "Change Key"
+    },
+    {
+      "command": "hf mfdes chfilesettings",
+      "description": "Change file settings"
+    },
+    {
+      "command": "hf mfdes chk",
+      "description": "Check keys"
+    },
+    {
+      "command": "hf mfdes chkeysettings",
+      "description": "Change Key Settings"
+    },
+    {
+      "command": "hf mfdes clearrecfile",
+      "description": "Clear record File"
+    },
+    {
+      "command": "hf mfdes createapp",
+      "description": "Create Application"
+    },
+    {
+      "command": "hf mfdes createdelegateapp",
+      "description": "Create Delegated Application"
+    },
+    {
+      "command": "hf mfdes createfile",
+      "description": "Create Standard/Backup File"
+    },
+    {
+      "command": "hf mfdes createmacfile",
+      "description": "Create Transaction MAC File"
+    },
+    {
+      "command": "hf mfdes createmfcmapping",
+      "description": "Create a Mifare Classic mapping on a DESFire EV3C"
+    },
+    {
+      "command": "hf mfdes createrecordfile",
+      "description": "Create Linear/Cyclic Record File"
+    },
+    {
+      "command": "hf mfdes createvaluefile",
+      "description": "Create Value File"
+    },
+    {
+      "command": "hf mfdes default",
+      "description": "Set defaults for all the commands"
+    },
+    {
+      "command": "hf mfdes deleteapp",
+      "description": "Delete Application"
+    },
+    {
+      "command": "hf mfdes deletefile",
+      "description": "Delete File"
+    },
+    {
+      "command": "hf mfdes detect",
+      "description": "Detect key type and tries to find one from the list"
+    },
+    {
+      "command": "hf mfdes dump",
+      "description": "Dump all files"
+    },
+    {
+      "command": "hf mfdes formatpicc",
+      "description": "Format PICC"
+    },
+    {
+      "command": "hf mfdes freemem",
+      "description": "Get free memory size"
+    },
+    {
+      "command": "hf mfdes getaids",
+      "description": "Get Application IDs list"
+    },
+    {
+      "command": "hf mfdes getappnames",
+      "description": "Get Applications list"
+    },
+    {
+      "command": "hf mfdes getfileids",
+      "description": "Get File IDs list"
+    },
+    {
+      "command": "hf mfdes getfileisoids",
+      "description": "Get File ISO IDs list"
+    },
+    {
+      "command": "hf mfdes getfilesettings",
+      "description": "Get file settings"
+    },
+    {
+      "command": "hf mfdes getkeysettings",
+      "description": "Get Key Settings"
+    },
+    {
+      "command": "hf mfdes getkeyversions",
+      "description": "Get Key Versions"
+    },
+    {
+      "command": "hf mfdes getuid",
+      "description": "Get uid from card"
+    },
+    {
+      "command": "hf mfdes getversion",
+      "description": "Get version/type information"
+    },
+    {
+      "command": "hf mfdes help",
+      "description": "This help"
+    },
+    {
+      "command": "hf mfdes info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf mfdes intauth",
+      "description": "ISO Internal Authenticate (ECDSA challenge-response)"
+    },
+    {
+      "command": "hf mfdes list",
+      "description": "List DESFire (ISO 14443A) history"
+    },
+    {
+      "command": "hf mfdes lsapp",
+      "description": "Show all applications with files list"
+    },
+    {
+      "command": "hf mfdes lsfiles",
+      "description": "Show all files list"
+    },
+    {
+      "command": "hf mfdes mad",
+      "description": "Prints MAD records / files from the card"
+    },
+    {
+      "command": "hf mfdes makemfclicense",
+      "description": "Generate a Mifare Classic license for DESFire EV3C"
+    },
+    {
+      "command": "hf mfdes pc",
+      "description": "Run proximity check"
+    },
+    {
+      "command": "hf mfdes read",
+      "description": "Read data from standard/backup/record/value/mac file"
+    },
+    {
+      "command": "hf mfdes selectapp",
+      "description": "Select Application ID"
+    },
+    {
+      "command": "hf mfdes selectisofid",
+      "description": "Select file by ISO ID"
+    },
+    {
+      "command": "hf mfdes setconfig",
+      "description": "Set card configuration"
+    },
+    {
+      "command": "hf mfdes test",
+      "description": "Regression crypto tests"
+    },
+    {
+      "command": "hf mfdes value",
+      "description": "Operations with value file (get/credit/limited credit/debit/clear)"
+    },
+    {
+      "command": "hf mfdes vdesign",
+      "description": "VDE ECDSASign (EV charging signature over 32-byte challenge)"
+    },
+    {
+      "command": "hf mfdes verifycert",
+      "description": "Validate cert from file and verify key possession"
+    },
+    {
+      "command": "hf mfdes write",
+      "description": "Write data to standard/backup/record/value file"
+    },
+    {
+      "command": "hf mfp",
+      "description": "{ MIFARE Plus RFIDs...                }"
+    },
+    {
+      "command": "hf mfp acl",
+      "description": "Decode ACL values for Mifare Plus"
+    },
+    {
+      "command": "hf mfp auth",
+      "description": "Authentication"
+    },
+    {
+      "command": "hf mfp chconf",
+      "description": "Change config on card"
+    },
+    {
+      "command": "hf mfp chk",
+      "description": "Check keys"
+    },
+    {
+      "command": "hf mfp chkey",
+      "description": "Change key on card"
+    },
+    {
+      "command": "hf mfp commitp",
+      "description": "Configure security layer (SL1/SL3 mode)"
+    },
+    {
+      "command": "hf mfp dump",
+      "description": "Dump MIFARE Plus tag to file"
+    },
+    {
+      "command": "hf mfp help",
+      "description": "This help"
+    },
+    {
+      "command": "hf mfp info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf mfp initp",
+      "description": "Fill all the card's keys in SL0 mode"
+    },
+    {
+      "command": "hf mfp list",
+      "description": "List MIFARE Plus history"
+    },
+    {
+      "command": "hf mfp mad",
+      "description": "Check and print MAD"
+    },
+    {
+      "command": "hf mfp madread",
+      "description": "Read data from MAD AID sectors"
+    },
+    {
+      "command": "hf mfp madverify",
+      "description": "Verify data in MAD AID sectors"
+    },
+    {
+      "command": "hf mfp madwrite",
+      "description": "Write data to MAD AID sectors"
+    },
+    {
+      "command": "hf mfp ndefformat",
+      "description": "Format MIFARE Plus Tag as NFC Tag"
+    },
+    {
+      "command": "hf mfp ndefread",
+      "description": "Read and print NDEF records from card"
+    },
+    {
+      "command": "hf mfp ndefwrite",
+      "description": "Write NDEF records to card"
+    },
+    {
+      "command": "hf mfp rdbl",
+      "description": "Read blocks from card"
+    },
+    {
+      "command": "hf mfp rdsc",
+      "description": "Read sectors from card"
+    },
+    {
+      "command": "hf mfp wrbl",
+      "description": "Write block to card"
+    },
+    {
+      "command": "hf mfp wrp",
+      "description": "Write Perso command"
+    },
+    {
+      "command": "hf mfu",
+      "description": "{ MIFARE Ultralight RFIDs...          }"
+    },
+    {
+      "command": "hf mfu aesauth",
+      "description": "Ultralight-AES - Authentication"
+    },
+    {
+      "command": "hf mfu aeschk",
+      "description": "Ultralight-AES - Authentication dictionary check"
+    },
+    {
+      "command": "hf mfu aesgetuid",
+      "description": "Ultralight-AES - Get UID when RID in use"
+    },
+    {
+      "command": "hf mfu amiibo",
+      "description": "Amiibo tag operations"
+    },
+    {
+      "command": "hf mfu cauth",
+      "description": "Ultralight-C - Authentication"
+    },
+    {
+      "command": "hf mfu cchk",
+      "description": "Ultralight-C - Authentication dictionary check"
+    },
+    {
+      "command": "hf mfu countertear",
+      "description": "Tear-off test on Ev1/NTAG Counter bits"
+    },
+    {
+      "command": "hf mfu desbrute",
+      "description": "Ultralight-C - 3DES key segment brute force"
+    },
+    {
+      "command": "hf mfu dump",
+      "description": "Dump MIFARE Ultralight family tag to binary file"
+    },
+    {
+      "command": "hf mfu eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "hf mfu esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "hf mfu esetblk",
+      "description": "Set emulator memory block"
+    },
+    {
+      "command": "hf mfu eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "hf mfu help",
+      "description": "This help"
+    },
+    {
+      "command": "hf mfu incr",
+      "description": "Increments Ev1/NTAG counter"
+    },
+    {
+      "command": "hf mfu info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf mfu keygen",
+      "description": "Generate DES/3DES/AES MIFARE diversified keys"
+    },
+    {
+      "command": "hf mfu list",
+      "description": "List MIFARE Ultralight / NTAG history"
+    },
+    {
+      "command": "hf mfu ndefread",
+      "description": "Prints NDEF records from card"
+    },
+    {
+      "command": "hf mfu otptear",
+      "description": "Tear-off test on OTP bits"
+    },
+    {
+      "command": "hf mfu pwdgen",
+      "description": "Generate pwd from known algos"
+    },
+    {
+      "command": "hf mfu rdbl",
+      "description": "Read block"
+    },
+    {
+      "command": "hf mfu restore",
+      "description": "Restore a dump file onto a tag"
+    },
+    {
+      "command": "hf mfu setkey",
+      "description": "Ultralight C/AES - Set 3DES/AES keys"
+    },
+    {
+      "command": "hf mfu setuid",
+      "description": "Set UID - MAGIC tags only"
+    },
+    {
+      "command": "hf mfu sim",
+      "description": "Simulate MIFARE Ultralight from emulator memory"
+    },
+    {
+      "command": "hf mfu tamper",
+      "description": "NTAG 213TT - Configure the tamper feature"
+    },
+    {
+      "command": "hf mfu view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf mfu wipe",
+      "description": "Wipe card to zeros and default key"
+    },
+    {
+      "command": "hf mfu wrbl",
+      "description": "Write block"
+    },
+    {
+      "command": "hf ntag424",
+      "description": "{ NXP NTAG 4242 DNA RFIDs...          }"
+    },
+    {
+      "command": "hf ntag424 auth",
+      "description": "Test authentication with key"
+    },
+    {
+      "command": "hf ntag424 changefs",
+      "description": "Change file settings"
+    },
+    {
+      "command": "hf ntag424 changekey",
+      "description": "Change key"
+    },
+    {
+      "command": "hf ntag424 getfs",
+      "description": "Get file settings"
+    },
+    {
+      "command": "hf ntag424 help",
+      "description": "This help"
+    },
+    {
+      "command": "hf ntag424 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf ntag424 read",
+      "description": "Read file"
+    },
+    {
+      "command": "hf ntag424 view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf ntag424 write",
+      "description": "Write file"
+    },
+    {
+      "command": "hf plot",
+      "description": "Plot signal"
+    },
+    {
+      "command": "hf saflok",
+      "description": "{ Saflok MFC RFIDs...                 }"
+    },
+    {
+      "command": "hf saflok cksum",
+      "description": "Generate checksum for data block"
+    },
+    {
+      "command": "hf saflok decode",
+      "description": "Decode Saflok card data"
+    },
+    {
+      "command": "hf saflok decrypt",
+      "description": "Decrypt 17-byte encrypted block"
+    },
+    {
+      "command": "hf saflok encode",
+      "description": "Encode Saflok card data"
+    },
+    {
+      "command": "hf saflok encrypt",
+      "description": "Encrypt 17-byte decrypted block"
+    },
+    {
+      "command": "hf saflok help",
+      "description": "This help"
+    },
+    {
+      "command": "hf saflok interrogate",
+      "description": "Interrogate saflok card"
+    },
+    {
+      "command": "hf saflok modify",
+      "description": "Modify Saflok card data"
+    },
+    {
+      "command": "hf saflok provision",
+      "description": "Provision Saflok card"
+    },
+    {
+      "command": "hf saflok read",
+      "description": "Read Saflok card"
+    },
+    {
+      "command": "hf saflok test",
+      "description": "Perform self-test"
+    },
+    {
+      "command": "hf search",
+      "description": "Search for known HF tags"
+    },
+    {
+      "command": "hf secc",
+      "description": "{ iClass SE Config Card Emulator...   }"
+    },
+    {
+      "command": "hf secc help",
+      "description": "This help"
+    },
+    {
+      "command": "hf secc info",
+      "description": "Read and decode Card Recognition Data (GP tag 0066)"
+    },
+    {
+      "command": "hf secc sim",
+      "description": "Simulate HID iCLASS SE Config Card"
+    },
+    {
+      "command": "hf secc sniff",
+      "description": "Sniff reader<->card, jam A0 D4 APDU"
+    },
+    {
+      "command": "hf seos",
+      "description": "{ SEOS RFIDs...                       }"
+    },
+    {
+      "command": "hf seos adf",
+      "description": "Read an ADF from the card"
+    },
+    {
+      "command": "hf seos gdf",
+      "description": "Read an GDF from card"
+    },
+    {
+      "command": "hf seos help",
+      "description": "This help"
+    },
+    {
+      "command": "hf seos info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf seos list",
+      "description": "List SEOS history"
+    },
+    {
+      "command": "hf seos managekeys",
+      "description": "Manage keys to use with SEOS commands"
+    },
+    {
+      "command": "hf seos pacs",
+      "description": "Extract PACS Information from card"
+    },
+    {
+      "command": "hf seos sim",
+      "description": "Simulate Seos tag"
+    },
+    {
+      "command": "hf seos write",
+      "description": "Write an ADF to the card"
+    },
+    {
+      "command": "hf sniff",
+      "description": "Generic HF Sniff"
+    },
+    {
+      "command": "hf st25ta",
+      "description": "{ ST25TA RFIDs...                     }"
+    },
+    {
+      "command": "hf st25ta help",
+      "description": "This help"
+    },
+    {
+      "command": "hf st25ta info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf st25ta list",
+      "description": "List ISO 14443A/7816 history"
+    },
+    {
+      "command": "hf st25ta ndefread",
+      "description": "read NDEF file on tag"
+    },
+    {
+      "command": "hf st25ta protect",
+      "description": "change protection on tag"
+    },
+    {
+      "command": "hf st25ta pwd",
+      "description": "change password on tag"
+    },
+    {
+      "command": "hf st25ta sim",
+      "description": "Fake ISO 14443A/ST tag"
+    },
+    {
+      "command": "hf tesla",
+      "description": "{ TESLA Cards...                      }"
+    },
+    {
+      "command": "hf tesla help",
+      "description": "This help"
+    },
+    {
+      "command": "hf tesla info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf tesla list",
+      "description": "List ISO 14443A/7816 history"
+    },
+    {
+      "command": "hf texkom",
+      "description": "{ Texkom RFIDs...                     }"
+    },
+    {
+      "command": "hf texkom help",
+      "description": "This help"
+    },
+    {
+      "command": "hf texkom reader",
+      "description": "Act like a Texkom reader"
+    },
+    {
+      "command": "hf texkom sim",
+      "description": "Simulate a Texkom tag"
+    },
+    {
+      "command": "hf thinfilm",
+      "description": "{ Thinfilm RFIDs...                   }"
+    },
+    {
+      "command": "hf thinfilm help",
+      "description": "This help"
+    },
+    {
+      "command": "hf thinfilm info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf thinfilm list",
+      "description": "List NFC Barcode / Thinfilm history - not correct"
+    },
+    {
+      "command": "hf thinfilm sim",
+      "description": "Fake Thinfilm tag"
+    },
+    {
+      "command": "hf topaz",
+      "description": "{ TOPAZ (NFC Type 1) RFIDs...         }"
+    },
+    {
+      "command": "hf topaz dump",
+      "description": "Dump TOPAZ family tag to file"
+    },
+    {
+      "command": "hf topaz help",
+      "description": "This help"
+    },
+    {
+      "command": "hf topaz info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf topaz list",
+      "description": "List Topaz history"
+    },
+    {
+      "command": "hf topaz raw",
+      "description": "Send raw hex data to tag"
+    },
+    {
+      "command": "hf topaz rdbl",
+      "description": "Read block"
+    },
+    {
+      "command": "hf topaz reader",
+      "description": "Act like a Topaz reader"
+    },
+    {
+      "command": "hf topaz sim",
+      "description": "Simulate Topaz tag"
+    },
+    {
+      "command": "hf topaz sniff",
+      "description": "Sniff Topaz reader-tag communication"
+    },
+    {
+      "command": "hf topaz view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hf topaz wrbl",
+      "description": "Write block"
+    },
+    {
+      "command": "hf tune",
+      "description": "Continuously measure HF antenna tuning"
+    },
+    {
+      "command": "hf vas",
+      "description": "{ Apple Value Added Service...        }"
+    },
+    {
+      "command": "hf vas decrypt",
+      "description": "Decrypt a previously captured VAS cryptogram"
+    },
+    {
+      "command": "hf vas help",
+      "description": "This help"
+    },
+    {
+      "command": "hf vas info",
+      "description": "Get VAS applet information"
+    },
+    {
+      "command": "hf vas reader",
+      "description": "Read and decrypt VAS message"
+    },
+    {
+      "command": "hf waveshare",
+      "description": "{ Waveshare NFC ePaper...             }"
+    },
+    {
+      "command": "hf waveshare help",
+      "description": "This help"
+    },
+    {
+      "command": "hf waveshare load",
+      "description": "Load image file to Waveshare NFC ePaper"
+    },
+    {
+      "command": "hf xerox",
+      "description": "{ Fuji/Xerox cartridge RFIDs...       }"
+    },
+    {
+      "command": "hf xerox dump",
+      "description": "Read all memory pages of an Fuji/Xerox tag, save to file"
+    },
+    {
+      "command": "hf xerox help",
+      "description": "This help"
+    },
+    {
+      "command": "hf xerox info",
+      "description": "Tag information"
+    },
+    {
+      "command": "hf xerox list",
+      "description": "List ISO-14443B history"
+    },
+    {
+      "command": "hf xerox rdbl",
+      "description": "Read Fuji/Xerox block"
+    },
+    {
+      "command": "hf xerox reader",
+      "description": "Act like a Fuji/Xerox reader"
+    },
+    {
+      "command": "hf xerox view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "hints",
+      "description": "Turn hints on / off"
+    },
+    {
+      "command": "hw",
+      "description": "{ Hardware commands... }"
+    },
+    {
+      "command": "hw bootloader",
+      "description": "Reboot into bootloader mode"
+    },
+    {
+      "command": "hw break",
+      "description": "Send break loop usb command"
+    },
+    {
+      "command": "hw connect",
+      "description": "Connect to the device via serial port"
+    },
+    {
+      "command": "hw dbg",
+      "description": "Set device side debug level"
+    },
+    {
+      "command": "hw decay",
+      "description": "Measure HF antenna decay after field-off"
+    },
+    {
+      "command": "hw detectreader",
+      "description": "Detect external reader field"
+    },
+    {
+      "command": "hw fpgaoff",
+      "description": "Turn off FPGA on device"
+    },
+    {
+      "command": "hw help",
+      "description": "This help"
+    },
+    {
+      "command": "hw ping",
+      "description": "Test if the Proxmark3 is responsive"
+    },
+    {
+      "command": "hw readmem",
+      "description": "Read from MCU flash"
+    },
+    {
+      "command": "hw reset",
+      "description": "Reset the device"
+    },
+    {
+      "command": "hw sethfthresh",
+      "description": "Set thresholds in HF/14a mode"
+    },
+    {
+      "command": "hw setlfdivisor",
+      "description": "Drive LF antenna at 12MHz / (divisor + 1)"
+    },
+    {
+      "command": "hw setmux",
+      "description": "Set the ADC mux to a specific value"
+    },
+    {
+      "command": "hw standalone",
+      "description": "Start installed standalone mode on device"
+    },
+    {
+      "command": "hw status",
+      "description": "Show runtime status information about the connected Proxmark3"
+    },
+    {
+      "command": "hw tearoff",
+      "description": "Program a tearoff hook for the next command supporting tearoff"
+    },
+    {
+      "command": "hw tia",
+      "description": "Trigger a Timing Interval Acquisition to re-adjust the RealTimeCounter divider"
+    },
+    {
+      "command": "hw timeout",
+      "description": "Set the communication timeout on the client side"
+    },
+    {
+      "command": "hw tune",
+      "description": "Measure tuning of device antenna"
+    },
+    {
+      "command": "hw version",
+      "description": "Show version information about the client and Proxmark3"
+    },
+    {
+      "command": "lf",
+      "description": "{ Low frequency commands... }"
+    },
+    {
+      "command": "lf awid",
+      "description": "{ AWID RFIDs...              }"
+    },
+    {
+      "command": "lf awid brute",
+      "description": "bruteforce card number against reader"
+    },
+    {
+      "command": "lf awid clone",
+      "description": "clone AWID tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf awid demod",
+      "description": "demodulate an AWID FSK tag from the GraphBuffer"
+    },
+    {
+      "command": "lf awid help",
+      "description": "this help"
+    },
+    {
+      "command": "lf awid reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf awid sim",
+      "description": "simulate AWID tag"
+    },
+    {
+      "command": "lf awid watch",
+      "description": "continuously watch for cards.  Reader mode"
+    },
+    {
+      "command": "lf cmdread",
+      "description": "Modulate LF reader field to send command before read"
+    },
+    {
+      "command": "lf config",
+      "description": "Get/Set config for LF sampling, bit/sample, decimation, frequency"
+    },
+    {
+      "command": "lf cotag",
+      "description": "{ COTAG CHIPs...             }"
+    },
+    {
+      "command": "lf cotag demod",
+      "description": "demodulate a COTAG tag"
+    },
+    {
+      "command": "lf cotag help",
+      "description": "This help"
+    },
+    {
+      "command": "lf cotag reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf destron",
+      "description": "{ FDX-A Destron RFIDs...     }"
+    },
+    {
+      "command": "lf destron clone",
+      "description": "clone Destron tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf destron demod",
+      "description": "demodulate an Destron tag from the GraphBuffer"
+    },
+    {
+      "command": "lf destron help",
+      "description": "This help"
+    },
+    {
+      "command": "lf destron reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf destron sim",
+      "description": "simulate Destron tag"
+    },
+    {
+      "command": "lf em",
+      "description": "{ EM CHIPs & RFIDs...        }"
+    },
+    {
+      "command": "lf em 410x",
+      "description": "{ EM 4102 commands... }"
+    },
+    {
+      "command": "lf em 410x brute",
+      "description": "reader bruteforce attack by simulating EM410x tags"
+    },
+    {
+      "command": "lf em 410x clone",
+      "description": "clone EM410x Tag ID to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf em 410x demod",
+      "description": "demodulate a EM410x tag from the GraphBuffer"
+    },
+    {
+      "command": "lf em 410x help",
+      "description": "This help"
+    },
+    {
+      "command": "lf em 410x reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf em 410x sim",
+      "description": "simulate EM410x tag"
+    },
+    {
+      "command": "lf em 410x spoof",
+      "description": "watches for EM410x 125/134 kHz tags, and replays them"
+    },
+    {
+      "command": "lf em 410x watch",
+      "description": "watches for EM410x 125/134 kHz tags"
+    },
+    {
+      "command": "lf em 4x05",
+      "description": "{ EM 4205 / 4305 / 4369 / 4469 commands... }"
+    },
+    {
+      "command": "lf em 4x05 brute",
+      "description": "Bruteforce password"
+    },
+    {
+      "command": "lf em 4x05 chk",
+      "description": "Check passwords"
+    },
+    {
+      "command": "lf em 4x05 clonehelp",
+      "description": "Shows the available clone commands"
+    },
+    {
+      "command": "lf em 4x05 config",
+      "description": "Create common configuration words"
+    },
+    {
+      "command": "lf em 4x05 demod",
+      "description": "Demodulate a EM4x05/EM4x69 tag from the GraphBuffer"
+    },
+    {
+      "command": "lf em 4x05 dump",
+      "description": "Dump EM4x05/EM4x69 tag"
+    },
+    {
+      "command": "lf em 4x05 help",
+      "description": "This help"
+    },
+    {
+      "command": "lf em 4x05 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "lf em 4x05 read",
+      "description": "Read word data from EM4x05/EM4x69"
+    },
+    {
+      "command": "lf em 4x05 sniff",
+      "description": "Attempt to recover em4x05 commands from sample buffer"
+    },
+    {
+      "command": "lf em 4x05 unlock",
+      "description": "Execute tear off against EM4x05/EM4x69"
+    },
+    {
+      "command": "lf em 4x05 view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "lf em 4x05 wipe",
+      "description": "Wipe EM4x05/EM4x69 tag"
+    },
+    {
+      "command": "lf em 4x05 write",
+      "description": "Write word data to EM4x05/EM4x69"
+    },
+    {
+      "command": "lf em 4x50",
+      "description": "{ EM 4350 / 4450 commands... }"
+    },
+    {
+      "command": "lf em 4x50 brute",
+      "description": "Bruteforce attack to find password"
+    },
+    {
+      "command": "lf em 4x50 chk",
+      "description": "Check passwords"
+    },
+    {
+      "command": "lf em 4x50 dump",
+      "description": "Dump EM4x50 tag"
+    },
+    {
+      "command": "lf em 4x50 eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "lf em 4x50 esave",
+      "description": "Save emulator memory to file"
+    },
+    {
+      "command": "lf em 4x50 eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "lf em 4x50 help",
+      "description": "This help"
+    },
+    {
+      "command": "lf em 4x50 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "lf em 4x50 login",
+      "description": "Login into EM4x50 tag"
+    },
+    {
+      "command": "lf em 4x50 rdbl",
+      "description": "Read EM4x50 word data"
+    },
+    {
+      "command": "lf em 4x50 reader",
+      "description": "Show standard read mode data"
+    },
+    {
+      "command": "lf em 4x50 restore",
+      "description": "Restore EM4x50 dump to tag"
+    },
+    {
+      "command": "lf em 4x50 sim",
+      "description": "Simulate EM4x50 tag"
+    },
+    {
+      "command": "lf em 4x50 view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "lf em 4x50 wipe",
+      "description": "Wipe EM4x50 tag"
+    },
+    {
+      "command": "lf em 4x50 wrbl",
+      "description": "Write EM4x50 word data"
+    },
+    {
+      "command": "lf em 4x50 wrpwd",
+      "description": "Change EM4x50 password"
+    },
+    {
+      "command": "lf em 4x70",
+      "description": "{ EM 4070 / 4170 commands... }"
+    },
+    {
+      "command": "lf em 4x70 auth",
+      "description": "Authenticate EM4x70"
+    },
+    {
+      "command": "lf em 4x70 autorecover",
+      "description": "Recover entire key from writable tag"
+    },
+    {
+      "command": "lf em 4x70 brute",
+      "description": "Bruteforce EM4X70 to find partial key"
+    },
+    {
+      "command": "lf em 4x70 calc",
+      "description": "Calculate EM4x70 challenge and response"
+    },
+    {
+      "command": "lf em 4x70 help",
+      "description": "This help"
+    },
+    {
+      "command": "lf em 4x70 info",
+      "description": "Tag information"
+    },
+    {
+      "command": "lf em 4x70 recover",
+      "description": "Recover remaining key from partial key"
+    },
+    {
+      "command": "lf em 4x70 setkey",
+      "description": "Write key"
+    },
+    {
+      "command": "lf em 4x70 setpin",
+      "description": "Write PIN"
+    },
+    {
+      "command": "lf em 4x70 unlock",
+      "description": "Unlock EM4x70 for writing"
+    },
+    {
+      "command": "lf em 4x70 write",
+      "description": "Write EM4x70"
+    },
+    {
+      "command": "lf em help",
+      "description": "This help"
+    },
+    {
+      "command": "lf fdxb",
+      "description": "{ FDX-B RFIDs...             }"
+    },
+    {
+      "command": "lf fdxb clone",
+      "description": "clone animal ID tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf fdxb demod",
+      "description": "demodulate a FDX-B ISO11784/85 tag from the GraphBuffer"
+    },
+    {
+      "command": "lf fdxb help",
+      "description": "this help"
+    },
+    {
+      "command": "lf fdxb reader",
+      "description": "attempt to read at 134kHz and extract tag data"
+    },
+    {
+      "command": "lf fdxb sim",
+      "description": "simulate Animal ID tag"
+    },
+    {
+      "command": "lf gallagher",
+      "description": "{ GALLAGHER RFIDs...         }"
+    },
+    {
+      "command": "lf gallagher clone",
+      "description": "clone GALLAGHER tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf gallagher demod",
+      "description": "demodulate an GALLAGHER tag from the GraphBuffer"
+    },
+    {
+      "command": "lf gallagher help",
+      "description": "This help"
+    },
+    {
+      "command": "lf gallagher reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf gallagher sim",
+      "description": "simulate GALLAGHER tag"
+    },
+    {
+      "command": "lf gproxii",
+      "description": "{ Guardall Prox II RFIDs...  }"
+    },
+    {
+      "command": "lf gproxii clone",
+      "description": "clone Guardall tag to T55x7 or Q5/T5555"
+    },
+    {
+      "command": "lf gproxii demod",
+      "description": "demodulate a G Prox II tag from the GraphBuffer"
+    },
+    {
+      "command": "lf gproxii help",
+      "description": "this help"
+    },
+    {
+      "command": "lf gproxii reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf gproxii sim",
+      "description": "simulate Guardall tag"
+    },
+    {
+      "command": "lf help",
+      "description": "This help"
+    },
+    {
+      "command": "lf hid",
+      "description": "{ HID Prox RFIDs...          }"
+    },
+    {
+      "command": "lf hid brute",
+      "description": "bruteforce facility code or card number against reader"
+    },
+    {
+      "command": "lf hid clone",
+      "description": "clone HID tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf hid demod",
+      "description": "demodulate HID Prox tag from the GraphBuffer"
+    },
+    {
+      "command": "lf hid help",
+      "description": "this help"
+    },
+    {
+      "command": "lf hid reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf hid sim",
+      "description": "simulate HID tag"
+    },
+    {
+      "command": "lf hid watch",
+      "description": "continuously watch for cards.  Reader mode"
+    },
+    {
+      "command": "lf hitag",
+      "description": "{ Hitag CHIPs...             }"
+    },
+    {
+      "command": "lf hitag cc",
+      "description": "Hitag S: test all provided challenges"
+    },
+    {
+      "command": "lf hitag chk",
+      "description": "Check keys"
+    },
+    {
+      "command": "lf hitag crack2",
+      "description": "Recover 2048bits of crypto stream"
+    },
+    {
+      "command": "lf hitag dump",
+      "description": "Dump Hitag 2 tag"
+    },
+    {
+      "command": "lf hitag eload",
+      "description": "Upload file into emulator memory"
+    },
+    {
+      "command": "lf hitag eview",
+      "description": "View emulator memory"
+    },
+    {
+      "command": "lf hitag help",
+      "description": "This help"
+    },
+    {
+      "command": "lf hitag hts",
+      "description": "{ Hitag S/8211 operations }"
+    },
+    {
+      "command": "lf hitag hts dump",
+      "description": "Dump Hitag S pages to a file"
+    },
+    {
+      "command": "lf hitag hts help",
+      "description": "This help"
+    },
+    {
+      "command": "lf hitag hts list",
+      "description": "List Hitag S trace history"
+    },
+    {
+      "command": "lf hitag hts rdbl",
+      "description": "Read Hitag S page"
+    },
+    {
+      "command": "lf hitag hts reader",
+      "description": "Act like a Hitag S reader"
+    },
+    {
+      "command": "lf hitag hts restore",
+      "description": "Restore Hitag S memory from dump file"
+    },
+    {
+      "command": "lf hitag hts sim",
+      "description": "Simulate Hitag S transponder"
+    },
+    {
+      "command": "lf hitag hts wrbl",
+      "description": "Write Hitag S page"
+    },
+    {
+      "command": "lf hitag htu",
+      "description": "{ Hitag �/8265 operations }"
+    },
+    {
+      "command": "lf hitag htu dump",
+      "description": "Dump Hitag � blocks to a file"
+    },
+    {
+      "command": "lf hitag htu help",
+      "description": "This help"
+    },
+    {
+      "command": "lf hitag htu list",
+      "description": "List Hitag � trace history"
+    },
+    {
+      "command": "lf hitag htu rdbl",
+      "description": "Read Hitag � block"
+    },
+    {
+      "command": "lf hitag htu reader",
+      "description": "Act like a Hitag � reader"
+    },
+    {
+      "command": "lf hitag htu sim",
+      "description": "Simulate Hitag � transponder"
+    },
+    {
+      "command": "lf hitag htu wrbl",
+      "description": "Write Hitag � block"
+    },
+    {
+      "command": "lf hitag info",
+      "description": "Tag information"
+    },
+    {
+      "command": "lf hitag list",
+      "description": "List Hitag trace history"
+    },
+    {
+      "command": "lf hitag lookup",
+      "description": "Uses authentication trace to check for key in dictionary file"
+    },
+    {
+      "command": "lf hitag read",
+      "description": "Read Hitag memory"
+    },
+    {
+      "command": "lf hitag reader",
+      "description": "Act like a Hitag 2 reader"
+    },
+    {
+      "command": "lf hitag sim",
+      "description": "Simulate Hitag transponder"
+    },
+    {
+      "command": "lf hitag sniff",
+      "description": "Eavesdrop Hitag communication"
+    },
+    {
+      "command": "lf hitag ta",
+      "description": "Hitag 2: test all recorded authentications"
+    },
+    {
+      "command": "lf hitag test",
+      "description": "Perform self tests"
+    },
+    {
+      "command": "lf hitag view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "lf hitag wrbl",
+      "description": "Write a block (page) in Hitag memory"
+    },
+    {
+      "command": "lf idteck",
+      "description": "{ Idteck RFIDs...            }"
+    },
+    {
+      "command": "lf idteck clone",
+      "description": "clone Idteck tag to T55x7 or Q5/T5555"
+    },
+    {
+      "command": "lf idteck demod",
+      "description": "demodulate an Idteck tag from the GraphBuffer"
+    },
+    {
+      "command": "lf idteck help",
+      "description": "This help"
+    },
+    {
+      "command": "lf idteck reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf idteck sim",
+      "description": "simulate Idteck tag"
+    },
+    {
+      "command": "lf indala",
+      "description": "{ Indala RFIDs...            }"
+    },
+    {
+      "command": "lf indala altdemod",
+      "description": "Alternative method to demodulate samples for Indala 64 bit UID (option '224' for 224 bit)"
+    },
+    {
+      "command": "lf indala brute",
+      "description": "Bruteforce an Indala reader with a specified facility code"
+    },
+    {
+      "command": "lf indala clone",
+      "description": "Clone Indala tag to T55x7 or Q5/T5555"
+    },
+    {
+      "command": "lf indala demod",
+      "description": "Demodulate an Indala tag (PSK1) from the GraphBuffer"
+    },
+    {
+      "command": "lf indala help",
+      "description": "This help"
+    },
+    {
+      "command": "lf indala reader",
+      "description": "Read an Indala tag from the antenna"
+    },
+    {
+      "command": "lf indala sim",
+      "description": "Simulate Indala tag"
+    },
+    {
+      "command": "lf io",
+      "description": "{ ioProx RFIDs...            }"
+    },
+    {
+      "command": "lf io clone",
+      "description": "clone ioProx tag to T55x7 or Q5/T5555"
+    },
+    {
+      "command": "lf io demod",
+      "description": "demodulate an ioProx tag from the GraphBuffer"
+    },
+    {
+      "command": "lf io help",
+      "description": "this help"
+    },
+    {
+      "command": "lf io reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf io sim",
+      "description": "simulate ioProx tag"
+    },
+    {
+      "command": "lf io watch",
+      "description": "continuously watch for cards. Reader mode"
+    },
+    {
+      "command": "lf jablotron",
+      "description": "{ Jablotron RFIDs...         }"
+    },
+    {
+      "command": "lf jablotron clone",
+      "description": "clone jablotron tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf jablotron demod",
+      "description": "demodulate an Jablotron tag from the GraphBuffer"
+    },
+    {
+      "command": "lf jablotron help",
+      "description": "This help"
+    },
+    {
+      "command": "lf jablotron reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf jablotron sim",
+      "description": "simulate jablotron tag"
+    },
+    {
+      "command": "lf keri",
+      "description": "{ KERI RFIDs...              }"
+    },
+    {
+      "command": "lf keri clone",
+      "description": "clone KERI tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf keri demod",
+      "description": "demodulate an KERI tag from the GraphBuffer"
+    },
+    {
+      "command": "lf keri help",
+      "description": "This help"
+    },
+    {
+      "command": "lf keri reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf keri sim",
+      "description": "simulate KERI tag"
+    },
+    {
+      "command": "lf motorola",
+      "description": "{ Motorola Flexpass RFIDs... }"
+    },
+    {
+      "command": "lf motorola clone",
+      "description": "clone MOTOROLA tag to T55x7"
+    },
+    {
+      "command": "lf motorola demod",
+      "description": "demodulate an MOTOROLA tag from the GraphBuffer"
+    },
+    {
+      "command": "lf motorola help",
+      "description": "This help"
+    },
+    {
+      "command": "lf motorola reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf motorola sim",
+      "description": "simulate MOTOROLA tag"
+    },
+    {
+      "command": "lf nedap",
+      "description": "{ Nedap RFIDs...             }"
+    },
+    {
+      "command": "lf nedap clone",
+      "description": "clone Nedap tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf nedap demod",
+      "description": "demodulate Nedap tag from the GraphBuffer"
+    },
+    {
+      "command": "lf nedap help",
+      "description": "This help"
+    },
+    {
+      "command": "lf nedap reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf nedap sim",
+      "description": "simulate Nedap tag"
+    },
+    {
+      "command": "lf nexwatch",
+      "description": "{ NexWatch RFIDs...          }"
+    },
+    {
+      "command": "lf nexwatch clone",
+      "description": "clone NexWatch tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf nexwatch demod",
+      "description": "demodulate a NexWatch tag (nexkey, quadrakey) from the GraphBuffer"
+    },
+    {
+      "command": "lf nexwatch help",
+      "description": "This help"
+    },
+    {
+      "command": "lf nexwatch reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf nexwatch sim",
+      "description": "simulate NexWatch tag"
+    },
+    {
+      "command": "lf noralsy",
+      "description": "{ Noralsy RFIDs...           }"
+    },
+    {
+      "command": "lf noralsy clone",
+      "description": "clone Noralsy tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf noralsy demod",
+      "description": "demodulate an Noralsy tag from the GraphBuffer"
+    },
+    {
+      "command": "lf noralsy help",
+      "description": "This help"
+    },
+    {
+      "command": "lf noralsy reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf noralsy sim",
+      "description": "simulate Noralsy tag"
+    },
+    {
+      "command": "lf pac",
+      "description": "{ PAC/Stanley RFIDs...       }"
+    },
+    {
+      "command": "lf pac clone",
+      "description": "clone PAC tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf pac demod",
+      "description": "demodulate a PAC tag from the GraphBuffer"
+    },
+    {
+      "command": "lf pac help",
+      "description": "This help"
+    },
+    {
+      "command": "lf pac reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf pac sim",
+      "description": "simulate PAC tag"
+    },
+    {
+      "command": "lf paradox",
+      "description": "{ Paradox RFIDs...           }"
+    },
+    {
+      "command": "lf paradox clone",
+      "description": "clone paradox tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf paradox demod",
+      "description": "demodulate a Paradox FSK tag from the GraphBuffer"
+    },
+    {
+      "command": "lf paradox help",
+      "description": "This help"
+    },
+    {
+      "command": "lf paradox reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf paradox sim",
+      "description": "simulate paradox tag"
+    },
+    {
+      "command": "lf pcf7931",
+      "description": "{ PCF7931 CHIPs...           }"
+    },
+    {
+      "command": "lf pcf7931 config",
+      "description": "Configure the password, the tags initialization delay and time offsets (optional)"
+    },
+    {
+      "command": "lf pcf7931 help",
+      "description": "This help"
+    },
+    {
+      "command": "lf pcf7931 reader",
+      "description": "Read content of a PCF7931 transponder"
+    },
+    {
+      "command": "lf pcf7931 write",
+      "description": "Write data on a PCF7931 transponder."
+    },
+    {
+      "command": "lf presco",
+      "description": "{ Presco RFIDs...            }"
+    },
+    {
+      "command": "lf presco clone",
+      "description": "clone presco tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf presco demod",
+      "description": "demodulate Presco tag from the GraphBuffer"
+    },
+    {
+      "command": "lf presco help",
+      "description": "This help"
+    },
+    {
+      "command": "lf presco reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf presco sim",
+      "description": "simulate presco tag"
+    },
+    {
+      "command": "lf pyramid",
+      "description": "{ Farpointe/Pyramid RFIDs... }"
+    },
+    {
+      "command": "lf pyramid clone",
+      "description": "clone pyramid tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf pyramid demod",
+      "description": "demodulate a Pyramid FSK tag from the GraphBuffer"
+    },
+    {
+      "command": "lf pyramid help",
+      "description": "this help"
+    },
+    {
+      "command": "lf pyramid reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf pyramid sim",
+      "description": "simulate pyramid tag"
+    },
+    {
+      "command": "lf read",
+      "description": "Read LF tag"
+    },
+    {
+      "command": "lf relay",
+      "description": "LF relay between two pm3 devices (tag/rdr mode)"
+    },
+    {
+      "command": "lf search",
+      "description": "Read and Search for valid known tag"
+    },
+    {
+      "command": "lf securakey",
+      "description": "{ Securakey RFIDs...         }"
+    },
+    {
+      "command": "lf securakey clone",
+      "description": "clone Securakey tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf securakey demod",
+      "description": "demodulate an Securakey tag from the GraphBuffer"
+    },
+    {
+      "command": "lf securakey help",
+      "description": "This help"
+    },
+    {
+      "command": "lf securakey reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf securakey sim",
+      "description": "simulate Securakey tag"
+    },
+    {
+      "command": "lf sim",
+      "description": "Simulate LF tag from buffer"
+    },
+    {
+      "command": "lf simask",
+      "description": "Simulate ASK tag"
+    },
+    {
+      "command": "lf simbidir",
+      "description": "Simulate LF tag (with bidirectional data transmission between reader and tag)"
+    },
+    {
+      "command": "lf simfsk",
+      "description": "Simulate FSK tag"
+    },
+    {
+      "command": "lf simpsk",
+      "description": "Simulate PSK tag"
+    },
+    {
+      "command": "lf sniff",
+      "description": "Sniff LF traffic between reader and tag"
+    },
+    {
+      "command": "lf t55xx",
+      "description": "{ T55xx CHIPs...             }"
+    },
+    {
+      "command": "lf t55xx bruteforce",
+      "description": "Simple bruteforce attack to find password"
+    },
+    {
+      "command": "lf t55xx chk",
+      "description": "Check passwords"
+    },
+    {
+      "command": "lf t55xx clonehelp",
+      "description": "Shows the available clone commands"
+    },
+    {
+      "command": "lf t55xx config",
+      "description": "Set/Get T55XX configuration (modulation, inverted, offset, rate)"
+    },
+    {
+      "command": "lf t55xx dangerraw",
+      "description": "Sends raw bitstream. Dangerous, do not use!!"
+    },
+    {
+      "command": "lf t55xx detect",
+      "description": "Try detecting the tag modulation from reading the configuration block"
+    },
+    {
+      "command": "lf t55xx deviceconfig",
+      "description": "Set/Get T55XX device configuration"
+    },
+    {
+      "command": "lf t55xx dump",
+      "description": "Dump T55xx card Page 0 block 0-7"
+    },
+    {
+      "command": "lf t55xx help",
+      "description": "This help"
+    },
+    {
+      "command": "lf t55xx info",
+      "description": "Show T55x7 configuration data (page 0/ blk 0)"
+    },
+    {
+      "command": "lf t55xx p1detect",
+      "description": "Try detecting if this is a t55xx tag by reading page 1"
+    },
+    {
+      "command": "lf t55xx protect",
+      "description": "Password protect tag"
+    },
+    {
+      "command": "lf t55xx read",
+      "description": "Read T55xx block data"
+    },
+    {
+      "command": "lf t55xx recoverpw",
+      "description": "Try to recover from bad password write from a cloner"
+    },
+    {
+      "command": "lf t55xx resetread",
+      "description": "Send Reset Cmd then lf read the stream to attempt to identify the start"
+    },
+    {
+      "command": "lf t55xx restore",
+      "description": "Restore T55xx card Page 0 / Page 1 blocks"
+    },
+    {
+      "command": "lf t55xx sniff",
+      "description": "Attempt to recover T55xx commands from sample buffer"
+    },
+    {
+      "command": "lf t55xx special",
+      "description": "Show block changes with 64 different offsets"
+    },
+    {
+      "command": "lf t55xx trace",
+      "description": "Show T55x7 traceability data (page 1/ blk 0-1)"
+    },
+    {
+      "command": "lf t55xx view",
+      "description": "Display content from tag dump file"
+    },
+    {
+      "command": "lf t55xx wakeup",
+      "description": "Send AOR wakeup command"
+    },
+    {
+      "command": "lf t55xx wipe",
+      "description": "Wipe a T55xx tag and set defaults (will destroy any data on tag)"
+    },
+    {
+      "command": "lf t55xx write",
+      "description": "Write T55xx block data"
+    },
+    {
+      "command": "lf ti",
+      "description": "{ TI CHIPs...                }"
+    },
+    {
+      "command": "lf ti demod",
+      "description": "Demodulate raw bits for TI LF tag from the GraphBuffer"
+    },
+    {
+      "command": "lf ti help",
+      "description": "This help"
+    },
+    {
+      "command": "lf ti reader",
+      "description": "Read and decode a TI 134 kHz tag"
+    },
+    {
+      "command": "lf ti write",
+      "description": "Write new data to a r/w TI 134 kHz tag"
+    },
+    {
+      "command": "lf trovan",
+      "description": "{ Trovan animal IDs...       }"
+    },
+    {
+      "command": "lf trovan clone",
+      "description": "clone Trovan tag to T55x7 or Q5/T5555"
+    },
+    {
+      "command": "lf trovan demod",
+      "description": "demodulate a Trovan tag from the GraphBuffer"
+    },
+    {
+      "command": "lf trovan help",
+      "description": "This help"
+    },
+    {
+      "command": "lf trovan reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf tune",
+      "description": "Continuously measure LF antenna tuning"
+    },
+    {
+      "command": "lf viking",
+      "description": "{ Viking RFIDs...            }"
+    },
+    {
+      "command": "lf viking clone",
+      "description": "clone Viking tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf viking demod",
+      "description": "demodulate a Viking tag from the GraphBuffer"
+    },
+    {
+      "command": "lf viking help",
+      "description": "This help"
+    },
+    {
+      "command": "lf viking reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf viking sim",
+      "description": "simulate Viking tag"
+    },
+    {
+      "command": "lf visa2000",
+      "description": "{ Visa2000 RFIDs...          }"
+    },
+    {
+      "command": "lf visa2000 clone",
+      "description": "clone Visa2000 tag to T55x7, Q5/T5555 or EM4305/4469"
+    },
+    {
+      "command": "lf visa2000 demod",
+      "description": "demodulate an VISA2000 tag from the GraphBuffer"
+    },
+    {
+      "command": "lf visa2000 help",
+      "description": "This help"
+    },
+    {
+      "command": "lf visa2000 reader",
+      "description": "attempt to read and extract tag data"
+    },
+    {
+      "command": "lf visa2000 sim",
+      "description": "simulate Visa2000 tag"
+    },
+    {
+      "command": "mad",
+      "description": "{ MAD commands... }"
+    },
+    {
+      "command": "mad decode",
+      "description": "Decode MAD byte array"
+    },
+    {
+      "command": "mad encode",
+      "description": "Encode MAD byte array from AID mappings"
+    },
+    {
+      "command": "mad help",
+      "description": "This help"
+    },
+    {
+      "command": "mad read",
+      "description": "Read data from MAD AID sectors"
+    },
+    {
+      "command": "mad test",
+      "description": "Perform MAD regression self-tests"
+    },
+    {
+      "command": "mad verify",
+      "description": "Verify data in MAD AID sectors"
+    },
+    {
+      "command": "mad write",
+      "description": "Write data to MAD AID sectors"
+    },
+    {
+      "command": "mqtt",
+      "description": "{ MQTT commmands... }"
+    },
+    {
+      "command": "mqtt help",
+      "description": "This help"
+    },
+    {
+      "command": "mqtt receive",
+      "description": "Receive message or json file over MQTT"
+    },
+    {
+      "command": "mqtt send",
+      "description": "Send messages or json file over MQTT"
+    },
+    {
+      "command": "msleep",
+      "description": "Add a pause in milliseconds"
+    },
+    {
+      "command": "nfc",
+      "description": "{ NFC commands... }"
+    },
+    {
+      "command": "nfc barcode",
+      "description": "{ NFC Barcode Tag...                  }"
+    },
+    {
+      "command": "nfc barcode help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc barcode read",
+      "description": "read NFC Barcode"
+    },
+    {
+      "command": "nfc barcode sim",
+      "description": "simulate NFC Barcode"
+    },
+    {
+      "command": "nfc decode",
+      "description": "Decode NDEF records"
+    },
+    {
+      "command": "nfc help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc mf",
+      "description": "{ NFC Type MIFARE Classic/Plus Tag... }"
+    },
+    {
+      "command": "nfc mf cformat",
+      "description": "format MIFARE Classic Tag as NFC Tag"
+    },
+    {
+      "command": "nfc mf cread",
+      "description": "read NFC Type MIFARE Classic Tag"
+    },
+    {
+      "command": "nfc mf cwrite",
+      "description": "write NFC Type MIFARE Classic Tag"
+    },
+    {
+      "command": "nfc mf help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc mf pread",
+      "description": "read NFC Type MIFARE Plus Tag"
+    },
+    {
+      "command": "nfc type1",
+      "description": "{ NFC Forum Tag Type 1...             }"
+    },
+    {
+      "command": "nfc type1 help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc type1 read",
+      "description": "read NFC Forum Tag Type 1"
+    },
+    {
+      "command": "nfc type2",
+      "description": "{ NFC Forum Tag Type 2...             }"
+    },
+    {
+      "command": "nfc type2 help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc type2 read",
+      "description": "read NFC Forum Tag Type 2"
+    },
+    {
+      "command": "nfc type4a",
+      "description": "{ NFC Forum Tag Type 4 ISO14443A...   }"
+    },
+    {
+      "command": "nfc type4a format",
+      "description": "format ISO-14443-a tag as NFC Tag"
+    },
+    {
+      "command": "nfc type4a help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc type4a read",
+      "description": "read NFC Forum Tag Type 4 A"
+    },
+    {
+      "command": "nfc type4a st25taread",
+      "description": "read ST25TA as NFC Forum Tag Type 4"
+    },
+    {
+      "command": "nfc type4a write",
+      "description": "write NFC Forum Tag Type 4 A"
+    },
+    {
+      "command": "nfc type4b",
+      "description": "{ NFC Forum Tag Type 4 ISO14443B...   }"
+    },
+    {
+      "command": "nfc type4b help",
+      "description": "This help"
+    },
+    {
+      "command": "nfc type4b read",
+      "description": "read NFC Forum Tag Type 4 B"
+    },
+    {
+      "command": "piv",
+      "description": "{ PIV commands... }"
+    },
+    {
+      "command": "piv authsign",
+      "description": "Authenticate with the card"
+    },
+    {
+      "command": "piv getdata",
+      "description": "Gets a container on a PIV card"
+    },
+    {
+      "command": "piv help",
+      "description": "This help"
+    },
+    {
+      "command": "piv list",
+      "description": "List ISO7816 history"
+    },
+    {
+      "command": "piv scan",
+      "description": "Scan PIV card for known containers"
+    },
+    {
+      "command": "piv select",
+      "description": "Select the PIV applet"
+    },
+    {
+      "command": "prefs",
+      "description": "{ Edit client/device preferences... }"
+    },
+    {
+      "command": "prefs get",
+      "description": "{ Get a preference }"
+    },
+    {
+      "command": "prefs get barmode",
+      "description": "Get bar mode preference"
+    },
+    {
+      "command": "prefs get color",
+      "description": "Get color support preference"
+    },
+    {
+      "command": "prefs get emoji",
+      "description": "Get emoji display preference"
+    },
+    {
+      "command": "prefs get hints",
+      "description": "Get hint display preference"
+    },
+    {
+      "command": "prefs get mqtt",
+      "description": "Get MQTT preference"
+    },
+    {
+      "command": "prefs get output",
+      "description": "Get dump output style preference"
+    },
+    {
+      "command": "prefs get plotsliders",
+      "description": "Get plot slider display preference"
+    },
+    {
+      "command": "prefs get savepaths",
+      "description": "Get file folder"
+    },
+    {
+      "command": "prefs help",
+      "description": "This help"
+    },
+    {
+      "command": "prefs set",
+      "description": "{ Set a preference }"
+    },
+    {
+      "command": "prefs set barmode",
+      "description": "Set bar mode"
+    },
+    {
+      "command": "prefs set color",
+      "description": "Set color support"
+    },
+    {
+      "command": "prefs set emoji",
+      "description": "Set emoji display"
+    },
+    {
+      "command": "prefs set help",
+      "description": "This help"
+    },
+    {
+      "command": "prefs set hints",
+      "description": "Set hint display"
+    },
+    {
+      "command": "prefs set mqtt",
+      "description": "Set MQTT default values"
+    },
+    {
+      "command": "prefs set output",
+      "description": "Set dump output style"
+    },
+    {
+      "command": "prefs set plotsliders",
+      "description": "Set plot slider display"
+    },
+    {
+      "command": "prefs set savepaths",
+      "description": "... to be adjusted next ..."
+    },
+    {
+      "command": "prefs show",
+      "description": "Show all preferences"
+    },
+    {
+      "command": "rem",
+      "description": "Add a text line in log file"
+    },
+    {
+      "command": "reveng",
+      "description": "{ CRC calculations from RevEng software... }"
+    },
+    {
+      "command": "script",
+      "description": "{ Scripting commands... }"
+    },
+    {
+      "command": "smart",
+      "description": "{ Smart card ISO-7816 commands... }"
+    },
+    {
+      "command": "smart help",
+      "description": "This help"
+    },
+    {
+      "command": "smart list",
+      "description": "List ISO 7816 history"
+    },
+    {
+      "command": "smart pcsc",
+      "description": "Turn pm3 into pcsc reader and relay to host OS via vpcd"
+    },
+    {
+      "command": "smart upgrade",
+      "description": "Upgrade sim module firmware"
+    },
+    {
+      "command": "trace",
+      "description": "{ Trace manipulation... }"
+    },
+    {
+      "command": "trace extract",
+      "description": "Extract authentication challenges found in trace"
+    },
+    {
+      "command": "trace help",
+      "description": "This help"
+    },
+    {
+      "command": "trace list",
+      "description": "List protocol data in trace buffer"
+    },
+    {
+      "command": "trace load",
+      "description": "Load trace from file"
+    },
+    {
+      "command": "trace save",
+      "description": "Save trace buffer to file"
+    },
+    {
+      "command": "wiegand",
+      "description": "{ Wiegand format manipulation... }"
+    },
+    {
+      "command": "wiegand decode",
+      "description": "Convert raw hex to decoded wiegand format (currently for HID Prox)"
+    },
+    {
+      "command": "wiegand encode",
+      "description": "Encode to wiegand raw hex (currently for HID Prox)"
+    },
+    {
+      "command": "wiegand help",
+      "description": "This help"
+    },
+    {
+      "command": "wiegand list",
+      "description": "List available wiegand formats"
+    }
+  ]
+}

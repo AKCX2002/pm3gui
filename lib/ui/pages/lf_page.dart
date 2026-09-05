@@ -37,14 +37,9 @@ class _LfPageState extends State<LfPage> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  void _execute(String cmd) {
+  Future<void> _execute(String cmd) async {
     final appState = context.read<AppState>();
-    if (!appState.isConnected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接 PM3')),
-      );
-      return;
-    }
+    if (!ensurePm3Ready(context)) return;
 
     setState(() {
       _lastCmd = cmd;
@@ -54,18 +49,15 @@ class _LfPageState extends State<LfPage> with SingleTickerProviderStateMixin {
 
     final buf = StringBuffer();
     _sub?.cancel();
-    _sub = appState.pm3Output.listen((line) {
+    _sub = appState.pm3PageOutput.listen((line) {
       if (!line.startsWith('[pm3]')) {
         buf.writeln(line);
         if (mounted) setState(() => _result = buf.toString());
       }
     });
 
-    appState.sendCommand(cmd);
-    Future.delayed(const Duration(seconds: 5), () {
-      _sub?.cancel();
-      if (mounted) setState(() => _isLoading = false);
-    });
+    await appState.sendCommand(cmd);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override

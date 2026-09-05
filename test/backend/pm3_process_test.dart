@@ -20,6 +20,74 @@ void main() {
     await fixtureDirectory.delete(recursive: true);
   });
 
+
+  test('command waits through pauses and table headers until its own marker', () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(processStarter: (_, __, {workingDirectory}) async => child);
+    addTearDown(process.dispose);
+    final connecting = process.connect(_dartExecutable, 'test');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    await connecting;
+    final visible = <String>[];
+    final sub = process.outputStream.listen(visible.add);
+    addTearDown(sub.cancel);
+    var completed = false;
+    final result = process.sendCommandAndWait('hf mf help')..then((_) => completed = true);
+    await Future<void>.delayed(Duration.zero);
+    final marker = child.writtenLines.last.substring(4);
+    child.stdoutController.add(utf8.encode('[usb|script] pm3 --> hf mf help\n-----+-----+\n[=] (header)\n'));
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    expect(completed, isFalse);
+    await expectLater(process.sendCommandAndWait('second'), throwsStateError);
+    expect(child.writtenLines.where((s) => s == 'second'), isEmpty);
+    child.stderrController.add(utf8.encode('diagnostic\n'));
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add([...utf8.encode('FINAL_'), 0xff, ...utf8.encode('_ROW\n')]);
+    child.stdoutController.add(utf8.encode('[usb|script] pm3 --> rem $marker\n'));
+    await Future<void>.delayed(Duration.zero);
+    expect(completed, isFalse);
+    child.stdoutController.add(utf8.encode('[+] remark: $marker\n'));
+    final output = await result;
+    expect(output, contains('FINAL_\uFFFD_ROW'));
+    expect(output, contains('[ERR] diagnostic'));
+    expect(visible.join('\n'), isNot(contains(marker)));
+    expect(process.isConnected, isTrue);
+  });
+
+  test('explicit command timeout closes the session rather than returning partial success', () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      gracefulExitTimeout: const Duration(milliseconds: 1),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+    final connecting = process.connect(_dartExecutable, 'test');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    await connecting;
+    await expectLater(process.sendCommandAndWait('never finishes',
+        timeout: const Duration(milliseconds: 20)), throwsA(isA<TimeoutException>()));
+    expect(process.state, Pm3ProcessState.disconnected);
+  });
+
+  test('disconnect releases a command waiting for its completion marker', () async {
+    final child = _FakeProcess();
+    final process = Pm3Process(
+      gracefulExitTimeout: const Duration(milliseconds: 1),
+      processStarter: (_, __, {workingDirectory}) async => child,
+    );
+    addTearDown(process.dispose);
+    final connecting = process.connect(_dartExecutable, 'test');
+    await Future<void>.delayed(Duration.zero);
+    child.stdoutController.add(utf8.encode('pm3 -->\n'));
+    await connecting;
+    final result = expectLater(process.sendCommandAndWait('pending'), throwsStateError);
+    await Future<void>.delayed(Duration.zero);
+    await process.disconnect();
+    await result;
+  });
+
   test('Windows batch client starts through cmd call without PM3 arguments',
       () async {
     if (!Platform.isWindows) return;
@@ -72,6 +140,10 @@ void main() {
     await batchFile.writeAsString(r'''@echo off
 echo Communicating with PM3 over USB-CDC
 echo pm3 --^>
+set /p pm3_command=
+if /i not "%pm3_command%"=="hw version" exit /b 8
+set /p pm3_marker=
+echo [+] remark: %pm3_marker:~4%
 set /p pm3_command=
 if /i not "%pm3_command%"=="quit" exit /b 9
 pause >nul
@@ -273,7 +345,7 @@ pause >nul
     expect(process.state, Pm3ProcessState.connected);
   });
 
-  test('Windows batch sends one read-only handshake before waiting for prompt',
+  test('Windows batch sends one read-only handshake and waits for its completion marker',
       () async {
     if (!Platform.isWindows) return;
 
@@ -297,7 +369,9 @@ pause >nul
     );
     await Future<void>.delayed(Duration.zero);
 
-    expect(child.writtenLines, ['hw version']);
+    expect(child.writtenLines, hasLength(2));
+    expect(child.writtenLines.first, 'hw version');
+    expect(child.writtenLines.last, startsWith('rem PM3GUI_READY_'));
     expect(process.state, Pm3ProcessState.connecting);
     expect(completed, isFalse);
 
@@ -310,11 +384,17 @@ pause >nul
       utf8.encode('[+] Communicating with PM3 over USB-CDC\n'),
     );
     await Future<void>.delayed(Duration.zero);
-    expect(child.writtenLines, ['hw version']);
+    expect(child.writtenLines, hasLength(2));
+    expect(child.writtenLines.first, 'hw version');
+    expect(child.writtenLines.last, startsWith('rem PM3GUI_READY_'));
 
     child.stdoutController.add(
       utf8.encode('[usb|script] pm3 --> hw version'),
     );
+    await Future<void>.delayed(Duration.zero);
+    expect(completed, isFalse);
+    final marker = child.writtenLines.last.substring(4);
+    child.stdoutController.add(utf8.encode('\n[+] remark: $marker\n'));
     expect(await connecting.timeout(const Duration(seconds: 2)), isTrue);
   });
 

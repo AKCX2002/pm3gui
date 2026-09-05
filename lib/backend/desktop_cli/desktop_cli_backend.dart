@@ -98,7 +98,7 @@ final class DesktopCliBackend implements Pm3Backend {
     final startedAt = DateTime.now();
     final output = await _process.sendCommandAndWait(
       command.executable,
-      timeout: timeout ?? const Duration(seconds: 10),
+      timeout: timeout,
     );
     return Pm3Result(
       command: command,

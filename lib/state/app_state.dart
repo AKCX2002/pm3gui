@@ -166,6 +166,33 @@ class AppState extends ChangeNotifier {
   bool get hwInfoParsed => hardwareState.hwInfoParsed;
 
   Stream<String> get pm3Output => connectionState.controller.outputLines;
+  final _connectionOutput = StringBuffer();
+
+  /// 子终端接收当前页面的实时输出，切换页面即关闭；总终端独立订阅。
+  Stream<String> get pm3PageOutput {
+    final pageIndex = currentPageIndex;
+    late StreamController<String> output;
+    StreamSubscription<String>? subscription;
+    void pageChanged() {
+      if (currentPageIndex != pageIndex) unawaited(output.close());
+    }
+    output = StreamController<String>(
+      sync: true,
+      onListen: () {
+        addListener(pageChanged);
+        subscription = pm3Output.listen((line) {
+          if (!output.isClosed) output.add(line);
+        }, onError: (Object error, StackTrace stack) {
+          if (!output.isClosed) output.addError(error, stack);
+        }, onDone: output.close);
+      },
+      onCancel: () async {
+        removeListener(pageChanged);
+        await subscription?.cancel();
+      },
+    );
+    return output.stream;
+  }
 
   AppState({
     ConnectionState? connectionState,
@@ -185,6 +212,9 @@ class AppState extends ChangeNotifier {
     terminalState.addListener(_onTerminalChanged);
     _outputSubscription =
         this.connectionState.controller.outputLines.listen((line) {
+      if (this.connectionState.controller.state == Pm3ConnectionState.connecting) {
+        _connectionOutput.writeln(line);
+      }
       terminalState.addOutput(line);
       _recordSession(_sessionRecorder.recordOutput(line));
 
@@ -201,7 +231,9 @@ class AppState extends ChangeNotifier {
 
     _stateSubscription =
         this.connectionState.controller.stateChanges.listen((state) {
-      if (state == Pm3ConnectionState.connected) {
+      if (state == Pm3ConnectionState.connecting) {
+        _connectionOutput.clear();
+      } else if (state == Pm3ConnectionState.connected) {
         _recordSession(_sessionRecorder.start(
           devicePort: this.connectionState.portName,
           executable: this.connectionState.pm3Path,
@@ -246,7 +278,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> sendCommand(String cmd) async {
     terminalState.addCommand(cmd);
-    await connectionState.sendCommand(cmd);
+    try {
+      await connectionState.sendCommand(cmd);
+    } catch (error) {
+      terminalState.addOutput('[错误] $error');
+    }
   }
 
   Future<WriteProgress> sendCommandSequence(
@@ -411,6 +447,12 @@ class AppState extends ChangeNotifier {
   }
 
   void _queryHwVersion({bool sendCommand = true}) {
+    if (!sendCommand) {
+      hardwareState.parseHwVersion(_connectionOutput.toString());
+      _connectionOutput.clear();
+      _notifyListenersIfActive();
+      return;
+    }
     final buffer = StringBuffer();
     unawaited(_hwVersionOutputSubscription?.cancel() ?? Future.value());
     _hwVersionTimer?.cancel();

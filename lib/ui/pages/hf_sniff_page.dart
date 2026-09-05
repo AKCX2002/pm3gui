@@ -38,8 +38,8 @@ class _HfSniffPageState extends State<HfSniffPage> {
     super.dispose();
   }
 
-  void _execute(String cmd) {
-    if (!executeIfConnected(context, cmd)) return;
+  Future<void> _execute(String cmd) async {
+    if (!ensurePm3Ready(context)) return;
     setState(() {
       _lastCmd = cmd;
       _isLoading = true;
@@ -47,17 +47,14 @@ class _HfSniffPageState extends State<HfSniffPage> {
     });
     final buf = StringBuffer();
     _sub?.cancel();
-    _sub = context.read<AppState>().pm3Output.listen((line) {
+    _sub = context.read<AppState>().pm3PageOutput.listen((line) {
       if (!line.startsWith('[pm3]')) {
         buf.writeln(line);
         if (mounted) setState(() => _result = buf.toString());
       }
     });
-    context.read<AppState>().sendCommand(cmd);
-    Future.delayed(const Duration(seconds: 8), () {
-      _sub?.cancel();
-      if (mounted) setState(() => _isLoading = false);
-    });
+    await context.read<AppState>().sendCommand(cmd);
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override

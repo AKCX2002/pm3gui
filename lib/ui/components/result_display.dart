@@ -71,13 +71,12 @@ class ResultDisplay extends StatelessWidget {
             ),
 
           // ── Result body ──
+          if (isLoading) const LinearProgressIndicator(),
           Expanded(
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SelectionArea(
+              child: SelectionArea(
                       child: SingleChildScrollView(
                         child: Text(
                           result.isEmpty ? '执行命令查看结果' : result,

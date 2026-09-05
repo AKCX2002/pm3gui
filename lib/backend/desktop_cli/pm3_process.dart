@@ -120,6 +120,9 @@ class Pm3Process {
 
   /// 用于响应匹配的累积输出缓冲区
   final _responseBuffer = StringBuffer();
+  Completer<String>? _commandCompleter;
+  String? _commandMarker;
+  int _commandSequence = 0;
 
   Stream<String> get outputStream => _outputController.stream;
   Stream<Pm3ProcessState> get stateStream => _stateController.stream;
@@ -289,13 +292,31 @@ class Pm3Process {
       _connectionCompleter = completer;
       var connected = false;
       var batchHandshakeSent = false;
+      final readyMarker = 'PM3GUI_READY_${connectionGeneration}_${DateTime.now().microsecondsSinceEpoch}';
       var stdoutPending = '';
 
       void handleStdoutRecord(String line) {
         if (!identical(_process, process) || _disposed) return;
-        // 始终写入响应缓冲区，以便 sendCommandAndWait 等函数
-        // 能够获得完整输出，即使 UI 出于限流而丢弃显示行。
-        _responseBuffer.writeln(line);
+        if (batchHandshakeSent && line.contains('pm3 --> rem $readyMarker')) return;
+        if (batchHandshakeSent && line.trimRight().endsWith('remark: $readyMarker')) {
+          connected = true;
+          _setState(Pm3ProcessState.connected);
+          if (!completer.isCompleted) completer.complete(true);
+          return;
+        }
+        // 管道模式没有结束提示符。rem 的结果只能在前一命令完成后出现。
+        final marker = _commandMarker;
+        if (marker != null) {
+          if (line.trimRight().endsWith('remark: $marker')) {
+            final completer = _commandCompleter;
+            if (completer != null && !completer.isCompleted) {
+              completer.complete(_responseBuffer.toString());
+            }
+            return;
+          }
+          if (line.contains('pm3 --> rem $marker')) return;
+        }
+        if (_commandCompleter != null) _responseBuffer.writeln(line);
 
         // 检测致命错误和连接提示
         if (_detectFatalError(line)) {
@@ -309,6 +330,7 @@ class Pm3Process {
         }
 
         if (!connected &&
+            !batchHandshakeSent &&
             _isConnectionPrompt(line, allowOsVersion: !isWindowsBatch)) {
           connected = true;
           _extractVersion(line);
@@ -326,6 +348,7 @@ class Pm3Process {
           unawaited(() async {
             try {
               await process.writeLine('hw version');
+              await process.writeLine('rem $readyMarker');
             } catch (error) {
               if (!identical(_process, process) || _disposed) return;
               _lastError = 'PM3 BAT 只读握手写入失败: $error';
@@ -367,7 +390,8 @@ class Pm3Process {
       }
 
       // 监听 stdout
-      _stdoutSubscription = process.stdout.transform(utf8.decoder).listen(
+      // 部分 Windows 客户端帮助文本含非 UTF-8 字节；保留后续输出与会话。
+      _stdoutSubscription = process.stdout.transform(const Utf8Decoder(allowMalformed: true)).listen(
         handleStdoutChunk,
         onError: (Object error, StackTrace stackTrace) {
           _failConnecting(completer, 'PM3 stdout 流错误: $error');
@@ -393,7 +417,7 @@ class Pm3Process {
 
       // 监听 stderr
       _stderrSubscription = process.stderr
-          .transform(utf8.decoder)
+          .transform(const Utf8Decoder(allowMalformed: true))
           .transform(const LineSplitter())
           .listen((line) {
         if (!identical(_process, process) || _disposed) return;
@@ -406,6 +430,7 @@ class Pm3Process {
           ));
           return;
         }
+        if (_commandCompleter != null) _responseBuffer.writeln('[ERR] $line');
         _emitOutput('[ERR] $line');
       }, onError: (Object error, StackTrace stackTrace) {
         _failConnecting(completer, 'PM3 stderr 流错误: $error');
@@ -486,51 +511,55 @@ class Pm3Process {
       _emitOutput('[未连接]');
       return;
     }
-    _responseBuffer.clear();
     _emitOutput('[pm3] $command');
     await _process!.writeLine(command);
   }
 
-  /// 发送命令并等待输出稳定
-  /// [timeout] - 超时时间，默认为10秒
-  /// Send a command and wait until output stabilizes or a known terminator
-  /// pattern appears. This helps capture long multi-line tables (e.g. autopwn)
-  /// that may finish with a table footer instead of a clear pause.
+  /// 等待客户端执行完成标记；静默、表格边框和命令回显都不是结束信号。
+  /// 默认持续等待。显式超时会断开会话，防止后续命令混入未完成的输出。
   Future<String> sendCommandAndWait(String command,
-      {Duration timeout = const Duration(seconds: 10),
-      RegExp? terminator}) async {
+      {Duration? timeout}) async {
     if (_process == null || _state != Pm3ProcessState.connected) {
       return '[未连接]';
     }
 
-    _responseBuffer.clear();
-    _emitOutput('[pm3] $command');
-    await _process!.writeLine(command);
-
-    // Wait until either output stabilizes or a terminator pattern is observed.
-    var lastLength = 0;
-    final deadline = DateTime.now().add(timeout);
-    // Default terminator: table footer or legend that many pm3 commands emit.
-    final defaultTerminator = RegExp(r'-----\+-----\+|\[=\]\s*\(');
-    final term = terminator ?? defaultTerminator;
-
-    while (DateTime.now().isBefore(deadline)) {
-      await Future.delayed(const Duration(milliseconds: 200));
-      final current = _responseBuffer.toString();
-
-      // If we detect a terminator string in the accumulated output, stop waiting
-      if (term.hasMatch(current)) {
-        break;
-      }
-
-      final currentLength = current.length;
-      if (currentLength > 0 && currentLength == lastLength) {
-        break; // output appears stable
-      }
-      lastLength = currentLength;
+    if (_commandCompleter != null) {
+      throw StateError('PM3 命令仍在执行，请等待完成或断开连接');
     }
+    final process = _process!;
+    final completer = Completer<String>();
+    _commandCompleter = completer;
+    _commandMarker = 'PM3GUI_DONE_${DateTime.now().microsecondsSinceEpoch}_${++_commandSequence}';
+    _responseBuffer.clear();
+    // 在写 stdin 前注册错误处理，断开或写入失败也不会产生未处理 Future。
+    final result = timeout == null
+        ? completer.future
+        : completer.future.timeout(timeout);
+    unawaited(result.then<void>((_) {}, onError: (Object _) {}));
+    try {
+      _emitOutput('[pm3] $command');
+      await process.writeLine(command);
+      await process.writeLine('rem $_commandMarker');
+      return await result;
+    } on TimeoutException {
+      _emitOutput('[错误] 命令超时，会话已停止');
+      await disconnect();
+      rethrow;
+    } catch (_) {
+      if (identical(_process, process)) await disconnect();
+      rethrow;
+    } finally {
+      _commandCompleter = null;
+      _commandMarker = null;
+      _responseBuffer.clear();
+    }
+  }
 
-    return _responseBuffer.toString();
+  void _failCommand() {
+    final completer = _commandCompleter;
+    if (completer != null && !completer.isCompleted) {
+      completer.completeError(StateError('PM3 会话在命令完成前断开'));
+    }
   }
 
   /// 断开与 PM3 的连接
@@ -553,6 +582,7 @@ class Pm3Process {
   Future<void> _shutdown() async {
     if (_disposed) return;
     _shuttingDown = true;
+    _failCommand();
     _disposed = true;
     ++_processGeneration;
     final connectionCompleter = _connectionCompleter;
@@ -635,6 +665,7 @@ class Pm3Process {
     bool publishDisconnected = true,
   }) async {
     if (!identical(_process, process)) return;
+    _failCommand();
     _process = null;
     final stdoutSubscription = _stdoutSubscription;
     final stderrSubscription = _stderrSubscription;

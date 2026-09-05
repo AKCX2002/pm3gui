@@ -45,6 +45,7 @@ flutter:
   assets:
     - docs/pm3_commands_help.yaml
     - docs/pm3_commands_help.zh.yaml
+    - docs/pm3_commands_client.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
