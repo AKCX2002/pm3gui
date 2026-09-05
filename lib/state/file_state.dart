@@ -2,6 +2,7 @@
 library;
 
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/services/file_collector.dart';
 
@@ -10,12 +11,22 @@ class FileState extends ChangeNotifier {
   List<CardGroup> cardGroups = [];
   bool isScanning = false;
   String? collectBaseDir;
+  String? scanError;
+  String _lastPm3Path = '';
+  String? _lastWorkingDirectory;
+  bool _rescanRequested = false;
 
   /// 扫描 PM3 工作目录，收集 dump / key 文件
-  Future<void> scanForFiles(String pm3Path) async {
-    if (isScanning) return;
+  Future<void> scanForFiles(String pm3Path, {String? workingDirectory}) async {
+    _lastPm3Path = pm3Path;
+    _lastWorkingDirectory = workingDirectory;
+    if (isScanning) {
+      _rescanRequested = true;
+      return;
+    }
 
     isScanning = true;
+    scanError = null;
     notifyListeners();
 
     try {
@@ -23,34 +34,43 @@ class FileState extends ChangeNotifier {
       final result = await compute(_scanFilesInIsolate, {
         'pm3Path': pm3Path,
         'collectBaseDir': collectBaseDir,
+        'workingDirectory': workingDirectory,
       });
 
       collectedFiles = result['files'] as List<CollectedFile>;
       cardGroups = result['groups'] as List<CardGroup>;
+      final errors = result['errors'] as List<String>;
+      scanError = errors.isEmpty ? null : errors.join('\n');
     } catch (e) {
-      // 记录扫描错误
+      scanError = '文件扫描失败: $e';
     }
 
     isScanning = false;
     notifyListeners();
+    if (_rescanRequested) {
+      _rescanRequested = false;
+      await scanForFiles(_lastPm3Path, workingDirectory: _lastWorkingDirectory);
+    }
   }
 
   /// 在 isolate 中执行文件扫描
   static Future<Map<String, dynamic>> _scanFilesInIsolate(
       Map<String, dynamic> params) async {
     final pm3Path = params['pm3Path'] as String;
-    final collectBaseDir = params['collectBaseDir'] as String?;
+    final collectBaseDir = params['collectBaseDir'] as String? ??
+        '${Directory.current.path}/pm3_files';
 
-    final dirs = FileCollector.defaultScanDirs(pm3Path);
-    final files = await FileCollector.scan(dirs);
+    final errors = <String>[];
+    final dirs = FileCollector.defaultScanDirs(pm3Path,
+        workingDirectory: params['workingDirectory'] as String?,
+        onError: errors.add);
+    final files = await FileCollector.scan(dirs, onError: errors.add);
 
-    List<CollectedFile> organizedFiles = [];
-    if (collectBaseDir != null) {
-      organizedFiles = await FileCollector.scan(
-        [collectBaseDir],
-        recursive: true,
-      );
-    }
+    final organizedFiles = await FileCollector.scan(
+      [collectBaseDir],
+      recursive: true,
+      onError: errors.add,
+    );
 
     final seen = <String>{};
     final allFiles =
@@ -60,6 +80,7 @@ class FileState extends ChangeNotifier {
     return {
       'files': allFiles,
       'groups': groups,
+      'errors': errors,
     };
   }
 
@@ -67,7 +88,7 @@ class FileState extends ChangeNotifier {
   Future<int> organizeCollectedFiles(String baseDir) async {
     collectBaseDir = baseDir;
     final count = await FileCollector.organizeFiles(collectedFiles, baseDir);
-    await scanForFiles('');
+    await scanForFiles(_lastPm3Path, workingDirectory: _lastWorkingDirectory);
     return count;
   }
 

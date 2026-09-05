@@ -20,6 +20,7 @@ import 'package:pm3gui/services/dump_converter.dart';
 import 'package:pm3gui/services/file_dialog_service.dart';
 import 'package:pm3gui/services/pm3_commands.dart';
 import 'package:pm3gui/state/app_state.dart';
+import 'package:pm3gui/ui/widgets/command_card_editor.dart';
 
 enum _KeyOverride { preserve, overwrite }
 
@@ -76,7 +77,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -165,7 +166,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
     // Check filename pattern: *-key*.bin
     final name = path.split('/').last.split('\\').last.toLowerCase();
-    if (name.contains('-key')) return true;
+    if (name.contains('-key') || name.endsWith('.keys.txt')) return true;
 
     // For .bin files, check if the size matches a key file layout
     if (ext == 'bin' || ext == 'dump') {
@@ -209,8 +210,12 @@ class _DumpViewerPageState extends State<DumpViewerPage>
     }
 
     // Binary key file
-    final bytes = await File(path).readAsBytes();
-    newKeys = parseKeyBinBytes(Uint8List.fromList(bytes));
+    if (ext == 'txt') {
+      newKeys = parseKeyText(await File(path).readAsString());
+    } else {
+      final bytes = await File(path).readAsBytes();
+      newKeys = parseKeyBinBytes(Uint8List.fromList(bytes));
+    }
 
     if (_card != null) {
       // Merge keys into existing card WITHOUT touching block data
@@ -227,25 +232,30 @@ class _DumpViewerPageState extends State<DumpViewerPage>
         ),
       );
     } else {
-      // No card loaded yet — create keys-only card
-      final dumpResult = await parseDumpFile(path);
-      setState(() {
-        _dumpResult = dumpResult;
-        _card = dumpResult.card;
-        _filePath = path;
-        _format = 'key';
-        _error = null;
-        _selectedSector = 0;
-        _initEditControllers();
-      });
+      final type = [cardMini, card1K, card2K, card4K]
+          .firstWhere((type) => type.sectorCount == newKeys.length);
       if (!mounted) return;
-      context.read<AppState>().updateCard(_card!);
+      final draft = context.read<AppState>().commandCard;
+      draft.clear(cardType: type);
+      for (var s = 0; s < newKeys.length; s++) {
+        draft.editKey(s, true, newKeys[s].keyA);
+        draft.editKey(s, false, newKeys[s].keyB);
+      }
+      setState(() {
+        _error = null;
+      });
+      _tabController.animateTo(4);
     }
   }
 
   /// Load a dump file, optionally preserving existing keys.
   Future<void> _loadDumpFile(String path) async {
     final dumpResult = await parseDumpFile(path);
+    if (!mounted) return;
+    if (!dumpResult.isSuccess) {
+      setState(() => _error = dumpResult.error);
+      return;
+    }
 
     if (_card != null && _card!.sectorKeys.isNotEmpty) {
       // Already have a card with keys — ask user what to do
@@ -359,7 +369,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
   Future<void> _setAsPreferredKeyFile() async {
     if (_card == null) return;
-    _applyEdits();
+    if (!_applyEdits()) return;
     final appState = context.read<AppState>();
     final tmp = File('${Directory.systemTemp.path}/pm3gui-current-keys.bin');
     await tmp.writeAsBytes(exportKeysToBin(_card!.sectorKeys), flush: true);
@@ -373,7 +383,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
 
   Future<void> _setAsPreferredDumpFile() async {
     if (_card == null) return;
-    _applyEdits();
+    if (!_applyEdits()) return;
     final appState = context.read<AppState>();
     final tmp = File('${Directory.systemTemp.path}/pm3gui-current-dump.bin');
     await tmp.writeAsBytes(exportToBin(_card!), flush: true);
@@ -425,6 +435,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
             Tab(text: '密钥/编辑', icon: Icon(Icons.edit, size: 18)),
             Tab(text: '深度分析', icon: Icon(Icons.analytics, size: 18)),
             Tab(text: '回写/清空', icon: Icon(Icons.upload, size: 18)),
+            Tab(text: '命令数据', icon: Icon(Icons.terminal, size: 18)),
           ],
         ),
         Expanded(
@@ -445,6 +456,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
                   ? _buildAnalysisView()
                   : _buildEmptyHint('打开转储文件后可查看深度分析', Icons.analytics),
               _buildWriteBackView(),
+              CommandCardEditor(openedCard: _card),
             ],
           ),
         ),
@@ -466,6 +478,12 @@ class _DumpViewerPageState extends State<DumpViewerPage>
           onPressed: _openFile,
           icon: const Icon(Icons.file_open, size: 16),
           label: const Text('打开文件'),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: () => _tabController.animateTo(4),
+          icon: const Icon(Icons.terminal),
+          label: const Text('命令数据'),
         ),
       ]),
     );
@@ -528,14 +546,16 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   Future<void> _exportAs(String format) async {
     if (_card == null) return;
 
-    _applyEdits();
+    if (!_applyEdits()) return;
     final appState = context.read<AppState>();
 
     final autoPath = _buildCategorizedExportPath(format, appState);
     try {
-      await _writeExportToPath(autoPath, format);
-      _afterExportSuccess(autoPath, format, appState, autoSaved: true);
-      return;
+      if (!await File(autoPath).exists()) {
+        await _writeExportToPath(autoPath, format);
+        _afterExportSuccess(autoPath, format, appState, autoSaved: true);
+        return;
+      }
     } catch (_) {
       // fallback to manual save
     }
@@ -1559,27 +1579,40 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   }
 
   /// 应用编辑：将控制器中的值写回 _card 模型
-  void _applyEdits() {
-    if (_card == null) return;
-    for (var i = 0; i < _card!.blocks.length; i++) {
-      if (_blockControllers.containsKey(i)) {
-        _card!.blocks[i] = _blockControllers[i]!.text.toUpperCase();
+  bool _applyEdits() {
+    if (_card == null) return false;
+    final blocks = <String>[];
+    final keys = <SectorKey>[];
+    String normalize(String value, int length) {
+      final text = value.replaceAll(RegExp(r'\s'), '').toUpperCase();
+      if (text.length != length || !RegExp(r'^[0-9A-F]+$').hasMatch(text)) {
+        throw FormatException('需要 $length 位十六进制字符');
       }
+      return text;
     }
-    for (var s = 0; s < _card!.sectorKeys.length; s++) {
-      if (_keyAControllers.containsKey(s)) {
-        _card!.sectorKeys[s].keyA = _keyAControllers[s]!.text.toUpperCase();
+
+    try {
+      for (var b = 0; b < _card!.blocks.length; b++) {
+        blocks.add(normalize(_blockControllers[b]!.text, 32));
       }
-      if (_keyBControllers.containsKey(s)) {
-        _card!.sectorKeys[s].keyB = _keyBControllers[s]!.text.toUpperCase();
+      for (var s = 0; s < _card!.sectorKeys.length; s++) {
+        keys.add(SectorKey(
+          keyA: normalize(_keyAControllers[s]!.text, 12),
+          keyB: normalize(_keyBControllers[s]!.text, 12),
+        ));
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('修改未应用：$e')));
+      return false;
     }
+    _card!.blocks = blocks;
+    _card!.sectorKeys = keys;
+    // Invalidate analysis derived from the previous bytes.
+    _dumpResult = DumpResult(card: _card!, format: _format);
     setState(() {});
     context.read<AppState>().updateCard(_card!);
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('修改已应用到内存')));
-    }
+    return true;
   }
 
   // ======================================================================
@@ -2266,7 +2299,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   }
 
   Future<String> _prepareTempDumpBin(AppState appState) async {
-    _applyEdits();
+    if (!_applyEdits()) throw const FormatException('编辑数据不完整');
     final file = File(
       '${Directory.systemTemp.path}/pm3gui-quick-write-${DateTime.now().millisecondsSinceEpoch}.bin',
     );
@@ -2530,7 +2563,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   // ======================================================================
   Future<void> _executeCuidClear(AppState appState) async {
     if (_card == null) return;
-    _applyEdits(); // 确保最新的密钥
+    if (!_applyEdits()) return; // 确保最新的密钥
 
     final commands = <(int, String)>[];
     final ct = _card!.cardType;
@@ -2566,7 +2599,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   // ======================================================================
   Future<void> _executeCuidWrite(AppState appState) async {
     if (_card == null) return;
-    _applyEdits(); // 确保最新数据
+    if (!_applyEdits()) return; // 确保最新数据
 
     final commands = <(int, String)>[];
     final ct = _card!.cardType;
@@ -2597,7 +2630,7 @@ class _DumpViewerPageState extends State<DumpViewerPage>
   // ======================================================================
   Future<void> _executeSectorWrite(AppState appState, int sector) async {
     if (_card == null) return;
-    _applyEdits();
+    if (!_applyEdits()) return;
 
     final commands = <(int, String)>[];
     final ct = _card!.cardType;

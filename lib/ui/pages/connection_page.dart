@@ -408,6 +408,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
                   const Text('PM3 文件收集',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  if (appState.fileState.scanError != null)
+                    Tooltip(
+                        message: appState.fileState.scanError!,
+                        child: const Icon(Icons.error_outline,
+                            color: Colors.orange)),
                   const SizedBox(width: 8),
                   Text(
                     '$collectedFilesCount 个文件, '

@@ -11,8 +11,8 @@
 library;
 
 import 'dart:io';
+import 'dart:convert';
 import 'package:path/path.dart' as p;
-import 'package:pm3gui/services/file_cache.dart';
 
 // ─── Data Models ─────────────────────────────────────────────────────────
 
@@ -115,7 +115,7 @@ class CardGroup {
 ///   lf-em-12345678-dump.bin
 /// 说明：pattern 将 UID 约束为十六进制，以避免误将普通日志/临时文件识别为 dump。
 final _pm3FilePattern = RegExp(
-  r'^(hf|lf)-([a-z0-9]+)-([0-9A-Fa-f]+)-(dump|key)(?:-(\d{3}))?\.(\w+)$',
+  r'^(hf|lf)-([a-z0-9]+)-([0-9A-Fa-f]+)(?:-(dump|keys?))?(?:-(\d+))?\.(bin|json|eml|dump|dic|txt|keys\.txt)$',
   caseSensitive: false,
 );
 
@@ -137,6 +137,7 @@ class FileCollector {
     '.eml',
     '.dump',
     '.dic',
+    '.txt',
   };
 
   /// 判断文件名是否为当前扫描器支持的 dump/key 格式。
@@ -157,12 +158,13 @@ class FileCollector {
   static Future<List<CollectedFile>> scan(
     List<String> directories, {
     bool recursive = false,
+    void Function(String)? onError,
   }) async {
     final results = <CollectedFile>[];
     final tasks = <Future<void>>[];
 
     for (final dirPath in directories) {
-      tasks.add(_scanDirectory(dirPath, recursive, results));
+      tasks.add(_scanDirectory(dirPath, recursive, results, onError));
     }
 
     await Future.wait(tasks);
@@ -173,19 +175,10 @@ class FileCollector {
   }
 
   /// 扫描单个目录
-  static Future<void> _scanDirectory(
-      String dirPath, bool recursive, List<CollectedFile> results) async {
-    // 检查缓存
-    final cachedFiles = FileCache.getCachedFiles(dirPath, recursive);
-    if (cachedFiles != null) {
-      results.addAll(cachedFiles);
-      return;
-    }
-
+  static Future<void> _scanDirectory(String dirPath, bool recursive,
+      List<CollectedFile> results, void Function(String)? onError) async {
     final dir = Directory(dirPath);
     if (!await dir.exists()) return;
-
-    final directoryFiles = <CollectedFile>[];
 
     try {
       await for (final entity
@@ -217,16 +210,10 @@ class FileCollector {
           sizeBytes: stat.size,
         );
 
-        directoryFiles.add(collectedFile);
         results.add(collectedFile);
       }
     } catch (e) {
-      // 忽略目录访问错误
-    }
-
-    // 缓存结果
-    if (directoryFiles.isNotEmpty) {
-      FileCache.cacheFiles(dirPath, recursive, directoryFiles);
+      onError?.call('$dirPath: $e');
     }
   }
 
@@ -295,7 +282,8 @@ class FileCollector {
   }
 
   /// 获取典型的PM3工作目录以进行扫描
-  static List<String> defaultScanDirs(String pm3Path) {
+  static List<String> defaultScanDirs(String pm3Path,
+      {String? workingDirectory, void Function(String)? onError}) {
     final dirs = <String>{};
     // 1. PM3可执行文件的父文件夹
     final pm3Dir = File(pm3Path).parent.path;
@@ -310,7 +298,35 @@ class FileCollector {
     // 3. 当前工作目录
     dirs.add(Directory.current.path);
 
-    return dirs.toList();
+    if (workingDirectory != null && workingDirectory.isNotEmpty) {
+      dirs.add(p.absolute(workingDirectory));
+    }
+    // 官方 Windows 发行包根目录的 pm3.bat 会切到 client 并重设 HOME。
+    final clientDir = p.join(pm3Dir, 'client');
+    if (File(p.join(clientDir, 'setup.bat')).existsSync()) dirs.add(clientDir);
+    for (final root in dirs.toList()) {
+      final preferences = File(p.join(root, '.proxmark3', 'preferences.json'));
+      if (preferences.existsSync()) {
+        try {
+          final config = jsonDecode(preferences.readAsStringSync())
+              as Map<String, dynamic>;
+          for (final key in [
+            'file.default.savepath',
+            'file.default.dumppath'
+          ]) {
+            final value = config[key];
+            if (value is String && value.trim().isNotEmpty) {
+              dirs.add(p.isAbsolute(value) ? value : p.join(root, value));
+            }
+          }
+        } catch (e) {
+          onError?.call('${preferences.path}: $e');
+        }
+      }
+      dirs.add(p.join(root, '.proxmark3', 'dumps'));
+    }
+
+    return dirs.map((dir) => p.normalize(p.absolute(dir))).toSet().toList();
   }
 }
 
@@ -343,9 +359,11 @@ _ParsedName? _parseFileName(String name) {
       band: m.group(1)!.toLowerCase() == 'hf' ? FreqBand.hf : FreqBand.lf,
       cardType: m.group(2)!.toLowerCase(),
       uid: m.group(3)!,
-      fileType: m.group(4)!.toLowerCase() == 'dump'
-          ? CardFileType.dump
-          : CardFileType.key,
+      fileType: ((m.group(4)?.toLowerCase().startsWith('key') ?? false) ||
+              m.group(6)!.toLowerCase() == 'keys.txt' ||
+              m.group(6)!.toLowerCase() == 'dic')
+          ? CardFileType.key
+          : CardFileType.dump,
       format: m.group(6)!.toLowerCase(),
       sequence: m.group(5) != null ? int.tryParse(m.group(5)!) : null,
     );

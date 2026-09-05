@@ -337,9 +337,9 @@ class MifareCard {
     this.sak = '',
     List<String>? blocks,
     List<SectorKey>? sectorKeys,
-  })  : blocks = blocks ?? List.filled(card1K.blockCount, '0' * 32),
-        sectorKeys =
-            sectorKeys ?? List.generate(card1K.sectorCount, (_) => SectorKey());
+  })  : blocks = blocks ?? List.filled(cardType.blockCount, '0' * 32),
+        sectorKeys = sectorKeys ??
+            List.generate(cardType.sectorCount, (_) => SectorKey());
 
   /// Reinitialize for a different card type.
   void setCardType(CardType type) {

@@ -99,7 +99,7 @@ class ExtractedKey {
 List<ExtractedKey> extractKeys(String output,
     {int keyAIndex = 2, int keyBIndex = 4}) {
   final pattern = RegExp(
-      r'\s*(\d{3})\s*\|\s*(\d{3})\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*$',
+      r'(\d{1,3})[ \t]*\|[ \t]*(\d{1,3})[ \t]*\|[ \t]*([^\r\n|]+)\|[ \t]*([^\r\n|]+)\|[ \t]*([^\r\n|]+)\|[ \t]*([^\r\n|]+)$',
       multiLine: true);
 
   final results = <ExtractedKey>[];
@@ -118,8 +118,10 @@ List<ExtractedKey> extractKeys(String output,
     final keyB = cells[keyBIndex].replaceAll('-', '').toUpperCase();
     // The "res" column contains status letters (e.g. D, N, R, A, etc.).
     // Consider a key "found" when the parsed hex is present (12 hex chars).
-    final keyAFound = keyA.length == 12;
-    final keyBFound = keyB.length == 12;
+    final keyAFound = RegExp(r'^[0-9A-F]{12}$').hasMatch(keyA) &&
+        !['0', '-'].contains(cells[keyAIndex + 1]);
+    final keyBFound = RegExp(r'^[0-9A-F]{12}$').hasMatch(keyB) &&
+        !['0', '-'].contains(cells[keyBIndex + 1]);
 
     results.add(ExtractedKey(
       sector: sector,
@@ -129,10 +131,7 @@ List<ExtractedKey> extractKeys(String output,
       keyBFound: keyBFound,
     ));
   }
-  if (results.isEmpty) {
-    // Fallback: parse lines like "Target sector ... found valid key [...]"
-    return extractKeysFromTargetLines(output);
-  }
+  results.addAll(extractKeysFromTargetLines(output));
   return results;
 }
 

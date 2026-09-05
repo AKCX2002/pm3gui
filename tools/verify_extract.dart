@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:pm3gui/parsers/output_parser.dart';
 
 void main() {
@@ -41,17 +42,17 @@ void main() {
 
   // First try extractKeys (expects table rows). Also try stripAnsi then extract.
   final keys = extractKeys(sample);
-  print('extractKeys returned ${keys.length} entries');
+  stdout.writeln('extractKeys returned ${keys.length} entries');
   for (final k in keys) {
-    print(
+    stdout.writeln(
         'Sector ${k.sector}: keyA=${k.keyA} found=${k.keyAFound} keyB=${k.keyB} found=${k.keyBFound}');
   }
 
   final stripped = stripAnsi(sample);
   final keys2 = extractKeys(stripped);
-  print('\nAfter stripAnsi: ${keys2.length} entries');
+  stdout.writeln('\nAfter stripAnsi: ${keys2.length} entries');
   for (final k in keys2) {
-    print(
+    stdout.writeln(
         'Sector ${k.sector}: keyA=${k.keyA} found=${k.keyAFound} keyB=${k.keyB} found=${k.keyBFound}');
   }
 }

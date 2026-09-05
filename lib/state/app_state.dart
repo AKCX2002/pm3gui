@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:pm3gui/models/mifare_card.dart';
+import 'package:pm3gui/models/command_card.dart';
 import 'package:pm3gui/services/file_collector.dart';
 import 'package:pm3gui/core/pm3/pm3_connection.dart';
 import 'package:pm3gui/services/pm3_session_recorder.dart';
@@ -113,6 +114,7 @@ class AppState extends ChangeNotifier {
   NavigationIntent? get pendingIntent => _pendingIntent;
 
   MifareCard currentCard = MifareCard();
+  final commandCard = CommandCard();
 
   WriteProgress? writeProgress;
 
@@ -176,6 +178,7 @@ class AppState extends ChangeNotifier {
     void pageChanged() {
       if (currentPageIndex != pageIndex) unawaited(output.close());
     }
+
     output = StreamController<String>(
       sync: true,
       onListen: () {
@@ -212,9 +215,11 @@ class AppState extends ChangeNotifier {
     terminalState.addListener(_onTerminalChanged);
     _outputSubscription =
         this.connectionState.controller.outputLines.listen((line) {
-      if (this.connectionState.controller.state == Pm3ConnectionState.connecting) {
+      if (this.connectionState.controller.state ==
+          Pm3ConnectionState.connecting) {
         _connectionOutput.writeln(line);
       }
+      commandCard.consume(line);
       terminalState.addOutput(line);
       _recordSession(_sessionRecorder.recordOutput(line));
 
@@ -226,6 +231,7 @@ class AppState extends ChangeNotifier {
 
     _commandSubscription =
         this.connectionState.controller.commands.listen((command) {
+      commandCard.beginCommand(command.executable);
       _recordSession(_sessionRecorder.recordCommand(command.executable));
     });
 
@@ -243,6 +249,7 @@ class AppState extends ChangeNotifier {
           sendCommand: !this.connectionState.usesWindowsBatchClient,
         );
       } else if (state == Pm3ConnectionState.disconnected) {
+        commandCard.beginCommand('');
         if (!_disconnectInProgress) {
           _sessionClose = _recordSession(_sessionRecorder.close());
         }
@@ -436,7 +443,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> scanForFiles() async {
-    await fileState.scanForFiles(connectionState.pm3Path);
+    await fileState.scanForFiles(connectionState.pm3Path,
+        workingDirectory: connectionState.pm3WorkingDirectory);
     _notifyListenersIfActive();
   }
 

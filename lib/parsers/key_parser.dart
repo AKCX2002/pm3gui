@@ -129,6 +129,28 @@ String exportKeysAsText(List<SectorKey> keys) {
   return buf.toString();
 }
 
+/// Read the indexed text format emitted by exportKeysAsText, without inventing missing sectors.
+List<SectorKey> parseKeyText(String text) {
+  final rows = <int, SectorKey>{};
+  for (final raw in text.split('\n')) {
+    final line = raw.trim();
+    if (line.isEmpty || line.startsWith('#')) continue;
+    final match = RegExp(r'^(\d+)\s+([0-9a-fA-F]{12})\s+([0-9a-fA-F]{12})$')
+        .firstMatch(line);
+    if (match == null) throw const FormatException('密钥文本格式错误');
+    final sector = int.parse(match.group(1)!);
+    if (rows.containsKey(sector)) throw FormatException('扇区 $sector 重复');
+    rows[sector] = SectorKey(
+        keyA: match.group(2)!.toUpperCase(),
+        keyB: match.group(3)!.toUpperCase());
+  }
+  if (![5, 16, 32, 40].contains(rows.length) ||
+      List.generate(rows.length, (i) => i).any((i) => !rows.containsKey(i))) {
+    throw const FormatException('密钥文本缺少扇区');
+  }
+  return List.generate(rows.length, (i) => rows[i]!);
+}
+
 // ---------------------------------------------------------------------------
 //  Utility — merge keys into a MifareCard
 // ---------------------------------------------------------------------------
